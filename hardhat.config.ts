@@ -1,12 +1,10 @@
 import "@nomiclabs/hardhat-waffle";
-import "hardhat-typechain";
 import "solidity-coverage";
-
+import "hardhat-etherscan-abi";
+import "@typechain/hardhat";
 import "./tasks/accounts";
 import "./tasks/clean";
-
 import { resolve } from "path";
-
 import { config as dotenvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
@@ -38,6 +36,20 @@ if (!process.env.INFURA_API_KEY) {
   infuraApiKey = process.env.INFURA_API_KEY;
 }
 
+let archiveNode: string;
+if (!process.env.ARCHIVE_NODE) {
+  throw new Error("Please set your ARCHIVE_NODE url in a .env file");
+} else {
+  archiveNode = process.env.ARCHIVE_NODE;
+}
+
+let etherscanApiKey: string;
+if (!process.env.ETHERSCAN_API_KEY) {
+  throw new Error("Please set your ETHERSCAN_API_KEY in a .env file");
+} else {
+  etherscanApiKey = process.env.ETHERSCAN_API_KEY;
+}
+
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   const url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
   return {
@@ -56,6 +68,10 @@ const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
+      forking: {
+        url: archiveNode,
+        blockNumber: 12091539,
+      },
       accounts: {
         mnemonic,
       },
@@ -65,6 +81,9 @@ const config: HardhatUserConfig = {
     kovan: createTestnetConfig("kovan"),
     rinkeby: createTestnetConfig("rinkeby"),
     ropsten: createTestnetConfig("ropsten"),
+  },
+  etherscan: {
+    apiKey: etherscanApiKey
   },
   paths: {
     artifacts: "./artifacts",
@@ -77,20 +96,18 @@ const config: HardhatUserConfig = {
       {
         version: "0.8.2",
         settings: {
-          // https://hardhat.org/hardhat-network/#solidity-optimizer-support
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 2000,
           },
         },
       },
       {
         version: "0.6.4",
         settings: {
-          // https://hardhat.org/hardhat-network/#solidity-optimizer-support
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 20,
           },
         },
       },

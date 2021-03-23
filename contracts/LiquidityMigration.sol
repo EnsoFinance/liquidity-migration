@@ -11,7 +11,7 @@ interface PieDaoRegistry {
 
 contract LiquidityMigration {
     using SafeERC20 for IERC20;
-    
+
     enum Protocols { PieDao, dHedge } // Accepted protocols
     mapping(Protocols => address) public protocols; // Protocol => Factory address
 
