@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: WTFPL
 
 // solhint-disable-next-line compiler-version
 pragma solidity ^0.8.0;

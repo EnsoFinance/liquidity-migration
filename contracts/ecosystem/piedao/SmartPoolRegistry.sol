@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: WTFPL
+
 /**
  *Submitted for verification at Etherscan.io on 2020-12-15
  */

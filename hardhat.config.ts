@@ -1,15 +1,17 @@
+/**
+ * @type import('hardhat/config').HardhatUserConfig
+ */
+import { HardhatUserConfig } from "hardhat/types";
+import { NetworkUserConfig } from "hardhat/types";
+import { resolve } from "path";
+import { config as dotenvConfig } from "dotenv";
 import "@nomiclabs/hardhat-waffle";
-import "hardhat-typechain";
+import "@nomiclabs/hardhat-ethers";
 import "solidity-coverage";
-
+import "@typechain/hardhat";
 import "./tasks/accounts";
 import "./tasks/clean";
-
-import { resolve } from "path";
-
-import { config as dotenvConfig } from "dotenv";
-import { HardhatUserConfig } from "hardhat/config";
-import { NetworkUserConfig } from "hardhat/types";
+import "hardhat-etherscan-abi";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -38,6 +40,20 @@ if (!process.env.INFURA_API_KEY) {
   infuraApiKey = process.env.INFURA_API_KEY;
 }
 
+let archiveNode: string;
+if (!process.env.ARCHIVE_NODE) {
+  throw new Error("Please set your ARCHIVE_NODE url in a .env file");
+} else {
+  archiveNode = process.env.ARCHIVE_NODE;
+}
+
+let etherscanApiKey: string;
+if (!process.env.ETHERSCAN_API_KEY) {
+  throw new Error("Please set your ETHERSCAN_API_KEY in a .env file");
+} else {
+  etherscanApiKey = process.env.ETHERSCAN_API_KEY;
+}
+
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   const url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
   return {
@@ -56,15 +72,22 @@ const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
+      forking: {
+        url: archiveNode,
+        blockNumber: 12142007,
+      },
       accounts: {
         mnemonic,
       },
-      chainId: chainIds.hardhat,
+      chainId: chainIds.mainnet,
     },
     goerli: createTestnetConfig("goerli"),
     kovan: createTestnetConfig("kovan"),
     rinkeby: createTestnetConfig("rinkeby"),
     ropsten: createTestnetConfig("ropsten"),
+  },
+  etherscan: {
+    apiKey: etherscanApiKey,
   },
   paths: {
     artifacts: "./artifacts",
@@ -75,26 +98,36 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.2",
+        version: "0.6.12",
         settings: {
-          // https://hardhat.org/hardhat-network/#solidity-optimizer-support
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 20,
+          },
+        },
+      },
+      {
+        version: "0.8.2",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 2000,
           },
         },
       },
       {
         version: "0.6.4",
         settings: {
-          // https://hardhat.org/hardhat-network/#solidity-optimizer-support
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 20,
           },
         },
       },
     ],
+  },
+  mocha: {
+    timeout: 40000,
   },
   typechain: {
     outDir: "typechain",
