@@ -5,6 +5,7 @@ import hre from "hardhat";
 
 export interface Signers {
   admin: Signer;
+  default: Signer;
   impersonateAccount(account: string): Promise<Signer>;
 }
 

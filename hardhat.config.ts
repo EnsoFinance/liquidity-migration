@@ -1,6 +1,6 @@
+import "hardhat-etherscan-abi";
 import "@nomiclabs/hardhat-waffle";
 import "solidity-coverage";
-import "hardhat-etherscan-abi";
 import "@typechain/hardhat";
 import "./tasks/accounts";
 import "./tasks/clean";
