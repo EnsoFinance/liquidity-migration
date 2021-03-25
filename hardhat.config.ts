@@ -83,7 +83,7 @@ const config: HardhatUserConfig = {
     ropsten: createTestnetConfig("ropsten"),
   },
   etherscan: {
-    apiKey: etherscanApiKey
+    apiKey: etherscanApiKey,
   },
   paths: {
     artifacts: "./artifacts",
