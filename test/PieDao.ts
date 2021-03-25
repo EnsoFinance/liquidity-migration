@@ -1,5 +1,5 @@
 // import { ethers, hre } from "hardhat";
-const hre = require('hardhat');
+const hre = require("hardhat");
 const { ethers } = hre;
 import {
   SmartPoolRegistry,
@@ -25,23 +25,22 @@ describe("PieDao: Unit tests", function () {
     this.signers.admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
 
     this.pools = [];
-    for (let i = 0; i < 6; i ++){ 
-        const poolAddr = await this.smartPoolRegistry.connect(this.signers.default).entries(i);
-        // const pool = (await PCappedSmartPool__factory.connect(poolAddr, this.signers.default)) as PCappedSmartPool;
-        const proxy = await hre.ethers.getVerifiedContractAt(poolAddr);
-        const implementation = await proxy.connect(this.signers.default).getImplementation();
-        const pool = await hre.ethers.getVerifiedContractAt(implementation) as PCappedSmartPool;
-        expect(await this.smartPoolRegistry.connect(this.signers.default).inRegistry(poolAddr)).to.eq(true);
-        this.pools.push(pool);
-        console.log('PieDaoPool ', i, ': ', poolAddr);
-        console.log('Total supply: ', (await pool.connect(this.signers.admin).totalSupply()).toString());
+    for (let i = 0; i < 6; i++) {
+      const poolAddr = await this.smartPoolRegistry.connect(this.signers.default).entries(i);
+      // const pool = await hre.ethers.getVerifiedContractAt(poolAddr);
+      const proxy = await hre.ethers.getVerifiedContractAt(poolAddr);
+      const implementation = await proxy.connect(this.signers.default).getImplementation();
+      const pool = (await hre.ethers.getVerifiedContractAt(implementation)) as PCappedSmartPool;
+      pool.attach(proxy.address);
+      expect(await this.smartPoolRegistry.connect(this.signers.default).inRegistry(poolAddr)).to.eq(true);
+      this.pools.push(pool);
+      console.log("PieDaoPool ", i, ": ", poolAddr);
+      console.log("Total supply: ", (await pool.connect(this.signers.admin).totalSupply()).toString());
     }
-
   });
 
   describe("PoolRegistry", function () {
-    beforeEach(async function () {
-    });
+    beforeEach(async function () {});
 
     shouldMigrateFromSmartPool();
   });
