@@ -1,4 +1,6 @@
-import { ethers, waffle } from "hardhat";
+// import { ethers, hre } from "hardhat";
+const hre = require('hardhat');
+const { ethers } = hre;
 import {
   SmartPoolRegistry,
   SmartPoolRegistry__factory,
@@ -16,10 +18,7 @@ describe("PieDao: Unit tests", function () {
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
 
-    this.smartPoolRegistry = (await SmartPoolRegistry__factory.connect(
-      PIE_DAO_REGISTRY,
-      this.signers.admin,
-    )) as SmartPoolRegistry;
+    this.smartPoolRegistry = (await hre.ethers.getVerifiedContractAt(PIE_DAO_REGISTRY)) as SmartPoolRegistry;
     console.log("PieDaoRegistry: ", this.smartPoolRegistry.address);
 
     const pieDaoAdmin = await this.smartPoolRegistry.connect(this.signers.default).owner();
@@ -28,18 +27,20 @@ describe("PieDao: Unit tests", function () {
     this.pools = [];
     for (let i = 0; i < 6; i ++){ 
         const poolAddr = await this.smartPoolRegistry.connect(this.signers.default).entries(i);
-        const pool = (await PCappedSmartPool__factory.connect(poolAddr, this.signers.default)) as PCappedSmartPool;
+        // const pool = (await PCappedSmartPool__factory.connect(poolAddr, this.signers.default)) as PCappedSmartPool;
+        const proxy = await hre.ethers.getVerifiedContractAt(poolAddr);
+        const implementation = await proxy.connect(this.signers.default).getImplementation();
+        const pool = await hre.ethers.getVerifiedContractAt(implementation) as PCappedSmartPool;
         expect(await this.smartPoolRegistry.connect(this.signers.default).inRegistry(poolAddr)).to.eq(true);
         this.pools.push(pool);
         console.log('PieDaoPool ', i, ': ', poolAddr);
-        // console.log(await pool.connect(this.signers.admin).totalSupply());
+        console.log('Total supply: ', (await pool.connect(this.signers.admin).totalSupply()).toString());
     }
 
   });
 
   describe("PoolRegistry", function () {
     beforeEach(async function () {
-      // const etherscanAbi = await ethers.getVerifiedContractAt(PIE_DAO_REGISTRY);
     });
 
     shouldMigrateFromSmartPool();

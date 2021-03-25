@@ -1,6 +1,5 @@
-// import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { Signer } from "ethers";
-import { ethers, waffle } from "hardhat";
+import { waffle } from "hardhat";
 import hre from "hardhat";
 
 export interface Signers {

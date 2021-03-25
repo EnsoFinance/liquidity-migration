@@ -10,5 +10,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2018"
-  }
+  },
+  "include": ["./scripts", "./test"],
+  "files": ["./hardhat.config.ts"]
 }

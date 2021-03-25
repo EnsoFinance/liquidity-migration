@@ -1,13 +1,17 @@
-import "hardhat-etherscan-abi";
+/**
+ * @type import('hardhat/config').HardhatUserConfig
+ */
+import { HardhatUserConfig } from "hardhat/types";
+import { NetworkUserConfig } from "hardhat/types";
+import { resolve } from "path";
+import { config as dotenvConfig } from "dotenv";
 import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-ethers";
 import "solidity-coverage";
 import "@typechain/hardhat";
 import "./tasks/accounts";
 import "./tasks/clean";
-import { resolve } from "path";
-import { config as dotenvConfig } from "dotenv";
-import { HardhatUserConfig } from "hardhat/config";
-import { NetworkUserConfig } from "hardhat/types";
+import "hardhat-etherscan-abi";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -75,7 +79,7 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic,
       },
-      chainId: chainIds.hardhat,
+      chainId: chainIds.mainnet,
     },
     goerli: createTestnetConfig("goerli"),
     kovan: createTestnetConfig("kovan"),
