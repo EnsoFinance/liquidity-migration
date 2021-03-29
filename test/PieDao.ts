@@ -12,7 +12,7 @@ import { shouldMigrateFromSmartPool } from "./PieDao.behavior";
 import { PIE_DAO_REGISTRY } from "../src/constants";
 import { expect } from "chai";
 import { BigNumber, Signer } from "ethers";
-const { Contract } = ethers;
+const { ZERO_ADDRESS } = ethers;
 
 class SmartPoolBuilder {
   signer: Signer;
@@ -27,12 +27,22 @@ class SmartPoolBuilder {
     this.signer = signer;
   }
 
+  async getHolders(): Promise<string[]> {
+    const transferEvents  = this.contract.filters.Transfer(ZERO_ADDRESS, null, null);
+    console.log(transferEvents.topics?.values().next())
+    // this.contract.on(transferEvents, (_src: string, _dst: string, _amount: BigNumber) => {
+      // console.log(_src, _dst, _amount);
+    // });
+    return []
+  }
+
   async build(address: string): Promise<SmartPool> {
     this.contract = this.contract.attach(address);
     this.controller = await this.contract.connect(this.signer).getController();
     this.tokens = await this.contract.connect(this.signer).getTokens();
     this.supply = await this.contract.connect(this.signer).totalSupply();
     this.name = await this.contract.connect(this.signer).name();
+    await this.getHolders();
     return new SmartPool(this.contract, this.controller, this.supply, this.tokens, this.name);
   }
 }
@@ -73,7 +83,7 @@ describe("PieDao: Unit tests", function () {
     console.log("PieDaoRegistry: ", this.smartPoolRegistry.address);
 
     const pieDaoAdmin = await this.smartPoolRegistry.connect(this.signers.default).owner();
-    this.signers.admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
+    this.signers.admin = await (new MainnetSigner(pieDaoAdmin)).impersonateAccount();
 
     this.pools = [];
     this.pV2SmartPool = await hre.ethers.getVerifiedContractAt("0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435");

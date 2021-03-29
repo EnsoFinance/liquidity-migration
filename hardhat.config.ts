@@ -117,6 +117,9 @@ const config: HardhatUserConfig = {
       },
     ],
   },
+  mocha: {
+    timeout: 20000,
+  },
   typechain: {
     outDir: "typechain",
     target: "ethers-v5",
