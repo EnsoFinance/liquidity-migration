@@ -28,12 +28,12 @@ class SmartPoolBuilder {
   }
 
   async getHolders(): Promise<string[]> {
-    const transferEvents  = this.contract.filters.Transfer(ZERO_ADDRESS, null, null);
-    console.log(transferEvents.topics?.values().next())
+    const transferEvents = this.contract.filters.Transfer(ZERO_ADDRESS, null, null);
+    // console.log(transferEvents.topics?.values().next());
     // this.contract.on(transferEvents, (_src: string, _dst: string, _amount: BigNumber) => {
-      // console.log(_src, _dst, _amount);
+    // console.log(_src, _dst, _amount);
     // });
-    return []
+    return [];
   }
 
   async build(address: string): Promise<SmartPool> {
@@ -83,7 +83,7 @@ describe("PieDao: Unit tests", function () {
     console.log("PieDaoRegistry: ", this.smartPoolRegistry.address);
 
     const pieDaoAdmin = await this.smartPoolRegistry.connect(this.signers.default).owner();
-    this.signers.admin = await (new MainnetSigner(pieDaoAdmin)).impersonateAccount();
+    this.signers.admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
 
     this.pools = [];
     this.pV2SmartPool = await hre.ethers.getVerifiedContractAt("0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435");
@@ -97,12 +97,16 @@ describe("PieDao: Unit tests", function () {
       const proxy = await hre.ethers.getVerifiedContractAt(poolAddr);
       const implementation = await proxy.connect(this.signers.default).getImplementation();
       if (implementation === "0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181") {
-        const poolBuilder = new SmartPoolBuilder(this.signers.default, this.pV2SmartPool);
+        const poolBuilder = new SmartPoolBuilder(this.signers.default, this.PCappedSmartPool);
         const pool = await poolBuilder.build(poolAddr);
         this.pools.push(pool);
         pool.print(implementation);
-      } else {
+      } else if (implementation === "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435") {
+        // TODO: pv2smart pool
         console.log("implementation ", implementation);
+        const poolBuilder = new SmartPoolBuilder(this.signers.default, this.pV2SmartPool);
+        const pool = await poolBuilder.build(poolAddr);
+        this.pools.push(pool);
       }
     }
   });
