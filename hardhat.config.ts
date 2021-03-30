@@ -74,7 +74,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: archiveNode,
-        blockNumber: 12091539,
+        blockNumber: 12142007,
       },
       accounts: {
         mnemonic,
@@ -118,7 +118,7 @@ const config: HardhatUserConfig = {
     ],
   },
   mocha: {
-    timeout: 20000,
+    timeout: 40000,
   },
   typechain: {
     outDir: "typechain",

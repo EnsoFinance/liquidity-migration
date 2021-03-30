@@ -1,39 +1,41 @@
 // import { ethers, hre } from "hardhat";
 const hre = require("hardhat");
 const { ethers } = hre;
-import {
-  SmartPoolRegistry,
-  SmartPoolRegistry__factory,
-  PCappedSmartPool__factory,
-  PCappedSmartPool,
-} from "../typechain";
+import { SmartPoolRegistry, IPV2SmartPool, PCappedSmartPool, Impl } from "../typechain";
 import { Signers, MainnetSigner } from "../types";
 import { shouldMigrateFromSmartPool } from "./PieDao.behavior";
-import { PIE_DAO_REGISTRY } from "../src/constants";
+import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS } from "../src/constants";
 import { expect } from "chai";
-import { BigNumber, Signer } from "ethers";
+import { BigNumber, Contract, Signer } from "ethers";
 const { ZERO_ADDRESS } = ethers;
+
+type Implementation = PCappedSmartPool | IPV2SmartPool;
 
 class SmartPoolBuilder {
   signer: Signer;
-  contract: PCappedSmartPool;
+  contract: Implementation;
   controller?: string;
   supply?: BigNumber;
   tokens?: string[];
   name?: string;
+  holders?: Signer[];
 
-  constructor(signer: Signer, contract: PCappedSmartPool) {
+  constructor(signer: Signer, contract: Implementation) {
     this.contract = contract;
     this.signer = signer;
   }
 
-  async getHolders(): Promise<string[]> {
-    const transferEvents = this.contract.filters.Transfer(ZERO_ADDRESS, null, null);
-    // console.log(transferEvents.topics?.values().next());
-    // this.contract.on(transferEvents, (_src: string, _dst: string, _amount: BigNumber) => {
-    // console.log(_src, _dst, _amount);
-    // });
-    return [];
+  async getHolders(contract: string): Promise<Signer[]> {
+    const addresses = PIE_DAO_HOLDERS[contract];
+    if (addresses === undefined) {
+      throw Error(`Failed to find token holder for contract: ${contract} `);
+    }
+    const signers = [];
+    for (let i = 0; i < addresses.length; i++) {
+      const signer = await new MainnetSigner(addresses[i]).impersonateAccount();
+      signers.push(signer);
+    }
+    return signers as Signer[];
   }
 
   async build(address: string): Promise<SmartPool> {
@@ -42,24 +44,34 @@ class SmartPoolBuilder {
     this.tokens = await this.contract.connect(this.signer).getTokens();
     this.supply = await this.contract.connect(this.signer).totalSupply();
     this.name = await this.contract.connect(this.signer).name();
-    await this.getHolders();
-    return new SmartPool(this.contract, this.controller, this.supply, this.tokens, this.name);
+    this.name = this.name === undefined ? "No Name" : this.name;
+    this.holders = await this.getHolders(this.contract.address);
+    return new SmartPool(this.contract, this.controller, this.supply, this.tokens, this.name, this.holders);
   }
 }
 
 class SmartPool {
-  contract: PCappedSmartPool;
+  contract: Implementation;
   controller: string;
   supply: BigNumber;
   tokens: string[];
   name: string;
+  holders: Signer[];
 
-  constructor(contract: PCappedSmartPool, controller: string, supply: BigNumber, tokens: string[], name: string) {
+  constructor(
+    contract: Implementation,
+    controller: string,
+    supply: BigNumber,
+    tokens: string[],
+    name: string,
+    holders: Signer[],
+  ) {
     this.contract = contract;
     this.controller = controller;
     this.supply = supply;
     this.tokens = tokens;
     this.name = name;
+    this.holders = holders;
   }
 
   print(implementation?: string) {
@@ -79,14 +91,18 @@ describe("PieDao: Unit tests", function () {
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
 
-    this.smartPoolRegistry = (await hre.ethers.getVerifiedContractAt(PIE_DAO_REGISTRY)) as SmartPoolRegistry;
+    this.smartPoolRegistry = (await hre.ethers.getVerifiedContractAt(
+      FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS,
+    )) as SmartPoolRegistry;
     console.log("PieDaoRegistry: ", this.smartPoolRegistry.address);
 
     const pieDaoAdmin = await this.smartPoolRegistry.connect(this.signers.default).owner();
     this.signers.admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
 
     this.pools = [];
-    this.pV2SmartPool = await hre.ethers.getVerifiedContractAt("0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435");
+    this.pV2SmartPool = (await hre.ethers.getVerifiedContractAt(
+      "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435",
+    )) as IPV2SmartPool;
     this.PCappedSmartPool = (await hre.ethers.getVerifiedContractAt(
       "0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181",
     )) as PCappedSmartPool;
@@ -107,6 +123,7 @@ describe("PieDao: Unit tests", function () {
         const poolBuilder = new SmartPoolBuilder(this.signers.default, this.pV2SmartPool);
         const pool = await poolBuilder.build(poolAddr);
         this.pools.push(pool);
+        pool.print(implementation);
       }
     }
   });
