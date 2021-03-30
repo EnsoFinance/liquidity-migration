@@ -119,7 +119,7 @@ describe("PieDao: Unit tests", function () {
         pool.print(implementation);
       } else if (implementation === "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435") {
         // TODO: pv2smart pool
-        console.log("implementation ", implementation);
+        console.log("\n unknown implementation ", implementation, "\n");
         const poolBuilder = new SmartPoolBuilder(this.signers.default, this.pV2SmartPool);
         const pool = await poolBuilder.build(poolAddr);
         this.pools.push(pool);
