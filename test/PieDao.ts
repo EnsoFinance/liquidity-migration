@@ -1,13 +1,12 @@
-// import { ethers, hre } from "hardhat";
 const hre = require("hardhat");
 const { ethers } = hre;
-import { SmartPoolRegistry, IPV2SmartPool, PCappedSmartPool, Impl } from "../typechain";
+import { SmartPoolRegistry, IPV2SmartPool, PCappedSmartPool } from "../typechain";
 import { Signers, MainnetSigner } from "../types";
 import { shouldMigrateFromSmartPool } from "./PieDao.behavior";
-import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS } from "../src/constants";
+import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS, WETH} from "../src/constants";
 import { expect } from "chai";
-import { BigNumber, Contract, Signer } from "ethers";
-const { ZERO_ADDRESS } = ethers;
+import { BigNumber, Signer } from "ethers";
+import { deployPlatform } from "../src/utils"
 
 type Implementation = PCappedSmartPool | IPV2SmartPool;
 
@@ -52,7 +51,6 @@ class SmartPoolBuilder {
 
 class SmartPool {
   contract: Implementation;
-  // controller: string;
   supply: BigNumber;
   tokens: string[];
   name: string;
@@ -60,14 +58,12 @@ class SmartPool {
 
   constructor(
     contract: Implementation,
-    // controller: string,
     supply: BigNumber,
     tokens: string[],
     name: string,
     holders: Signer[],
   ) {
     this.contract = contract;
-    // this.controller = controller;
     this.supply = supply;
     this.tokens = tokens;
     this.name = name;
@@ -90,6 +86,8 @@ describe("PieDao: Unit tests", function () {
     this.signers = {} as Signers;
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
+
+    this.enso = await deployPlatform(this.signers.defualt, WETH, FACTORY_REGISTRIES.UNISWAP);
 
     this.smartPoolRegistry = (await hre.ethers.getVerifiedContractAt(
       FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS,

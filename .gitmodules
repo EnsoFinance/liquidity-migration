@@ -1,0 +1,3 @@
+[submodule "Monorepo"]
+	path = Monorepo
+	url = git@github.com:EnsoFinance/Monorepo.git

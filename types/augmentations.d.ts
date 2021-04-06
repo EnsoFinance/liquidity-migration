@@ -1,6 +1,5 @@
 // eslint-disable @typescript-eslint/no-explicit-any
 import { Fixture } from "ethereum-waffle";
-
 import { Signers } from "./";
 import { SmartPoolRegistry } from "../typechain";
 

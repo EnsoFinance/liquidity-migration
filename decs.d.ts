@@ -1,1 +1,1 @@
-declare module "bodhi-monorepo"
+declare module "@bodhi/contracts"
