@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: WTFPL
+
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 

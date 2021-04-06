@@ -3,7 +3,7 @@ import { BigNumber } from "ethers";
 import { ERC20__factory } from "../typechain";
 
 export function shouldMigrateFromSmartPool(): void {
-  it("should migrate smart pool funds to liquidity migration contract", async function () {
+  it("Token holder should be able to withdraw from pool", async function () {
     const pool = this.pools[0];
     const contract = await this.pools[0].contract;
     const holder = pool.holders[0];
@@ -17,6 +17,8 @@ export function shouldMigrateFromSmartPool(): void {
       "revert ERC777: transfer amount exceeds balance",
     );
 
+    const totalSupply = await contract.totalSupply();
+
     const tokenBalances = [];
     for (let i = 0; i < pool.tokens.length; i++) {
       const token = ERC20__factory.connect(pool.tokens[i], this.signers.default);
@@ -25,7 +27,7 @@ export function shouldMigrateFromSmartPool(): void {
     }
 
     const tx = await contract.connect(holder).exitPool(holderBalance);
-    const receipt = await tx.wait();
+    // const receipt = await tx.wait();
     expect(await contract.balanceOf(holder.getAddress())).to.eq(0);
 
     for (let i = 0; i < pool.tokens.length; i++) {
@@ -33,5 +35,6 @@ export function shouldMigrateFromSmartPool(): void {
       const balance = await token.balanceOf(holder.getAddress());
       expect(balance).to.gt(tokenBalances[i]);
     }
+    expect(await contract.totalSupply()).to.eq(totalSupply.sub(holderBalance));
   });
 }

@@ -1,6 +1,7 @@
 import { Signer } from "ethers";
 import { waffle } from "hardhat";
 import hre from "hardhat";
+// import  * as enso  from "bodhi-monorepo";
 
 export interface Signers {
   admin: Signer;
@@ -22,3 +23,15 @@ export class MainnetSigner {
     return waffle.provider.getSigner(this.address);
   }
 }
+
+export class EnsoPlatformBuilder{
+  signer: Signer;
+  constructor(signer: Signer) {
+    this.signer = signer;
+  }
+
+ async build() {
+  //  console.log(enso)
+  }
+}
+

@@ -11,6 +11,6 @@
     "strict": true,
     "target": "ES2018"
   },
-  "include": ["./scripts", "./test"],
+  "include": ["./scripts", "./test", "decs.d.ts"],
   "files": ["./hardhat.config.ts"]
 }

@@ -14,7 +14,7 @@ type Implementation = PCappedSmartPool | IPV2SmartPool;
 class SmartPoolBuilder {
   signer: Signer;
   contract: Implementation;
-  controller?: string;
+  // controller?: string;
   supply?: BigNumber;
   tokens?: string[];
   name?: string;
@@ -40,19 +40,19 @@ class SmartPoolBuilder {
 
   async build(address: string): Promise<SmartPool> {
     this.contract = this.contract.attach(address);
-    this.controller = await this.contract.connect(this.signer).getController();
+    // this.controller = await this.contract.connect(this.signer).getController();
     this.tokens = await this.contract.connect(this.signer).getTokens();
     this.supply = await this.contract.connect(this.signer).totalSupply();
     this.name = await this.contract.connect(this.signer).name();
     this.name = this.name === undefined ? "No Name" : this.name;
     this.holders = await this.getHolders(this.contract.address);
-    return new SmartPool(this.contract, this.controller, this.supply, this.tokens, this.name, this.holders);
+    return new SmartPool(this.contract, this.supply, this.tokens, this.name, this.holders);
   }
 }
 
 class SmartPool {
   contract: Implementation;
-  controller: string;
+  // controller: string;
   supply: BigNumber;
   tokens: string[];
   name: string;
@@ -60,14 +60,14 @@ class SmartPool {
 
   constructor(
     contract: Implementation,
-    controller: string,
+    // controller: string,
     supply: BigNumber,
     tokens: string[],
     name: string,
     holders: Signer[],
   ) {
     this.contract = contract;
-    this.controller = controller;
+    // this.controller = controller;
     this.supply = supply;
     this.tokens = tokens;
     this.name = name;
@@ -80,7 +80,7 @@ class SmartPool {
     if (implementation) console.log("  Implementation: ", implementation);
     console.log("  Supply: ", this.supply?.toString());
     console.log("  Tokens: ", this.tokens);
-    console.log("  Controller: ", this.controller);
+    // console.log("  Controller: ", this.controller);
     console.log("");
   }
 }
@@ -117,9 +117,10 @@ describe("PieDao: Unit tests", function () {
         const pool = await poolBuilder.build(poolAddr);
         this.pools.push(pool);
         pool.print(implementation);
-      } else if (implementation === "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435") {
-        // TODO: pv2smart pool
-        console.log("\n unknown implementation ", implementation, "\n");
+      } else if (
+        implementation === "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435" ||
+        implementation === "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435"
+      ) {
         const poolBuilder = new SmartPoolBuilder(this.signers.default, this.pV2SmartPool);
         const pool = await poolBuilder.build(poolAddr);
         this.pools.push(pool);
