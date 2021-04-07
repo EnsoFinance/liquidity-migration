@@ -58,7 +58,7 @@
     "smart-contracts",
     "solidity"
   ],
-  "license": "WTFPL",
+  "license": "GNU",
   "publishConfig": {
     "access": "public"
   },
