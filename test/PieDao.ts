@@ -1,9 +1,11 @@
 const hre = require("hardhat");
 const { ethers } = hre;
+import {deployPlatform} from "@bodhi/contracts/src/deploy"
 import { SmartPoolRegistry, IPV2SmartPool, PCappedSmartPool } from "../typechain";
 import { Signers, MainnetSigner } from "../types";
 import { shouldMigrateFromSmartPool } from "./PieDao.behavior";
-import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS, WETH} from "../src/constants";
+import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS, WETH } from "../src/constants";
+import * as LiquidityMigration from "../artifacts/contracts/LiquidityMigration.sol/LiquidityMigration.json"
 import { expect } from "chai";
 import { BigNumber, Signer } from "ethers";
 
@@ -12,7 +14,6 @@ type Implementation = PCappedSmartPool | IPV2SmartPool;
 class SmartPoolBuilder {
   signer: Signer;
   contract: Implementation;
-  // controller?: string;
   supply?: BigNumber;
   tokens?: string[];
   name?: string;
@@ -38,12 +39,16 @@ class SmartPoolBuilder {
 
   async build(address: string): Promise<SmartPool> {
     this.contract = this.contract.attach(address);
-    // this.controller = await this.contract.connect(this.signer).getController();
-    this.tokens = await this.contract.connect(this.signer).getTokens();
-    this.supply = await this.contract.connect(this.signer).totalSupply();
-    this.name = await this.contract.connect(this.signer).name();
+    [this.tokens, this.supply, this.name, this.holders] = await Promise.all([
+      await this.contract.connect(this.signer).getTokens(),
+      await this.contract.connect(this.signer).totalSupply(),
+      await this.contract.connect(this.signer).name(),
+      await this.getHolders(this.contract.address),
+    ]);
     this.name = this.name === undefined ? "No Name" : this.name;
-    this.holders = await this.getHolders(this.contract.address);
+    this.supply = this.supply === undefined ? BigNumber.from(0) : this.supply;
+    if (this.tokens === undefined) throw Error("Failed to get tokens");
+    if (this.supply === undefined) throw Error("Failed to get supply");
     return new SmartPool(this.contract, this.supply, this.tokens, this.name, this.holders);
   }
 }
@@ -55,13 +60,7 @@ class SmartPool {
   name: string;
   holders: Signer[];
 
-  constructor(
-    contract: Implementation,
-    supply: BigNumber,
-    tokens: string[],
-    name: string,
-    holders: Signer[],
-  ) {
+  constructor(contract: Implementation, supply: BigNumber, tokens: string[], name: string, holders: Signer[]) {
     this.contract = contract;
     this.supply = supply;
     this.tokens = tokens;
@@ -75,7 +74,6 @@ class SmartPool {
     if (implementation) console.log("  Implementation: ", implementation);
     console.log("  Supply: ", this.supply?.toString());
     console.log("  Tokens: ", this.tokens);
-    // console.log("  Controller: ", this.controller);
     console.log("");
   }
 }
@@ -107,19 +105,16 @@ describe("PieDao: Unit tests", function () {
       expect(await this.smartPoolRegistry.connect(this.signers.default).inRegistry(poolAddr)).to.eq(true);
       const proxy = await hre.ethers.getVerifiedContractAt(poolAddr);
       const implementation = await proxy.connect(this.signers.default).getImplementation();
-      if (implementation === "0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181") {
-        const poolBuilder = new SmartPoolBuilder(this.signers.default, this.PCappedSmartPool);
+      const abi =
+        implementation === "0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181" ? this.PCappedSmartPool : this.pV2SmartPool;
+      try {
+        const poolBuilder = new SmartPoolBuilder(this.signers.default, abi);
         const pool = await poolBuilder.build(poolAddr);
         this.pools.push(pool);
         pool.print(implementation);
-      } else if (
-        implementation === "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435" ||
-        implementation === "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435"
-      ) {
-        const poolBuilder = new SmartPoolBuilder(this.signers.default, this.pV2SmartPool);
-        const pool = await poolBuilder.build(poolAddr);
-        this.pools.push(pool);
-        pool.print(implementation);
+      } catch (e) {
+        console.error("Couldnt handle: ", implementation); //Experi-pie?
+        continue;
       }
     }
   });

@@ -45,12 +45,13 @@
     ganache-cli "^6.7.0"
     global "^4.4.0"
 
-"@bodhi/contracts@file:Monorepo/packages/contracts/":
+"@bodhi/contracts@file:../Monorepo/packages/contracts":
   version "0.1.0"
   dependencies:
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"
     "@chainlink/contracts" "~0.1.6"
     "@openzeppelin/contracts" "~3.3.0"
+    "@typechain/hardhat" "^1.0.1"
     "@uniswap/lib" "~4.0.1-alpha"
     "@uniswap/v2-core" "~1.0.1"
     "@uniswap/v2-periphery" "~1.1.0-beta.0"

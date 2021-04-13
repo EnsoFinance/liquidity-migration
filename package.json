@@ -10,7 +10,7 @@
     "solc": "0.8.1"
   },
   "devDependencies": {
-    "@bodhi/contracts": "file:Monorepo/packages/contracts/",
+    "@bodhi/contracts": "file:../Monorepo/packages/contracts",
     "@commitlint/cli": "^9.1.2",
     "@commitlint/config-conventional": "^9.1.2",
     "@ethersproject/abstract-signer": "^5.0.6",
@@ -58,7 +58,7 @@
     "smart-contracts",
     "solidity"
   ],
-  "license": "GNU",
+  "license": "GPLv3",
   "publishConfig": {
     "access": "public"
   },
