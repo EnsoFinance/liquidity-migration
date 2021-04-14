@@ -46,7 +46,7 @@
     global "^4.4.0"
 
 "@bodhi/contracts@file:../Monorepo/packages/contracts":
-  version "0.1.0"
+  version "0.1.1"
   dependencies:
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"
     "@chainlink/contracts" "~0.1.6"

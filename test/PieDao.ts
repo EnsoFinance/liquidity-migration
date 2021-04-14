@@ -1,11 +1,9 @@
 const hre = require("hardhat");
 const { ethers } = hre;
-import {deployPlatform} from "@bodhi/contracts/src/deploy"
 import { SmartPoolRegistry, IPV2SmartPool, PCappedSmartPool } from "../typechain";
 import { Signers, MainnetSigner } from "../types";
 import { shouldMigrateFromSmartPool } from "./PieDao.behavior";
 import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS, WETH } from "../src/constants";
-import * as LiquidityMigration from "../artifacts/contracts/LiquidityMigration.sol/LiquidityMigration.json"
 import { expect } from "chai";
 import { BigNumber, Signer } from "ethers";
 
