@@ -6,6 +6,7 @@ import { shouldMigrateFromSmartPool } from "./PieDao.behavior";
 import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS, WETH } from "../src/constants";
 import { expect } from "chai";
 import { BigNumber, Signer } from "ethers";
+import { LiquidityMigrationBuilder } from "../src/liquditymigration"
 
 type Implementation = PCappedSmartPool | IPV2SmartPool;
 
@@ -81,6 +82,8 @@ describe("PieDao: Unit tests", function () {
     this.signers = {} as Signers;
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
+
+    this.liquidityMigration = await new LiquidityMigrationBuilder(this.signers.admin).mainnet();
 
     this.smartPoolRegistry = (await hre.ethers.getVerifiedContractAt(
       FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS,

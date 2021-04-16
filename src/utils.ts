@@ -9,3 +9,5 @@ export type AaveTokenList = {
 }
 
 const erc20s = () => JSON.parse('./tokenlist.json') as AaveTokenList[];
+
+export enum Networks { Mainnet, LocalTestnet, ExternalTestnet};
