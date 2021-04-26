@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "declaration": true,
+    "declaration": false,
     "esModuleInterop": true,
     "lib": ["ES2018"],
     "module": "CommonJS",
@@ -11,6 +11,7 @@
     "strict": true,
     "target": "ES2018"
   },
-  "include": ["./scripts", "./test", "./decs.d.ts", "src/utils.ts"],
+  "include": ["./scripts/*", "./test", "./src/*"],
   "files": ["./hardhat.config.ts"]
 }
+

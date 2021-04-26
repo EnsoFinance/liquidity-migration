@@ -27,7 +27,7 @@ export function shouldMigrateFromSmartPool(): void {
     }
 
     const tx = await contract.connect(holder).exitPool(holderBalance);
-    const receipt = await tx.wait()
+    await tx.wait();
     // const receipt = await tx.wait();
     expect(await contract.balanceOf(await holder.getAddress())).to.eq(0);
 

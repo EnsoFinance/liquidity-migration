@@ -3,14 +3,15 @@ const { ethers } = hre;
 import { SmartPoolRegistry, IPV2SmartPool, PCappedSmartPool } from "../typechain";
 import { Signers, MainnetSigner } from "../types";
 import { shouldMigrateFromSmartPool } from "./PieDao.behavior";
-import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS, WETH } from "../src/constants";
+import { FACTORY_REGISTRIES, PIE_DAO_HOLDERS} from "../src/constants";
 import { expect } from "chai";
 import { BigNumber, Signer } from "ethers";
 import { LiquidityMigrationBuilder } from "../src/liquditymigration"
+import { StrategyBuilder, Strategy } from './Strategy'
 
 type Implementation = PCappedSmartPool | IPV2SmartPool;
 
-class SmartPoolBuilder {
+class SmartPoolBuilder implements StrategyBuilder {
   signer: Signer;
   contract: Implementation;
   supply?: BigNumber;
@@ -52,7 +53,7 @@ class SmartPoolBuilder {
   }
 }
 
-class SmartPool {
+class SmartPool implements Strategy {
   contract: Implementation;
   supply: BigNumber;
   tokens: string[];
@@ -87,7 +88,7 @@ describe("PieDao: Unit tests", function () {
 
     this.smartPoolRegistry = (await hre.ethers.getVerifiedContractAt(
       FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS,
-    )) as SmartPoolRegistry;
+    ));
     console.log("PieDaoRegistry: ", this.smartPoolRegistry.address);
 
     const pieDaoAdmin = await this.smartPoolRegistry.connect(this.signers.default).owner();

@@ -80,6 +80,7 @@ contract LiquidityMigration {
 
     function getMigrationData(AcceptedProtocols protocol, address staker, address pool, uint amount) public view returns (bytes memory calls) {
         if (protocol == AcceptedProtocols.PieDao) {
+            // approve generic router
             calls = abi.encodeWithSelector(PieDaoSmartPool(pool).exitPool.selector, amount);
         }
     }

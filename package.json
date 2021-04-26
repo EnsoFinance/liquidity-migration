@@ -3,7 +3,7 @@
   "description": "Contracts to facilitate the migration of liquidity from other platforms",
   "version": "1.0.0",
   "engines": {
-    "node": ">=0.12"
+    "node": ">=0.10"
   },
   "dependencies": {
     "@bodhi/contracts": "file:../Monorepo/packages/contracts/",
