@@ -5,7 +5,7 @@ import hre from "hardhat";
 export interface Signers {
   admin: Signer;
   default: Signer;
-  impersonateAccount(account: string): Promise<Signer>;
+  // impersonateAccount(account: string): Promise<Signer>;
 }
 
 export class MainnetSigner {
@@ -22,14 +22,3 @@ export class MainnetSigner {
     return waffle.provider.getSigner(this.address);
   }
 }
-
-export class EnsoPlatformBuilder{
-  signer: Signer;
-  constructor(signer: Signer) {
-    this.signer = signer;
-  }
-
- async build() {
-  }
-}
-

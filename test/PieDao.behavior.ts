@@ -4,8 +4,8 @@ import { ERC20__factory } from "../typechain";
 
 export function shouldMigrateFromSmartPool(): void {
   it("Token holder should be able to withdraw from pool", async function () {
-    const pool = this.pools[0];
-    const contract = await this.pools[0].contract;
+    const pool = this.pieDaoEnv.pools[0];
+    const contract = await this.pieDaoEnv.pools[0].contract;
     const holder = pool.holders[0];
     const adminBalance = await contract.balanceOf(await this.signers.admin.getAddress());
     expect(adminBalance).to.eq(BigNumber.from(0));
@@ -29,7 +29,7 @@ export function shouldMigrateFromSmartPool(): void {
     const tx = await contract.connect(holder).exitPool(holderBalance);
     await tx.wait();
     // const receipt = await tx.wait();
-    expect(await contract.balanceOf(await holder.getAddress())).to.eq(0);
+    expect(await contract.balanceOf(await holder.getAddress())).to.eq(BigNumber.from(0));
 
     for (let i = 0; i < pool.tokens.length; i++) {
       const token = ERC20__factory.connect(pool.tokens[i], this.signers.default);

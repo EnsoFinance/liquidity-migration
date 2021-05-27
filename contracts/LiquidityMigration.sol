@@ -1,104 +1,149 @@
-
 //SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.2;
 
-
 // Erc20
 import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
+import { IAdapter } from "./interfaces/IAdapter.sol";
 
-// Enso::StrategyController
-// TODO: update enso interfaces to solidity >8
-// import { StrategyController, GenericRouter } from "@bodhi/contracts/contracts/StrategyController.sol";
-// interface StrategyController {
-
-// }
-
-// PieDao::SmartPoolRegistry
-interface PieDaoRegistry {
-    function inRegistry(address pool) external view returns (bool);
-}
-
-// PieDao::PV2SmartPool
-// PieDao::PCappedSmartPool
-interface PieDaoSmartPool {
-       function exitPool(uint256 _amount) external;
-}
-
+// TODO: Make external adapters? vs Store individual pools vs Verify pool in registry
 contract LiquidityMigration {
     using SafeERC20 for IERC20;
 
-    address immutable public genericRouter;
+    enum AcceptedProtocols { PieDao, DPI, TokenSets } // Accepted protocols
 
-    enum AcceptedProtocols{ PieDao, dHedge } // Accepted protocols
-    mapping(AcceptedProtocols => address) public protocols; // Protocol => Factory address
+    struct EnsoContracts {
+        address genericRouter;
+        address strategyController;
+    }
 
-    // Liquidity to migrate
+    // External strategy tokens
     struct Stake {
         uint256 amount;
-        address poolToken; // TODO: save to storage or reconstruct event logs? (prove with sha3(sender, token) )
+        address strategyToken; // TODO: save to storage or reconstruct event logs? (prove with sha3(sender, token) )
         AcceptedProtocols protocol;
     }
-    mapping(address => mapping (address => Stake)) public stakes;   // stakes[sender][poolToken] = Stake
 
-    constructor(AcceptedProtocols[] memory protos, address[] memory factories, address _genericRouter) {
-        require(protos.length == factories.length, "LM: Inputs different length");
-        for (uint256 i = 0; i < protos.length; i++) {
-            protocols[protos[i]] = factories[i];
+    struct Adapters {
+        AcceptedProtocols protocol;
+        address adapter;
+    }
+
+    EnsoContracts public ensoContracts;
+    mapping(address => mapping(address => Stake)) public stakes; // stakes[sender][strategyToken] = Stake
+    mapping(AcceptedProtocols => address) public adapters;
+
+    constructor(Adapters[] memory acceptedAdapters, EnsoContracts memory contracts) {
+        for (uint i = 0; i < acceptedAdapters.length; i++){
+            adapters[acceptedAdapters[i].protocol] = acceptedAdapters[i].adapter;
         }
-        genericRouter = _genericRouter;
+        ensoContracts = contracts;
     }
 
     function stakeLpTokens(
-        address poolToken,
+        address strategyToken,
         uint256 amount,
         AcceptedProtocols protocol
     ) public {
-        require(protocols[protocol] != address(0), "LM: Protocol not registered");
-        require(inRegistry(poolToken, protocol), "LM: Pool not in protocol");
-        IERC20(poolToken).safeTransferFrom(msg.sender, address(this), amount);
-        Stake storage stake = stakes[msg.sender][poolToken];
+        IAdapter adapter = IAdapter(adapters[protocol]);
+        require(address(adapter) != address(0), "LM: Protocol not registered");
+        require(adapter.isInputToken(strategyToken), "LM: Pool not in protocol");
+        IERC20(strategyToken).safeTransferFrom(msg.sender, address(this), amount);
+        Stake storage stake = stakes[msg.sender][strategyToken];
         stake.amount += amount;
         stake.protocol = protocol;
-        stake.poolToken = poolToken;
+        stake.strategyToken = strategyToken;
     }
 
     function migrate(
         address ensoStrategy,
-        address poolToken,
-        AcceptedProtocols protocol
+        address strategyToken,
+        AcceptedProtocols protocol,
+        bytes memory migrationData,
+        uint256 minimumAmount
     ) public {
-        require(protocols[protocol] != address(0), "LM: Protocol not registered");
-        require(inRegistry(poolToken, protocol), "LM: Pool not in protocol");
-        Stake storage stake = stakes[msg.sender][poolToken];
-        bytes memory calls = getMigrationData(protocol, msg.sender, poolToken, stake.amount);
-        require(IERC20(poolToken).transfer(genericRouter, stake.amount));
-
-        // approve pool token for generic router
-        // encode exitPool() call from generic router
-        // transfer tokens to new strategy
+        IAdapter adapter = IAdapter(adapters[protocol]);
+        require(address(adapter) != address(0), "LM: Protocol not registered");
+        require(adapter.isInputToken(strategyToken), "LM: Pool not in protocol");
+        EnsoStrategy enso = EnsoStrategy(ensoStrategy);
+        require(enso.controller() == ensoContracts.strategyController, "Not Enso strategy");
+        uint256 balanceBefore = IERC20(ensoStrategy).balanceOf(address(this));
+        Stake storage stake = stakes[msg.sender][strategyToken];
+        require(stake.strategyToken == strategyToken, "Wrong token");
+        uint256 stakeAmount = stake.amount;
+        delete stakes[msg.sender][strategyToken];
+        IERC20(strategyToken).safeTransfer(ensoContracts.genericRouter, stakeAmount);
+        // TODO: verify it is an enso strategy
+        StrategyController(ensoContracts.strategyController).deposit(
+            EnsoStrategy(ensoStrategy),
+            IStrategyRouter(ensoContracts.genericRouter),
+            migrationData
+        );
+        uint256 balanceAfter = IERC20(ensoStrategy).balanceOf(address(this));
+        require(balanceAfter > balanceBefore, "Didnt receive Enso strategy tokens");
+        uint256 gained = balanceAfter - balanceBefore;
+        require(gained > minimumAmount, "Didnt receive enough Enso strategy tokens");
+        IERC20(ensoStrategy).safeTransfer(msg.sender, balanceAfter - balanceBefore);
     }
 
-    function getMigrationData(AcceptedProtocols protocol, address staker, address pool, uint amount) public view returns (bytes memory calls) {
-        if (protocol == AcceptedProtocols.PieDao) {
-            // approve generic router
-            calls = abi.encodeWithSelector(PieDaoSmartPool(pool).exitPool.selector, amount);
-        }
+    function getStake(address account, address strategyToken) public view returns (Stake memory stake) {
+        stake = stakes[account][strategyToken];
     }
 
-    function getStake(address account, address poolToken) public view returns (Stake memory stake) {
-        stake = stakes[account][poolToken];
-    }
+}
 
-    // function getStake(address account, address poolToken) public view returns (Stake memory stake) {
-    //     stake = stakes[keccak256(abi.encodePacked(account, poolToken))];
-    // }
+// Enso::StrategyController
+interface StrategyController {
+    function deposit(
+        EnsoStrategy strategy,
+        IStrategyRouter router,
+        bytes memory data
+    ) external payable;
+}
 
-    function inRegistry(address poolToken, AcceptedProtocols protocol) public view returns (bool) {
-        if (protocol == AcceptedProtocols.PieDao) {
-            return PieDaoRegistry(protocols[protocol]).inRegistry(poolToken);
-        } else {
-            // TODO: complete for other protocols
-            return false;
-        }
-    }
+// TODO: does the external contract use the provided ABI or it's local version
+interface IStrategyRouter {
+    function sellTokens(
+        address strategy,
+        address[] memory tokens,
+        address[] memory routers
+    ) external;
+
+    function buyTokens(
+        address strategy,
+        address[] memory tokens,
+        address[] memory routers
+    ) external;
+
+    function deposit(address strategy, bytes calldata data) external;
+
+    function controller() external view returns (address);
+
+    function weth() external view returns (address);
+}
+
+// Enso::Strategy
+interface EnsoStrategy {
+    function approveTokens(address account, uint256 amount) external;
+
+    function setStructure(address[] memory newItems, uint256[] memory newPercentages) external;
+
+    function withdraw(uint256 amount) external;
+
+    function mint(address account, uint256 amount) external;
+
+    function items() external view returns (address[] memory);
+
+    function percentage(address token) external view returns (uint256);
+
+    function isWhitelisted(address account) external view returns (bool);
+
+    function controller() external view returns (address);
+
+    function manager() external view returns (address);
+
+    function oracle() external view returns (address);
+
+    function whitelist() external view returns (address);
+
+    function verifyStructure(address[] memory newTokens, uint256[] memory newPercentages) external pure returns (bool);
 }

@@ -1,8 +1,8 @@
-// const hre = require("hardhat");
-// const { waffle } = hre;
+const hre = require("hardhat");
+const { waffle } = hre;
 import * as constants from "./constants";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import {  LiquidityMigration } from "../typechain";
+import {  LiquidityMigration, LiquidityMigration__factory} from "../typechain";
 import { EnsoBuilder, EnsoEnvironment } from '@bodhi/contracts'
 
 export enum AcceptedProtocols {
@@ -22,15 +22,15 @@ export class LiquidityMigrationBuilder {
   }
 
   async mainnet() {
-    // const ensoEnv = await new EnsoBuilder(this.signer).mainnet().build();
-    // console.log(ensoEnv)
-    // const LiquidityMigrationFactory = (await waffle.getContractFactory(
-    //   "LiquidityMigration",
-    // )) as LiquidityMigration__factory;
-    // this.liquidityMigration = await LiquidityMigrationFactory.deploy(
+    const ensoEnv = await new EnsoBuilder(this.signer).testnet().addRouter('generic').build();
+    console.log(ensoEnv)
+    const LiquidityMigrationFactory = (await waffle.getContractFactory(
+      "LiquidityMigration",
+    )) as LiquidityMigration__factory;
+    // const tx = await LiquidityMigrationFactory.deploy(
     //   ACCEPTED_PROTOCOLS,
     //   PROTOCOL_FACTORIES,
-    //   ensoEnv.routers,
+    //   ensoEnv.routers.generic,
     // );
 
     // todo: get enso env
