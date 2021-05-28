@@ -12,7 +12,7 @@ describe("PieDao: Unit tests", function () {
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
 
-    this.liquidityMigration = await new LiquidityMigrationBuilder(this.signers.admin).mainnet();
+    // this.liquidityMigration = await new LiquidityMigrationBuilder(this.signers.admin).mainnet();
     this.pieDaoEnv = await new PieDaoEnvironmentBuilder(this.signers.default).connect()
 
   });

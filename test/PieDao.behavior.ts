@@ -7,13 +7,13 @@ export function shouldMigrateFromSmartPool(): void {
     const pool = this.pieDaoEnv.pools[0];
     const contract = await this.pieDaoEnv.pools[0].contract;
     const holder = pool.holders[0];
-    const adminBalance = await contract.balanceOf(await this.signers.admin.getAddress());
+    const adminBalance = await contract.balanceOf(await this.pieDaoEnv.admin.getAddress());
     expect(adminBalance).to.eq(BigNumber.from(0));
 
     const holderBalance = await contract.balanceOf(await holder.getAddress());
-    expect(holderBalance).to.gt(BigNumber.from(0));
+    expect(holderBalance).to.be.gt(BigNumber.from(0));
 
-    await expect(contract.connect(this.signers.admin).joinPool(100)).to.be.revertedWith(
+    await expect(contract.connect(this.pieDaoEnv.admin).joinPool(100)).to.be.revertedWith(
       "revert ERC777: transfer amount exceeds balance",
     );
 

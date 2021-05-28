@@ -22,7 +22,8 @@ export class LiquidityMigrationBuilder {
   }
 
   async mainnet() {
-    const ensoEnv = await new EnsoBuilder(this.signer).testnet().addRouter('generic').build();
+    // TODO: fix deploy error
+    const ensoEnv = await new EnsoBuilder(this.signer).testnet().build();
     console.log(ensoEnv)
     const LiquidityMigrationFactory = (await waffle.getContractFactory(
       "LiquidityMigration",
