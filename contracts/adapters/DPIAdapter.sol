@@ -51,7 +51,9 @@ contract DPIAdapter {
 
     // state variables
     ISetBasicIsstanceModuleAddress public setBasicIssuanceModule;
-    // address[] public components;
+    uint[] public pre;
+    uint[] public post;
+    
     
     // events
     event RedemptionSuccessful();
@@ -73,22 +75,22 @@ contract DPIAdapter {
     function migrateLiquidity(address tokenSetAddress, uint256 quantity, address toWhom) external returns (bool){
         IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
         address[] memory components = ISetToken(tokenSetAddress).getComponents();
-        uint[] memory pre = new uint[](components.length);
-        for (uint256 i = 0; i < components.length; i++) {
-                pre[i]=IERC20(components[i]).balanceOf(address(this));
-        }
+        // uint[] memory pre = new uint[](components.length);
+        // for (uint256 i = 0; i < components.length; i++) {
+        //         pre[i]=IERC20(components[i]).balanceOf(address(this));
+        // }
         setBasicIssuanceModule.redeem(
             tokenSetAddress,
             quantity,
             toWhom
         );
-        uint[] memory post = new uint[](components.length);
+        // uint[] memory post = new uint[](components.length);
         for (uint256 i = 0; i < components.length; i++) {
-                post[i]=IERC20(components[i]).balanceOf(address(this));
+                post.push(IERC20(components[i]).balanceOf(address(this)));
         }
-        for (uint256 i = 0; i < components.length; i++) {
-            require((post[i]>pre[i]), "DPIA: Redemption issue");
-        }
+        // for (uint256 i = 0; i < components.length; i++) {
+        //     require((post[i]>pre[i]), "DPIA: Redemption issue");
+        // }
         emit RedemptionSuccessful();
         return true;
         //TODO: What to do after the tokens are transferred over
