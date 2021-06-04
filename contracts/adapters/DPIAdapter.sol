@@ -51,8 +51,6 @@ contract DPIAdapter {
 
     // state variables
     ISetBasicIsstanceModuleAddress public setBasicIssuanceModule;
-    // uint[] public pre;
-    // uint[] public post;
     
     
     // events
@@ -89,7 +87,7 @@ contract DPIAdapter {
                 post[i]=IERC20(components[i]).balanceOf(address(this));
         }
         for (uint256 i = 0; i < components.length; i++) {
-            require((post[i]>pre[i]), "DPIA: Redemption issue");
+            require((post[i]>=pre[i]), "DPIA: Redemption issue");
         }
         emit RedemptionSuccessful();
         return true;
