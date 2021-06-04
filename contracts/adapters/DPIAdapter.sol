@@ -51,6 +51,7 @@ contract DPIAdapter {
 
     // state variables
     ISetBasicIsstanceModuleAddress public setBasicIssuanceModule;
+    address[] public components;
     
     // events
     event RedemptionSuccessful();
@@ -69,18 +70,21 @@ contract DPIAdapter {
     /// @param tokenSetAddress is the address of the Token Set (eg DPI) which needs to be redeemed
     /// @param quantity of the coins that needs to be redeemed
     /// @param toWhom is the address to which all the underlying assets need to be sent at the time redemption
-    function migrateLiquidity(address tokenSetAddress, uint256 quantity, address toWhom) external returns (bool){
-        IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
-        // address[] memory components = ISetToken(tokenSetAddress).getComponents();
+    function migrateLiquidity(address tokenSetAddress, uint256 quantity, address toWhom) external returns (address[] memory){
+        // IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
+        components = ISetToken(tokenSetAddress).getComponents();
+        return components;
         // uint256[] memory preRedeemComponentBalances;
         // for (uint256 i = 0; i < components.length; i++) {
         //         preRedeemComponentBalances[i]=IERC20(components[i]).balanceOf(address(this));
         // }
-        setBasicIssuanceModule.redeem(
-            tokenSetAddress,
-            quantity,
-            toWhom
-        );
+        // return preRedeemComponentBalances;
+        
+        // setBasicIssuanceModule.redeem(
+        //     tokenSetAddress,
+        //     quantity,
+        //     toWhom
+        // );
         // uint256[] memory postRedeemComponentBalances;
         // for (uint256 i = 0; i < components.length; i++) {
         //         postRedeemComponentBalances[i]=IERC20(components[i]).balanceOf(address(this));
@@ -88,8 +92,7 @@ contract DPIAdapter {
         // for (uint256 i = 0; i < components.length; i++) {
         //     require((postRedeemComponentBalances[i]>preRedeemComponentBalances[i]), "DPIA: Redemption issue");
         // }
-        emit RedemptionSuccessful();
-        return true;
+        // emit RedemptionSuccessful();
         //TODO: What to do after the tokens are transferred over
 
     // controllingFunctions
