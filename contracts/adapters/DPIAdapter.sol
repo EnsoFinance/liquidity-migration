@@ -43,7 +43,7 @@ contract DPIAdapter {
 
     // modifers
     modifier onlyManager {
-        require (msg.sender == manager);
+        require (msg.sender == manager, "DPIA: not authorised");
         _;
     }
 
@@ -73,10 +73,7 @@ contract DPIAdapter {
     // TODO: working on this function call
     function execute(bytes calldata inputData) external override {
         (address tokenSetAddress, uint256 quantity, address toWhom) = abi.decode(inputData, (address, uint256, address));
-        require(migrateLiquidity(address tokenSetAddress, uint256 quantity, address toWhom));
-    }
-
-    function migrateLiquidity(address tokenSetAddress, uint256 quantity, address toWhom) internal returns (bool){
+        require (isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
         IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
         address[] memory components = ISetToken(tokenSetAddress).getComponents();
         uint[] memory pre = new uint[](components.length);
@@ -96,11 +93,17 @@ contract DPIAdapter {
             require((post[i]>=pre[i]), "DPIA: Redemption issue");
         }
         emit RedemptionSuccessful();
-        return true;
-
+    }
+    function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
+        (address tokenSetAddress, uint256 quantity, address toWhom) = abi.decode(inputData, (address, uint256, address));
+        require (isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
+        bytes memory data = abi.encodeWithSelector(PieDaoPool(inputToken).exitPool.selector, amount);
+        bytes memory data = abi.encodeWithSelector(setBasicIssuanceModule.redeem.selector, tokenSetAddress, quantity, toWhom);
+        calls[0] = Call(payable(setBasicIssuanceModule), data, 0);
+    }
 
     // controllingFunctions
-    function addAcceptedTokensToWhitelist(address tokenAddress) onlyManager public returns (bool) {
+    function addAcceptedTokensToWhitelist(address tokenAddress) public onlyManager returns (bool) {
         whitelistedTokens(tokenAddress) = 1;
     }
 }
