@@ -247,7 +247,7 @@
 
 "@enso/contracts@git+ssh://git@github.com:EnsoFinance/contracts-temp.git":
   version "0.1.3"
-  resolved "git+ssh://git@github.com:EnsoFinance/contracts-temp.git#a90531954f091d34364e2c2035551ba480fa60a2"
+  resolved "git+ssh://git@github.com:EnsoFinance/contracts-temp.git#d0ad27514e49215f820def00276e22f1f2436524"
   dependencies:
     "@0xsequence/token-directory" "1.1.13"
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"
@@ -2877,9 +2877,9 @@ camelcase@^6.0.0:
   integrity sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==
 
 caniuse-lite@^1.0.30000844:
-  version "1.0.30001235"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001235.tgz#ad5ca75bc5a1f7b12df79ad806d715a43a5ac4ed"
-  integrity sha512-zWEwIVqnzPkSAXOUlQnPW2oKoYb2aLQ4Q5ejdjBcnH63rfypaW34CxaeBn1VMya2XaEU3P/R2qHpWyj+l0BT1A==
+  version "1.0.30001236"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001236.tgz#0a80de4cdf62e1770bb46a30d884fc8d633e3958"
+  integrity sha512-o0PRQSrSCGJKCPZcgMzl5fUaj5xHe8qA2m4QRvnyY4e1lITqoNkr7q/Oh1NcpGSy0Th97UZ35yoKcINPoq7YOQ==
 
 caseless@~0.12.0:
   version "0.12.0"
@@ -3902,9 +3902,9 @@ ee-first@1.1.1:
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
 electron-to-chromium@^1.3.47:
-  version "1.3.750"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.750.tgz#7e5ef6f478316b0bd656af5942fe502610e97eaf"
-  integrity sha512-Eqy9eHNepZxJXT+Pc5++zvEi5nQ6AGikwFYDCYwXUFBr+ynJ6pDG7MzZmwGYCIuXShLJM0n4bq+aoKDmvSGJ8A==
+  version "1.3.751"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.751.tgz#e0776481f7a62db61d7bb2132b9627398d54c4e9"
+  integrity sha512-+qEPTSrwAwfHiavFmbTJ8np1NUYFmeXaDUxIj1+x1zOsYDBgWnl5Z8GeVZqis1Ljp4BlRqoZygRsez2Lg9DJgw==
 
 elliptic@6.5.3:
   version "6.5.3"
@@ -5817,7 +5817,7 @@ hard-rejection@^2.1.0:
   resolved "https://registry.yarnpkg.com/hard-rejection/-/hard-rejection-2.1.0.tgz#1c6eda5c1685c63942766d79bb40ae773cecd883"
   integrity sha512-VIZB+ibDhx7ObhAe7OVtoEbuP4h/MuOTHJ+J8h/eBXotJYl0fBgR72xDFCKgIh22OJZIOVNxBMWuhAr10r8HdA==
 
-hardhat-etherscan-abi@0.1.1:
+hardhat-etherscan-abi@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/hardhat-etherscan-abi/-/hardhat-etherscan-abi-0.1.1.tgz#5f2c0460aea1a649c2188619405f70a9ea1e019b"
   integrity sha512-KeFLtKFo/AxWHbfcQB9HznaVWJSDgYBFSPNm+f0CYgRhPa8qYlPfIvgeqNLmz67u+T7gk25BwEv9SzkVYHLUZQ==

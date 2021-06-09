@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { BigNumber, Contract, Event } from "ethers";
-import { IStrategy__factory, ERC20__factory } from "../typechain";
-import { StrategyBuilder, Position } from "@enso/contracts"
-import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants"
+import { ERC20__factory } from "../typechain";
+import { StrategyBuilder, Multicall, encodeSettleTransfer } from "@enso/contracts"
+import { AcceptedProtocols } from "../src/liquiditymigration"
 
 export function shouldMigrateFromSmartPool(): void {
   it("Token holder should be able to withdraw from pool", async function () {
@@ -43,45 +43,52 @@ export function shouldMigrateFromSmartPool(): void {
   });
 }
 
-export function shouldCreateStrategy(): void {
-  it("Should create strategy based on pool", async function () {
+export function shouldStakeLPToken(): void {
+  it("Token holder should be able to stake LP token", async function () {
     const pool = this.pieDaoEnv.pools[0];
     const contract = await pool.contract;
-    const vault = await contract.getBPool();
+    const holder = pool.holders[0];
+    const holderAddress = await holder.getAddress()
 
-    const positions = [] as Position[]
-    for (let i = 0; i < pool.tokens.length; i++) {
-      positions.push({
-        token: pool.tokens[i],
-        percentage: BigNumber.from(DIVISOR).div(pool.tokens.length)
-      })
-    }
-    const s = new StrategyBuilder(positions, this.enso.adapters.uniswap.contract.address)
-
-    const data = ethers.utils.defaultAbiCoder.encode(['address[]', 'address[]'], [s.tokens, s.adapters])
-    const tx = await this.enso.enso.strategyFactory.createStrategy(
-      this.signers.default.address,
-      'PieDao',
-      'PIE',
-      s.tokens,
-      s.percentages,
-      false, //Cannot open strategy without first depositing
-      0,
-      THRESHOLD,
-      SLIPPAGE,
-      TIMELOCK,
-      this.enso.routers[1].contract.address,
-      data
-    )
-    const receipt = await tx.wait()
-    const strategyAddress = receipt.events.find((ev: Event) => ev.event === 'NewStrategy').args.strategy
-		this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
-    expect(await this.enso.enso.controller.initialized(strategyAddress)).to.equal(true)
+    const holderBalance = await contract.balanceOf(holderAddress);
+    expect(holderBalance).to.be.gt(BigNumber.from(0));
+    await contract.connect(holder).approve(this.liquidityMigration.address, holderBalance)
+    await this.liquidityMigration.connect(holder).stakeLpTokens(contract.address, holderBalance, AcceptedProtocols.PieDao)
+    expect((await this.liquidityMigration.stakes(holderAddress, contract.address))[0]).to.equal(holderBalance)
   })
 }
 
-export function shouldStakeLPToken(): void {
-  it("Token holder should be able to stake LP token", async function () {
+export function shouldMigrateToStrategy(): void {
+  it("Should migrate tokens to strategy", async function () {
+    const pool = this.pieDaoEnv.pools[0];
+    const poolContract = await pool.contract;
+    const routerContract = this.ensoEnv.routers[0].contract
 
+    const holder = pool.holders[0];
+    const holderAddress = await holder.getAddress()
+    const amount = (await this.liquidityMigration.stakes(holderAddress, poolContract.address))[0]
+
+    // Setup migration calls using PieDaoAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(['address', 'uint256'], [poolContract.address, amount])
+    const migrationCalls: Multicall[] = await this.pieDaoEnv.adapter.encodeExecute(adapterData)
+    // Setup transfer of tokens from router to strategy
+    const transferCalls = [] as Multicall[]
+    for (let i = 0; i < pool.tokens.length; i++) {
+      transferCalls.push(encodeSettleTransfer(routerContract, pool.tokens[i], this.strategy.address))
+    }
+    // Encode multicalls for GenericRouter
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls]
+    const migrationData = await routerContract.encodeCalls(calls)
+    // Migrate
+    await this.liquidityMigration.connect(holder).migrate(
+      this.strategy.address,
+      poolContract.address,
+      AcceptedProtocols.PieDao,
+      migrationData,
+      0
+    )
+    const [total, ] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, pool.tokens)
+    expect(total).to.gt(0)
+    expect(await this.strategy.balanceOf(holderAddress)).to.gt(0)
   })
 }
