@@ -1,11 +1,14 @@
 import { expect } from "chai";
-import { BigNumber } from "ethers";
-import { ERC20__factory } from "../typechain";
+import { ethers } from "hardhat";
+import { BigNumber, Contract, Event } from "ethers";
+import { IStrategy__factory, ERC20__factory } from "../typechain";
+import { StrategyBuilder, Position } from "@enso/contracts"
+import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants"
 
 export function shouldMigrateFromSmartPool(): void {
   it("Token holder should be able to withdraw from pool", async function () {
     const pool = this.pieDaoEnv.pools[0];
-    const contract = await this.pieDaoEnv.pools[0].contract;
+    const contract = await pool.contract;
     const holder = pool.holders[0];
     const adminBalance = await contract.balanceOf(await this.pieDaoEnv.admin.getAddress());
     expect(adminBalance).to.eq(BigNumber.from(0));
@@ -38,4 +41,47 @@ export function shouldMigrateFromSmartPool(): void {
     }
     expect(await contract.totalSupply()).to.eq(totalSupply.sub(holderBalance));
   });
+}
+
+export function shouldCreateStrategy(): void {
+  it("Should create strategy based on pool", async function () {
+    const pool = this.pieDaoEnv.pools[0];
+    const contract = await pool.contract;
+    const vault = await contract.getBPool();
+
+    const positions = [] as Position[]
+    for (let i = 0; i < pool.tokens.length; i++) {
+      positions.push({
+        token: pool.tokens[i],
+        percentage: BigNumber.from(DIVISOR).div(pool.tokens.length)
+      })
+    }
+    const s = new StrategyBuilder(positions, this.enso.adapters.uniswap.contract.address)
+
+    const data = ethers.utils.defaultAbiCoder.encode(['address[]', 'address[]'], [s.tokens, s.adapters])
+    const tx = await this.enso.enso.strategyFactory.createStrategy(
+      this.signers.default.address,
+      'PieDao',
+      'PIE',
+      s.tokens,
+      s.percentages,
+      false, //Cannot open strategy without first depositing
+      0,
+      THRESHOLD,
+      SLIPPAGE,
+      TIMELOCK,
+      this.enso.routers[1].contract.address,
+      data
+    )
+    const receipt = await tx.wait()
+    const strategyAddress = receipt.events.find((ev: Event) => ev.event === 'NewStrategy').args.strategy
+		this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+    expect(await this.enso.enso.controller.initialized(strategyAddress)).to.equal(true)
+  })
+}
+
+export function shouldStakeLPToken(): void {
+  it("Token holder should be able to stake LP token", async function () {
+
+  })
 }

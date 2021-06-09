@@ -15,3 +15,8 @@ export const PIE_DAO_HOLDERS: Holders = {
 };
 
 export const WETH: string  = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+
+export const THRESHOLD = 10 // 10/1000 = 1%
+export const SLIPPAGE = 995 // 995/1000 = 99.5%
+export const TIMELOCK = 60 // 1 minute
+export const DIVISOR = 1000
