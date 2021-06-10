@@ -56,7 +56,9 @@ contract PieDaoAdapter is IAdapter{
             inputs[i] = pool;
         }
     }
-
+    /// @notice to retrieve the underlying tokens in the pool
+    /// @param inputToken is the PieDao Pool Address
+    /// @return outputs is an array of the underlying tokens in the pool
     function outputTokens(address inputToken) external view override returns (address[] memory outputs) {
         // TODO: check experipie implementation
         return PieDaoPool(inputToken).getTokens();
