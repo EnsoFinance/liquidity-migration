@@ -41,7 +41,9 @@ contract PieDaoAdapter is IAdapter{
     constructor(address _registry) {
         registry = _registry;
     }
-
+    /// @notice to check if an address is a PieDao Pool
+    /// @param token: address that is to checked if it is a PieDao Pool
+    /// @return true or false depending on if it is a pool or not
     function isInputToken(address token) public override view returns (bool) {
         return PieDaoRegistry(registry).inRegistry(token);
     }
