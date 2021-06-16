@@ -64,9 +64,11 @@ contract DPIAdapter is IAdapter {
             return false;
         }
 
+    //TODO: To discuss with Kyle the idea of the inputTokens function
     function inputTokens() public override view returns (address[] memory inputs) {
         
     }
+
     /// @notice to retrieve the underlying tokens in the pool
     /// @param tokenSetAddress is the tokenSet Address
     /// @return outputs is an array of the underlying tokens in the pool
@@ -110,6 +112,8 @@ contract DPIAdapter is IAdapter {
     }
 
     // controllingFunctions
+
+    //TODO: To require this function in the execute and ecodeExecute function call
     function addAcceptedTokensToWhitelist(address tokenAddress) public onlyManager returns (bool) {
         whitelistedTokens[tokenAddress] = 1;
         return true;
