@@ -6,8 +6,9 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 // // import { shouldStakeLPToken, shouldMigrateToStrategy } from "./PieDao.behavior.txt";
 
 import { DPIEnvironmentBuilder } from "../src/dpi";
-// import { StrategyBuilder, Position } from "@enso/contracts";
-// import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
+import { Position } from "@enso/contracts";
+import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
+import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
 
 describe("DPI: Unit tests", function () {
     // lets create a strategy and then log its address and related stuff
@@ -33,16 +34,21 @@ describe("DPI: Unit tests", function () {
         this.ensoEnv = liquidityMigrationBuilder.enso
         this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration
     
-        // Create strategy
-        // const pool = this.pieDaoEnv.pools[0];
+        // getting the underlying tokens from DPI
+        const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+        
+        // creating the Positions array (that is which token holds how much weigth)
+        const positions = [] as Position[];
+        const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(this.DPIEnv.DPIToken.address, underlyingTokens)
+        for (let i = 0; i < underlyingTokens.length; i++) {
+            positions.push({
+            token: underlyingTokens[i],
+            percentage: BigNumber.from(estimates[i]).mul(DIVISOR).div(total)
+            })
+        }
     
-        // const positions = [] as Position[]
-        // for (let i = 0; i < pool.tokens.length; i++) {
-        //   positions.push({
-        //     token: pool.tokens[i],
-        //     percentage: BigNumber.from(DIVISOR).div(pool.tokens.length)
-        //   })
-        // }
+        // creating a strategy
+
         // const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address)
     
         // const data = ethers.utils.defaultAbiCoder.encode(['address[]', 'address[]'], [s.tokens, s.adapters])
