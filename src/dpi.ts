@@ -1,26 +1,15 @@
 import { ethers } from "hardhat";
-import { expect } from "chai";
 import { MainnetSigner } from "../types";
 import { DPI_HOLDERS } from "./constants";
-import { BigNumber, Contract, Signer } from "ethers";
-import { StrategyBuilder, Strategy, Implementation } from "./strategy";
+import { Contract, Signer } from "ethers";
 
 import { FACTORY_REGISTRIES } from "./constants";
 import {
-  PieDaoAdapter__factory,
   SetToken__factory,
   SetToken,
   BasicIssuanceModule__factory,
   BasicIssuanceModule,
   DPIAdapter__factory,
-  SmartPoolRegistry,
-  SmartPoolRegistry__factory,
-  IPV2SmartPool,
-  IPV2SmartPool__factory,
-  PCappedSmartPool,
-  PCappedSmartPool__factory,
-  IProxy,
-  IProxy__factory
 } from "../typechain";
 
 export class DPIEnvironmentBuilder {
@@ -71,7 +60,7 @@ export class DPIEnvironmentBuilder {
     //   }
     // }
 
-    return new DPIEnvironment(this.signer, setBasicIssuanceModule, adapter, DPIToken);
+    return new DPIEnvironment(this.signer, setBasicIssuanceModule, DPIToken, adapter);
     // return new PieDaoEnvironment(this.signer, registry, adapter, admin, implementations, pools)
   }
 
@@ -91,21 +80,19 @@ export class DPIEnvironmentBuilder {
 
 export class DPIEnvironment {
   signer: Signer;
-  registry: Contract;
+  setBasicIssuanceModule: Contract;
+  DPIToken: Contract;
   adapter: Contract;
-  admin: Signer;
   constructor(
     signer: Signer,
-    registry: Contract,
-    adapter: Contract,
-    admin: Signer
+    setBasicIssuanceModule: Contract,
+    DPIToken: Contract,
+    adapter: Contract
   ) {
     this.signer = signer;
-    this.registry = registry;
+    this.setBasicIssuanceModule = setBasicIssuanceModule;
+    this.DPIToken = DPIToken;
     this.adapter = adapter;
-    this.admin = admin;
-    this.implementations = implementations;
-    this.pools = pools;
   }
 }
 

@@ -27,6 +27,7 @@ describe("PieDao: Unit tests", function () {
     // Create strategy
     const pool = this.pieDaoEnv.pools[0];
 
+    // TODO: use the oracle contract to get the value it is part of the this.ensoEnv
     const positions = [] as Position[]
     for (let i = 0; i < pool.tokens.length; i++) {
       positions.push({
@@ -34,6 +35,8 @@ describe("PieDao: Unit tests", function () {
         percentage: BigNumber.from(DIVISOR).div(pool.tokens.length)
       })
     }
+    
+    // TODO: NOTE, this is version 2
     const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address)
 
     const data = ethers.utils.defaultAbiCoder.encode(['address[]', 'address[]'], [s.tokens, s.adapters])
