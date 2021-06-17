@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.2;
 
-import { IERC20, IStrategyToken} from "./IStrategyToken.sol";
+import { IERC20, IStrategyToken } from "./IStrategyToken.sol";
 
 interface IStrategy is IStrategyToken {
     function approveToken(
@@ -34,8 +34,5 @@ interface IStrategy is IStrategyToken {
 
     function whitelist() external view returns (address);
 
-    function verifyStructure(address[] memory newTokens, uint256[] memory newPercentages)
-        external
-        pure
-        returns (bool);
+    function verifyStructure(address[] memory newTokens, uint256[] memory newPercentages) external pure returns (bool);
 }

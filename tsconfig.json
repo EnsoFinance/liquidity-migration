@@ -14,4 +14,3 @@
   "include": ["./scripts/*", "./test", "./src/*"],
   "files": ["./hardhat.config.ts"]
 }
-

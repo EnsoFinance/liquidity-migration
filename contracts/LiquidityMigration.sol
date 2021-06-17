@@ -9,7 +9,11 @@ import { IAdapter } from "./interfaces/IAdapter.sol";
 contract LiquidityMigration {
     using SafeERC20 for IERC20;
 
-    enum AcceptedProtocols { PieDao, DPI, TokenSets } // Accepted protocols
+    enum AcceptedProtocols {
+        PieDao,
+        DPI,
+        TokenSets
+    } // Accepted protocols
 
     struct EnsoContracts {
         address genericRouter;
@@ -33,7 +37,7 @@ contract LiquidityMigration {
     mapping(AcceptedProtocols => address) public adapters;
 
     constructor(Adapters[] memory acceptedAdapters, EnsoContracts memory contracts) {
-        for (uint i = 0; i < acceptedAdapters.length; i++){
+        for (uint256 i = 0; i < acceptedAdapters.length; i++) {
             adapters[acceptedAdapters[i].protocol] = acceptedAdapters[i].adapter;
         }
         ensoContracts = contracts;
@@ -88,7 +92,6 @@ contract LiquidityMigration {
     function getStake(address account, address strategyToken) public view returns (Stake memory stake) {
         stake = stakes[account][strategyToken];
     }
-
 }
 
 // Enso::StrategyController

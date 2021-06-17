@@ -15,7 +15,7 @@ import {
   PCappedSmartPool,
   PCappedSmartPool__factory,
   IProxy,
-  IProxy__factory
+  IProxy__factory,
 } from "../typechain";
 
 export class PieDaoEnvironmentBuilder implements StrategyBuilder {
@@ -25,11 +25,14 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     this.signer = signer;
   }
   async connect(): Promise<PieDaoEnvironment> {
-    const registry = (await SmartPoolRegistry__factory.connect(FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS, this.signer)) as SmartPoolRegistry;
+    const registry = (await SmartPoolRegistry__factory.connect(
+      FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS,
+      this.signer,
+    )) as SmartPoolRegistry;
     console.log("PieDaoRegistry: ", registry.address);
 
-    const PieDaoAdapterFactory = (await ethers.getContractFactory('PieDaoAdapter')) as PieDaoAdapter__factory
-    const adapter = await PieDaoAdapterFactory.deploy(registry.address)
+    const PieDaoAdapterFactory = (await ethers.getContractFactory("PieDaoAdapter")) as PieDaoAdapter__factory;
+    const adapter = await PieDaoAdapterFactory.deploy(registry.address);
 
     const pieDaoAdmin = await registry.connect(this.signer).owner();
     const admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
@@ -37,10 +40,16 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     const pools = [];
     const implementations = [];
     implementations.push(
-      (await IPV2SmartPool__factory.connect("0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435", this.signer)) as IPV2SmartPool,
+      (await IPV2SmartPool__factory.connect(
+        "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435",
+        this.signer,
+      )) as IPV2SmartPool,
     );
     implementations.push(
-      (await PCappedSmartPool__factory.connect("0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181", this.signer)) as PCappedSmartPool,
+      (await PCappedSmartPool__factory.connect(
+        "0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181",
+        this.signer,
+      )) as PCappedSmartPool,
     );
 
     for (let i = 0; i < 6; i++) {
@@ -59,7 +68,7 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
       }
     }
 
-    return new PieDaoEnvironment(this.signer, registry, adapter, admin, implementations, pools)
+    return new PieDaoEnvironment(this.signer, registry, adapter, admin, implementations, pools);
   }
   async getHolders(contract: string): Promise<Signer[]> {
     const addresses = PIE_DAO_HOLDERS[contract];
@@ -77,7 +86,7 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
   async getPool(address: string, implementation: Implementation): Promise<PieDaoPool> {
     const contract = implementation.attach(address);
     let tokens: string[], supply: BigNumber, name: string, holders: Signer[];
-    ;[tokens, supply, name, holders] = await Promise.all([
+    [tokens, supply, name, holders] = await Promise.all([
       await contract.connect(this.signer).getTokens(),
       await contract.connect(this.signer).totalSupply(),
       await contract.connect(this.signer).name(),

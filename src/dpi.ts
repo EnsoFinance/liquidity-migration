@@ -19,20 +19,21 @@ export class DPIEnvironmentBuilder {
     this.signer = signer;
   }
   async connect(): Promise<DPIEnvironment> {
-  
-    const setBasicIssuanceModule = (await BasicIssuanceModule__factory.connect(FACTORY_REGISTRIES.SET_BASIC_SET_ISSUANCE_MODULE, this.signer)) as BasicIssuanceModule;
+    const setBasicIssuanceModule = (await BasicIssuanceModule__factory.connect(
+      FACTORY_REGISTRIES.SET_BASIC_SET_ISSUANCE_MODULE,
+      this.signer,
+    )) as BasicIssuanceModule;
 
     const DPIToken = (await SetToken__factory.connect(FACTORY_REGISTRIES.DPI, this.signer)) as SetToken;
 
-    const DPIAdapterFactory = (await ethers.getContractFactory('DPIAdapter')) as DPIAdapter__factory;
+    const DPIAdapterFactory = (await ethers.getContractFactory("DPIAdapter")) as DPIAdapter__factory;
 
     const signerAddress = await this.signer.getAddress();
 
     // deploying the DPI Adapter
-    const adapter = await DPIAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress)
-    
-    return new DPIEnvironment(this.signer, setBasicIssuanceModule, DPIToken, adapter);
+    const adapter = await DPIAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress);
 
+    return new DPIEnvironment(this.signer, setBasicIssuanceModule, DPIToken, adapter);
   }
 
   async getHolders(contract: string): Promise<Signer[]> {
@@ -54,12 +55,7 @@ export class DPIEnvironment {
   setBasicIssuanceModule: Contract;
   DPIToken: Contract;
   adapter: Contract;
-  constructor(
-    signer: Signer,
-    setBasicIssuanceModule: Contract,
-    DPIToken: Contract,
-    adapter: Contract
-  ) {
+  constructor(signer: Signer, setBasicIssuanceModule: Contract, DPIToken: Contract, adapter: Contract) {
     this.signer = signer;
     this.setBasicIssuanceModule = setBasicIssuanceModule;
     this.DPIToken = DPIToken;

@@ -1,13 +1,10 @@
 /**
  *Submitted for verification at Etherscan.io on 2020-09-09
-*/
+ */
 
 // Dependency file: @openzeppelin/contracts/utils/SafeCast.sol
 
-
-
 // pragma solidity ^0.6.0;
-
 
 /**
  * @dev Wrappers over Solidity's uintXX/intXX casting operators with added overflow
@@ -25,7 +22,6 @@
  * all math on `uint256` and `int256` and then downcasting.
  */
 library SafeCast {
-
     /**
      * @dev Returns the downcasted uint128 from uint256, reverting on
      * overflow (when the input is greater than largest uint128).
@@ -37,7 +33,7 @@ library SafeCast {
      * - input must fit into 128 bits
      */
     function toUint128(uint256 value) internal pure returns (uint128) {
-        require(value < 2**128, "SafeCast: value doesn\'t fit in 128 bits");
+        require(value < 2**128, "SafeCast: value doesn't fit in 128 bits");
         return uint128(value);
     }
 
@@ -52,7 +48,7 @@ library SafeCast {
      * - input must fit into 64 bits
      */
     function toUint64(uint256 value) internal pure returns (uint64) {
-        require(value < 2**64, "SafeCast: value doesn\'t fit in 64 bits");
+        require(value < 2**64, "SafeCast: value doesn't fit in 64 bits");
         return uint64(value);
     }
 
@@ -67,7 +63,7 @@ library SafeCast {
      * - input must fit into 32 bits
      */
     function toUint32(uint256 value) internal pure returns (uint32) {
-        require(value < 2**32, "SafeCast: value doesn\'t fit in 32 bits");
+        require(value < 2**32, "SafeCast: value doesn't fit in 32 bits");
         return uint32(value);
     }
 
@@ -82,7 +78,7 @@ library SafeCast {
      * - input must fit into 16 bits
      */
     function toUint16(uint256 value) internal pure returns (uint16) {
-        require(value < 2**16, "SafeCast: value doesn\'t fit in 16 bits");
+        require(value < 2**16, "SafeCast: value doesn't fit in 16 bits");
         return uint16(value);
     }
 
@@ -97,7 +93,7 @@ library SafeCast {
      * - input must fit into 8 bits.
      */
     function toUint8(uint256 value) internal pure returns (uint8) {
-        require(value < 2**8, "SafeCast: value doesn\'t fit in 8 bits");
+        require(value < 2**8, "SafeCast: value doesn't fit in 8 bits");
         return uint8(value);
     }
 
@@ -127,7 +123,7 @@ library SafeCast {
      * _Available since v3.1._
      */
     function toInt128(int256 value) internal pure returns (int128) {
-        require(value >= -2**127 && value < 2**127, "SafeCast: value doesn\'t fit in 128 bits");
+        require(value >= -2**127 && value < 2**127, "SafeCast: value doesn't fit in 128 bits");
         return int128(value);
     }
 
@@ -145,7 +141,7 @@ library SafeCast {
      * _Available since v3.1._
      */
     function toInt64(int256 value) internal pure returns (int64) {
-        require(value >= -2**63 && value < 2**63, "SafeCast: value doesn\'t fit in 64 bits");
+        require(value >= -2**63 && value < 2**63, "SafeCast: value doesn't fit in 64 bits");
         return int64(value);
     }
 
@@ -163,7 +159,7 @@ library SafeCast {
      * _Available since v3.1._
      */
     function toInt32(int256 value) internal pure returns (int32) {
-        require(value >= -2**31 && value < 2**31, "SafeCast: value doesn\'t fit in 32 bits");
+        require(value >= -2**31 && value < 2**31, "SafeCast: value doesn't fit in 32 bits");
         return int32(value);
     }
 
@@ -181,7 +177,7 @@ library SafeCast {
      * _Available since v3.1._
      */
     function toInt16(int256 value) internal pure returns (int16) {
-        require(value >= -2**15 && value < 2**15, "SafeCast: value doesn\'t fit in 16 bits");
+        require(value >= -2**15 && value < 2**15, "SafeCast: value doesn't fit in 16 bits");
         return int16(value);
     }
 
@@ -199,7 +195,7 @@ library SafeCast {
      * _Available since v3.1._
      */
     function toInt8(int256 value) internal pure returns (int8) {
-        require(value >= -2**7 && value < 2**7, "SafeCast: value doesn\'t fit in 8 bits");
+        require(value >= -2**7 && value < 2**7, "SafeCast: value doesn't fit in 8 bits");
         return int8(value);
     }
 
@@ -217,8 +213,6 @@ library SafeCast {
 }
 
 // Dependency file: @openzeppelin/contracts/token/ERC20/IERC20.sol
-
-
 
 // pragma solidity ^0.6.0;
 
@@ -279,7 +273,11 @@ interface IERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
@@ -297,8 +295,6 @@ interface IERC20 {
 }
 
 // Dependency file: @openzeppelin/contracts/GSN/Context.sol
-
-
 
 // pragma solidity ^0.6.0;
 
@@ -352,7 +348,6 @@ abstract contract Context {
  * Utility functions to handle Address Arrays
  */
 library AddressArrayUtils {
-
     /**
      * Finds the index of the first occurrence of the given element.
      * @param A The input array to search
@@ -370,22 +365,22 @@ library AddressArrayUtils {
     }
 
     /**
-    * Returns true if the value is present in the list. Uses indexOf internally.
-    * @param A The input array to search
-    * @param a The value to find
-    * @return Returns isIn for the first occurrence starting from index 0
-    */
+     * Returns true if the value is present in the list. Uses indexOf internally.
+     * @param A The input array to search
+     * @param a The value to find
+     * @return Returns isIn for the first occurrence starting from index 0
+     */
     function contains(address[] memory A, address a) internal pure returns (bool) {
         (, bool isIn) = indexOf(A, a);
         return isIn;
     }
 
     /**
-    * Returns true if there are 2 elements that are the same in an array
-    * @param A The input array to search
-    * @return Returns boolean for the first occurrence of a duplicate
-    */
-    function hasDuplicate(address[] memory A) internal pure returns(bool) {
+     * Returns true if there are 2 elements that are the same in an array
+     * @param A The input array to search
+     * @return Returns boolean for the first occurrence of a duplicate
+     */
+    function hasDuplicate(address[] memory A) internal pure returns (bool) {
         require(A.length > 0, "A is empty");
 
         for (uint256 i = 0; i < A.length - 1; i++) {
@@ -401,34 +396,26 @@ library AddressArrayUtils {
 
     /**
      * @param A The input array to search
-     * @param a The address to remove     
+     * @param a The address to remove
      * @return Returns the array with the object removed.
      */
-    function remove(address[] memory A, address a)
-        internal
-        pure
-        returns (address[] memory)
-    {
+    function remove(address[] memory A, address a) internal pure returns (address[] memory) {
         (uint256 index, bool isIn) = indexOf(A, a);
         if (!isIn) {
             revert("Address not in array.");
         } else {
-            (address[] memory _A,) = pop(A, index);
+            (address[] memory _A, ) = pop(A, index);
             return _A;
         }
     }
 
     /**
-    * Removes specified index from array
-    * @param A The input array to search
-    * @param index The index to remove
-    * @return Returns the new array and the removed entry
-    */
-    function pop(address[] memory A, uint256 index)
-        internal
-        pure
-        returns (address[] memory, address)
-    {
+     * Removes specified index from array
+     * @param A The input array to search
+     * @param index The index to remove
+     * @return Returns the new array and the removed entry
+     */
+    function pop(address[] memory A, uint256 index) internal pure returns (address[] memory, address) {
         uint256 length = A.length;
         require(index < A.length, "Index must be < A length");
         address[] memory newAddresses = new address[](length - 1);
@@ -441,6 +428,7 @@ library AddressArrayUtils {
         return (newAddresses, A[index]);
     }
 }
+
 // Dependency file: contracts/lib/PreciseUnitMath.sol
 
 /*
@@ -467,7 +455,6 @@ library AddressArrayUtils {
 // import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 // import { SignedSafeMath } from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 
-
 /**
  * @title PreciseUnitMath
  * @author Set Protocol
@@ -480,14 +467,14 @@ library PreciseUnitMath {
     using SignedSafeMath for int256;
 
     // The number One in precise units.
-    uint256 constant internal PRECISE_UNIT = 10 ** 18;
-    int256 constant internal PRECISE_UNIT_INT = 10 ** 18;
+    uint256 internal constant PRECISE_UNIT = 10**18;
+    int256 internal constant PRECISE_UNIT_INT = 10**18;
 
     // Max unsigned integer value
-    uint256 constant internal MAX_UINT_256 = type(uint256).max;
+    uint256 internal constant MAX_UINT_256 = type(uint256).max;
     // Max and min signed integer value
-    int256 constant internal MAX_INT_256 = type(int256).max;
-    int256 constant internal MIN_INT_256 = type(int256).min;
+    int256 internal constant MAX_INT_256 = type(int256).max;
+    int256 internal constant MIN_INT_256 = type(int256).min;
 
     /**
      * @dev Getter function since constants can't be read directly from libraries.
@@ -558,7 +545,6 @@ library PreciseUnitMath {
         return a.mul(PRECISE_UNIT).div(b);
     }
 
-
     /**
      * @dev Divides value a by value b (result is rounded towards 0).
      */
@@ -591,21 +577,22 @@ library PreciseUnitMath {
     }
 
     /**
-     * @dev Multiplies value a by value b where rounding is towards the lesser number. 
-     * (positive values are rounded towards zero and negative values are rounded away from 0). 
+     * @dev Multiplies value a by value b where rounding is towards the lesser number.
+     * (positive values are rounded towards zero and negative values are rounded away from 0).
      */
     function conservativePreciseMul(int256 a, int256 b) internal pure returns (int256) {
         return divDown(a.mul(b), PRECISE_UNIT_INT);
     }
 
     /**
-     * @dev Divides value a by value b where rounding is towards the lesser number. 
-     * (positive values are rounded towards zero and negative values are rounded away from 0). 
+     * @dev Divides value a by value b where rounding is towards the lesser number.
+     * (positive values are rounded towards zero and negative values are rounded away from 0).
      */
     function conservativePreciseDiv(int256 a, int256 b) internal pure returns (int256) {
         return divDown(a.mul(PRECISE_UNIT_INT), b);
     }
 }
+
 // Dependency file: contracts/protocol/lib/Position.sol
 
 /*
@@ -654,21 +641,25 @@ library Position {
     /**
      * Returns whether the SetToken has a default position for a given component (if the real unit is > 0)
      */
-    function hasDefaultPosition(ISetToken _setToken, address _component) internal view returns(bool) {
+    function hasDefaultPosition(ISetToken _setToken, address _component) internal view returns (bool) {
         return _setToken.getDefaultPositionRealUnit(_component) > 0;
     }
 
     /**
      * Returns whether the SetToken has an external position for a given component (if # of position modules is > 0)
      */
-    function hasExternalPosition(ISetToken _setToken, address _component) internal view returns(bool) {
+    function hasExternalPosition(ISetToken _setToken, address _component) internal view returns (bool) {
         return _setToken.getExternalPositionModules(_component).length > 0;
     }
-    
+
     /**
      * Returns whether the SetToken component default position real unit is greater than or equal to units passed in.
      */
-    function hasSufficientDefaultUnits(ISetToken _setToken, address _component, uint256 _unit) internal view returns(bool) {
+    function hasSufficientDefaultUnits(
+        ISetToken _setToken,
+        address _component,
+        uint256 _unit
+    ) internal view returns (bool) {
         return _setToken.getDefaultPositionRealUnit(_component) >= _unit.toInt256();
     }
 
@@ -680,24 +671,24 @@ library Position {
         address _component,
         address _positionModule,
         uint256 _unit
-    )
-        internal
-        view
-        returns(bool)
-    {
-       return _setToken.getExternalPositionRealUnit(_component, _positionModule) >= _unit.toInt256();    
+    ) internal view returns (bool) {
+        return _setToken.getExternalPositionRealUnit(_component, _positionModule) >= _unit.toInt256();
     }
 
     /**
      * If the position does not exist, create a new Position and add to the SetToken. If it already exists,
-     * then set the position units. If the new units is 0, remove the position. Handles adding/removing of 
+     * then set the position units. If the new units is 0, remove the position. Handles adding/removing of
      * components where needed (in light of potential external positions).
      *
      * @param _setToken           Address of SetToken being modified
      * @param _component          Address of the component
      * @param _newUnit            Quantity of Position units - must be >= 0
      */
-    function editDefaultPosition(ISetToken _setToken, address _component, uint256 _newUnit) internal {
+    function editDefaultPosition(
+        ISetToken _setToken,
+        address _component,
+        uint256 _newUnit
+    ) internal {
         bool isPositionFound = hasDefaultPosition(_setToken, _component);
         if (!isPositionFound && _newUnit > 0) {
             // If there is no Default Position and no External Modules, then component does not exist
@@ -716,7 +707,7 @@ library Position {
 
     /**
      * Update an external position and remove and external positions or components if necessary. The logic flows as follows:
-     * 1) If component is not already added then add component and external position. 
+     * 1) If component is not already added then add component and external position.
      * 2) If component is added but no existing external position using the passed module exists then add the external position.
      * 3) If the existing position is being added to then just update the unit
      * 4) If the position is being closed and no other external positions or default positions are associated with the component
@@ -736,9 +727,7 @@ library Position {
         address _module,
         int256 _newUnit,
         bytes memory _data
-    )
-        internal
-    {
+    ) internal {
         if (!_setToken.isComponent(_component)) {
             _setToken.addComponent(_component);
             addExternalPosition(_setToken, _component, _module, _newUnit, _data);
@@ -748,7 +737,10 @@ library Position {
             _setToken.editExternalPositionUnit(_component, _module, _newUnit);
         } else {
             // If no default or external position remaining then remove component from components array
-            if (_setToken.getDefaultPositionRealUnit(_component) == 0 && _setToken.getExternalPositionModules(_component).length == 1) {
+            if (
+                _setToken.getDefaultPositionRealUnit(_component) == 0 &&
+                _setToken.getExternalPositionModules(_component).length == 1
+            ) {
                 _setToken.removeComponent(_component);
             }
             _setToken.removeExternalPositionModule(_component, _module);
@@ -770,9 +762,7 @@ library Position {
         address _module,
         int256 _newUnit,
         bytes memory _data
-    )
-        internal
-    {
+    ) internal {
         _setToken.addExternalPositionModule(_component, _module);
         _setToken.editExternalPositionUnit(_component, _module, _newUnit);
         _setToken.editExternalPositionData(_component, _module, _data);
@@ -816,11 +806,7 @@ library Position {
         uint256 _preTotalNotional,
         uint256 _postTotalNotional,
         uint256 _prePositionUnit
-    )
-        internal
-        pure
-        returns (uint256)
-    {
+    ) internal pure returns (uint256) {
         // If pre action total notional amount is greater then subtract post action total notional and calculate new position units
         if (_preTotalNotional >= _postTotalNotional) {
             uint256 unitsToSub = _preTotalNotional.sub(_postTotalNotional).preciseDivCeil(_setTokenSupply);
@@ -864,7 +850,6 @@ library Position {
  * Interface for operating with SetTokens.
  */
 interface ISetToken is IERC20 {
-
     /* ============ Enums ============ */
 
     enum ModuleState {
@@ -893,21 +878,21 @@ interface ISetToken is IERC20 {
 
     /**
      * A struct that stores a component's cash position details and external positions
-     * This data structure allows O(1) access to a component's cash position units and 
+     * This data structure allows O(1) access to a component's cash position units and
      * virtual units.
      *
      * @param virtualUnit               Virtual value of a component's DEFAULT position. Stored as virtual for efficiency
      *                                  updating all units at once via the position multiplier. Virtual units are achieved
      *                                  by dividing a "real" value by the "positionMultiplier"
-     * @param componentIndex            
+     * @param componentIndex
      * @param externalPositionModules   List of external modules attached to each external position. Each module
      *                                  maps to an external position
      * @param externalPositions         Mapping of module => ExternalPosition struct for a given component
      */
     struct ComponentPosition {
-      int256 virtualUnit;
-      address[] externalPositionModules;
-      mapping(address => ExternalPosition) externalPositions;
+        int256 virtualUnit;
+        address[] externalPositionModules;
+        mapping(address => ExternalPosition) externalPositions;
     }
 
     /**
@@ -918,57 +903,91 @@ interface ISetToken is IERC20 {
      * @param data              Arbitrary data
      */
     struct ExternalPosition {
-      int256 virtualUnit;
-      bytes data;
+        int256 virtualUnit;
+        bytes data;
     }
 
-
     /* ============ Functions ============ */
-    
-    function addComponent(address _component) external;
-    function removeComponent(address _component) external;
-    function editDefaultPositionUnit(address _component, int256 _realUnit) external;
-    function addExternalPositionModule(address _component, address _positionModule) external;
-    function removeExternalPositionModule(address _component, address _positionModule) external;
-    function editExternalPositionUnit(address _component, address _positionModule, int256 _realUnit) external;
-    function editExternalPositionData(address _component, address _positionModule, bytes calldata _data) external;
 
-    function invoke(address _target, uint256 _value, bytes calldata _data) external returns(bytes memory);
+    function addComponent(address _component) external;
+
+    function removeComponent(address _component) external;
+
+    function editDefaultPositionUnit(address _component, int256 _realUnit) external;
+
+    function addExternalPositionModule(address _component, address _positionModule) external;
+
+    function removeExternalPositionModule(address _component, address _positionModule) external;
+
+    function editExternalPositionUnit(
+        address _component,
+        address _positionModule,
+        int256 _realUnit
+    ) external;
+
+    function editExternalPositionData(
+        address _component,
+        address _positionModule,
+        bytes calldata _data
+    ) external;
+
+    function invoke(
+        address _target,
+        uint256 _value,
+        bytes calldata _data
+    ) external returns (bytes memory);
 
     function editPositionMultiplier(int256 _newMultiplier) external;
 
     function mint(address _account, uint256 _quantity) external;
+
     function burn(address _account, uint256 _quantity) external;
 
     function lock() external;
+
     function unlock() external;
 
     function addModule(address _module) external;
+
     function removeModule(address _module) external;
+
     function initializeModule() external;
 
     function setManager(address _manager) external;
 
     function manager() external view returns (address);
-    function moduleStates(address _module) external view returns (ModuleState);
-    function getModules() external view returns (address[] memory);
-    
-    function getDefaultPositionRealUnit(address _component) external view returns(int256);
-    function getExternalPositionRealUnit(address _component, address _positionModule) external view returns(int256);
-    function getComponents() external view returns(address[] memory);
-    function getExternalPositionModules(address _component) external view returns(address[] memory);
-    function getExternalPositionData(address _component, address _positionModule) external view returns(bytes memory);
-    function isExternalPositionModule(address _component, address _module) external view returns(bool);
-    function isComponent(address _component) external view returns(bool);
-    
-    function positionMultiplier() external view returns (int256);
-    function getPositions() external view returns (Position[] memory);
-    function getTotalComponentRealUnits(address _component) external view returns(int256);
 
-    function isInitializedModule(address _module) external view returns(bool);
-    function isPendingModule(address _module) external view returns(bool);
+    function moduleStates(address _module) external view returns (ModuleState);
+
+    function getModules() external view returns (address[] memory);
+
+    function getDefaultPositionRealUnit(address _component) external view returns (int256);
+
+    function getExternalPositionRealUnit(address _component, address _positionModule) external view returns (int256);
+
+    function getComponents() external view returns (address[] memory);
+
+    function getExternalPositionModules(address _component) external view returns (address[] memory);
+
+    function getExternalPositionData(address _component, address _positionModule) external view returns (bytes memory);
+
+    function isExternalPositionModule(address _component, address _module) external view returns (bool);
+
+    function isComponent(address _component) external view returns (bool);
+
+    function positionMultiplier() external view returns (int256);
+
+    function getPositions() external view returns (Position[] memory);
+
+    function getTotalComponentRealUnits(address _component) external view returns (int256);
+
+    function isInitializedModule(address _module) external view returns (bool);
+
+    function isPendingModule(address _module) external view returns (bool);
+
     function isLocked() external view returns (bool);
 }
+
 // Dependency file: contracts/interfaces/IModule.sol
 
 /*
@@ -990,7 +1009,6 @@ interface ISetToken is IERC20 {
 */
 // pragma solidity 0.6.10;
 
-
 /**
  * @title IModule
  * @author Set Protocol
@@ -1004,6 +1022,7 @@ interface IModule {
      */
     function removeModule() external;
 }
+
 // Dependency file: contracts/interfaces/IController.sol
 
 /*
@@ -1027,16 +1046,21 @@ interface IModule {
 
 interface IController {
     function addSet(address _setToken) external;
-    function getModuleFee(address _module, uint256 _feeType) external view returns(uint256);
-    function resourceId(uint256 _id) external view returns(address);
-    function feeRecipient() external view returns(address);
-    function isModule(address _module) external view returns(bool);
-    function isSet(address _setToken) external view returns(bool);
+
+    function getModuleFee(address _module, uint256 _feeType) external view returns (uint256);
+
+    function resourceId(uint256 _id) external view returns (address);
+
+    function feeRecipient() external view returns (address);
+
+    function isModule(address _module) external view returns (bool);
+
+    function isSet(address _setToken) external view returns (bool);
+
     function isSystemContract(address _contractAddress) external view returns (bool);
 }
+
 // Dependency file: @openzeppelin/contracts/math/SignedSafeMath.sol
-
-
 
 // pragma solidity ^0.6.0;
 
@@ -1045,9 +1069,9 @@ interface IController {
  * @dev Signed math operations with safety checks that revert on error.
  */
 library SignedSafeMath {
-    int256 constant private _INT256_MIN = -2**255;
+    int256 private constant _INT256_MIN = -2**255;
 
-        /**
+    /**
      * @dev Returns the multiplication of two signed integers, reverting on
      * overflow.
      *
@@ -1131,8 +1155,6 @@ library SignedSafeMath {
 
 // Dependency file: @openzeppelin/contracts/math/SafeMath.sol
 
-
-
 // pragma solidity ^0.6.0;
 
 /**
@@ -1190,7 +1212,11 @@ library SafeMath {
      *
      * - Subtraction cannot overflow.
      */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function sub(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         uint256 c = a - b;
 
@@ -1249,7 +1275,11 @@ library SafeMath {
      *
      * - The divisor cannot be zero.
      */
-    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function div(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         uint256 c = a / b;
         // assert(a == b * c + a % b); // There is no case in which this doesn't hold
@@ -1285,15 +1315,17 @@ library SafeMath {
      *
      * - The divisor cannot be zero.
      */
-    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function mod(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b != 0, errorMessage);
         return a % b;
     }
 }
 
 // Dependency file: @openzeppelin/contracts/token/ERC20/ERC20.sol
-
-
 
 // pragma solidity ^0.6.0;
 
@@ -1330,9 +1362,9 @@ contract ERC20 is Context, IERC20 {
     using SafeMath for uint256;
     using Address for address;
 
-    mapping (address => uint256) private _balances;
+    mapping(address => uint256) private _balances;
 
-    mapping (address => mapping (address => uint256)) private _allowances;
+    mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
 
@@ -1349,7 +1381,7 @@ contract ERC20 is Context, IERC20 {
      * All three of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor (string memory name, string memory symbol) public {
+    constructor(string memory name, string memory symbol) public {
         _name = name;
         _symbol = symbol;
         _decimals = 18;
@@ -1445,9 +1477,17 @@ contract ERC20 is Context, IERC20 {
      * - the caller must have allowance for ``sender``'s tokens of at least
      * `amount`.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        _approve(
+            sender,
+            _msgSender(),
+            _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance")
+        );
         return true;
     }
 
@@ -1483,7 +1523,11 @@ contract ERC20 is Context, IERC20 {
      * `subtractedValue`.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        _approve(
+            _msgSender(),
+            spender,
+            _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero")
+        );
         return true;
     }
 
@@ -1501,7 +1545,11 @@ contract ERC20 is Context, IERC20 {
      * - `recipient` cannot be the zero address.
      * - `sender` must have a balance of at least `amount`.
      */
-    function _transfer(address sender, address recipient, uint256 amount) internal virtual {
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal virtual {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
@@ -1565,7 +1613,11 @@ contract ERC20 is Context, IERC20 {
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
      */
-    function _approve(address owner, address spender, uint256 amount) internal virtual {
+    function _approve(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -1598,12 +1650,14 @@ contract ERC20 is Context, IERC20 {
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {}
 }
 
 // Dependency file: @openzeppelin/contracts/utils/Address.sol
-
-
 
 // pragma solidity ^0.6.2;
 
@@ -1635,7 +1689,9 @@ library Address {
         bytes32 codehash;
         bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
         // solhint-disable-next-line no-inline-assembly
-        assembly { codehash := extcodehash(account) }
+        assembly {
+            codehash := extcodehash(account)
+        }
         return (codehash != accountHash && codehash != 0x0);
     }
 
@@ -1682,7 +1738,7 @@ library Address {
      * _Available since v3.1._
      */
     function functionCall(address target, bytes memory data) internal returns (bytes memory) {
-      return functionCall(target, data, "Address: low-level call failed");
+        return functionCall(target, data, "Address: low-level call failed");
     }
 
     /**
@@ -1691,7 +1747,11 @@ library Address {
      *
      * _Available since v3.1._
      */
-    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
+    function functionCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
         return _functionCallWithValue(target, data, 0, errorMessage);
     }
 
@@ -1706,7 +1766,11 @@ library Address {
      *
      * _Available since v3.1._
      */
-    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value
+    ) internal returns (bytes memory) {
         return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
     }
 
@@ -1716,12 +1780,22 @@ library Address {
      *
      * _Available since v3.1._
      */
-    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
         require(address(this).balance >= value, "Address: insufficient balance for call");
         return _functionCallWithValue(target, data, value, errorMessage);
     }
 
-    function _functionCallWithValue(address target, bytes memory data, uint256 weiValue, string memory errorMessage) private returns (bytes memory) {
+    function _functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 weiValue,
+        string memory errorMessage
+    ) private returns (bytes memory) {
         require(isContract(target), "Address: call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
@@ -1778,13 +1852,12 @@ pragma experimental "ABIEncoderV2";
 // import { PreciseUnitMath } from "../lib/PreciseUnitMath.sol";
 // import { AddressArrayUtils } from "../lib/AddressArrayUtils.sol";
 
-
 /**
  * @title SetToken
  * @author Set Protocol
  *
  * ERC20 Token contract that allows privileged modules to make modifications to its positions and invoke function calls
- * from the SetToken. 
+ * from the SetToken.
  */
 contract SetToken is ERC20 {
     using SafeMath for uint256;
@@ -1806,9 +1879,9 @@ contract SetToken is ERC20 {
 
     /* ============ Events ============ */
 
-    event Invoked(address indexed _target, uint indexed _value, bytes _data, bytes _returnValue);
+    event Invoked(address indexed _target, uint256 indexed _value, bytes _data, bytes _returnValue);
     event ModuleAdded(address indexed _module);
-    event ModuleRemoved(address indexed _module);    
+    event ModuleRemoved(address indexed _module);
     event ModuleInitialized(address indexed _module);
     event ManagerEdited(address _newManager, address _oldManager);
     event PendingModuleRemoved(address indexed _module);
@@ -1884,12 +1957,11 @@ contract SetToken is ERC20 {
     // This multiplier is used for efficiently modifying the entire position units (e.g. streaming fee)
     int256 public positionMultiplier;
 
-
     /* ============ Constructor ============ */
 
     /**
      * When a new SetToken is created, initializes Positions in default state and adds modules into pending state.
-     * All parameter validations are on the SetTokenCreator contract. Validations are performed already on the 
+     * All parameter validations are on the SetTokenCreator contract. Validations are performed already on the
      * SetTokenCreator. Initiates the positionMultiplier as 1e18 (no adjustments).
      *
      * @param _components             List of addresses of components for initial Positions
@@ -1908,10 +1980,7 @@ contract SetToken is ERC20 {
         address _manager,
         string memory _name,
         string memory _symbol
-    )
-        public
-        ERC20(_name, _symbol)
-    {
+    ) public ERC20(_name, _symbol) {
         controller = _controller;
         manager = _manager;
         positionMultiplier = PreciseUnitMath.preciseUnitInt();
@@ -1943,12 +2012,7 @@ contract SetToken is ERC20 {
         address _target,
         uint256 _value,
         bytes calldata _data
-    )
-        external
-        onlyModule
-        whenLockedOnlyLocker
-        returns (bytes memory _returnValue)
-    {
+    ) external onlyModule whenLockedOnlyLocker returns (bytes memory _returnValue) {
         _returnValue = _target.functionCallWithValue(_data, _value);
 
         emit Invoked(_target, _value, _data, _returnValue);
@@ -1994,43 +2058,42 @@ contract SetToken is ERC20 {
     /**
      * PRIVELEGED MODULE FUNCTION. Low level function that adds a module to a component's externalPositionModules array
      */
-    function addExternalPositionModule(address _component, address _positionModule) external onlyModule whenLockedOnlyLocker {
+    function addExternalPositionModule(address _component, address _positionModule)
+        external
+        onlyModule
+        whenLockedOnlyLocker
+    {
         componentPositions[_component].externalPositionModules.push(_positionModule);
 
         emit PositionModuleAdded(_component, _positionModule);
     }
 
     /**
-     * PRIVELEGED MODULE FUNCTION. Low level function that removes a module from a component's 
+     * PRIVELEGED MODULE FUNCTION. Low level function that removes a module from a component's
      * externalPositionModules array and deletes the associated externalPosition.
      */
-    function removeExternalPositionModule(
-        address _component,
-        address _positionModule
-    )
+    function removeExternalPositionModule(address _component, address _positionModule)
         external
         onlyModule
         whenLockedOnlyLocker
     {
-        componentPositions[_component].externalPositionModules = _externalPositionModules(_component).remove(_positionModule);
+        componentPositions[_component].externalPositionModules = _externalPositionModules(_component).remove(
+            _positionModule
+        );
         delete componentPositions[_component].externalPositions[_positionModule];
 
         emit PositionModuleRemoved(_component, _positionModule);
     }
 
     /**
-     * PRIVELEGED MODULE FUNCTION. Low level function that edits a component's external position virtual unit. 
+     * PRIVELEGED MODULE FUNCTION. Low level function that edits a component's external position virtual unit.
      * Takes a real unit and converts it to virtual before committing.
      */
     function editExternalPositionUnit(
         address _component,
         address _positionModule,
         int256 _realUnit
-    )
-        external
-        onlyModule
-        whenLockedOnlyLocker
-    {
+    ) external onlyModule whenLockedOnlyLocker {
         int256 virtualUnit = _convertRealToVirtualUnit(_realUnit);
 
         // These checks ensure that the virtual unit does not return a result that has rounded to 0
@@ -2050,11 +2113,7 @@ contract SetToken is ERC20 {
         address _component,
         address _positionModule,
         bytes calldata _data
-    )
-        external
-        onlyModule
-        whenLockedOnlyLocker
-    {
+    ) external onlyModule whenLockedOnlyLocker {
         componentPositions[_component].externalPositions[_positionModule].data = _data;
 
         emit ExternalPositionDataEdited(_component, _positionModule, _data);
@@ -2107,7 +2166,7 @@ contract SetToken is ERC20 {
     }
 
     /**
-     * MANAGER ONLY. Adds a module into a PENDING state; Module must later be initialized via 
+     * MANAGER ONLY. Adds a module into a PENDING state; Module must later be initialized via
      * module's initialize function
      */
     function addModule(address _module) external onlyManager {
@@ -2156,7 +2215,7 @@ contract SetToken is ERC20 {
     function initializeModule() external {
         require(!isLocked, "Only when unlocked");
         require(moduleStates[msg.sender] == ISetToken.ModuleState.PENDING, "Module must be pending");
-        
+
         moduleStates[msg.sender] = ISetToken.ModuleState.INITIALIZED;
         modules.push(msg.sender);
 
@@ -2177,23 +2236,23 @@ contract SetToken is ERC20 {
 
     /* ============ External Getter Functions ============ */
 
-    function getComponents() external view returns(address[] memory) {
+    function getComponents() external view returns (address[] memory) {
         return components;
     }
 
-    function getDefaultPositionRealUnit(address _component) public view returns(int256) {
+    function getDefaultPositionRealUnit(address _component) public view returns (int256) {
         return _convertVirtualToRealUnit(_defaultPositionVirtualUnit(_component));
     }
 
-    function getExternalPositionRealUnit(address _component, address _positionModule) public view returns(int256) {
+    function getExternalPositionRealUnit(address _component, address _positionModule) public view returns (int256) {
         return _convertVirtualToRealUnit(_externalPositionVirtualUnit(_component, _positionModule));
     }
 
-    function getExternalPositionModules(address _component) external view returns(address[] memory) {
+    function getExternalPositionModules(address _component) external view returns (address[] memory) {
         return _externalPositionModules(_component);
     }
 
-    function getExternalPositionData(address _component,address _positionModule) external view returns(bytes memory) {
+    function getExternalPositionData(address _component, address _positionModule) external view returns (bytes memory) {
         return _externalPositionData(_component, _positionModule);
     }
 
@@ -2201,11 +2260,11 @@ contract SetToken is ERC20 {
         return modules;
     }
 
-    function isComponent(address _component) external view returns(bool) {
+    function isComponent(address _component) external view returns (bool) {
         return components.contains(_component);
     }
 
-    function isExternalPositionModule(address _component, address _module) external view returns(bool) {
+    function isExternalPositionModule(address _component, address _module) external view returns (bool) {
         return _externalPositionModules(_component).contains(_module);
     }
 
@@ -2270,50 +2329,49 @@ contract SetToken is ERC20 {
     /**
      * Returns the total Real Units for a given component, summing the default and external position units.
      */
-    function getTotalComponentRealUnits(address _component) external view returns(int256) {
+    function getTotalComponentRealUnits(address _component) external view returns (int256) {
         int256 totalUnits = getDefaultPositionRealUnit(_component);
 
-		address[] memory externalModules = _externalPositionModules(_component);
-		for (uint256 i = 0; i < externalModules.length; i++) {
+        address[] memory externalModules = _externalPositionModules(_component);
+        for (uint256 i = 0; i < externalModules.length; i++) {
             // We will perform the summation no matter what, as an external position virtual unit can be negative
-			totalUnits = totalUnits.add(getExternalPositionRealUnit(_component, externalModules[i]));
-		}
+            totalUnits = totalUnits.add(getExternalPositionRealUnit(_component, externalModules[i]));
+        }
 
-		return totalUnits;
+        return totalUnits;
     }
-
 
     receive() external payable {} // solium-disable-line quotes
 
     /* ============ Internal Functions ============ */
 
-    function _defaultPositionVirtualUnit(address _component) internal view returns(int256) {
-    	return componentPositions[_component].virtualUnit;
+    function _defaultPositionVirtualUnit(address _component) internal view returns (int256) {
+        return componentPositions[_component].virtualUnit;
     }
 
-    function _externalPositionModules(address _component) internal view returns(address[] memory) {
-    	return componentPositions[_component].externalPositionModules;
+    function _externalPositionModules(address _component) internal view returns (address[] memory) {
+        return componentPositions[_component].externalPositionModules;
     }
 
-    function _externalPositionVirtualUnit(address _component, address _module) internal view returns(int256) {
-    	return componentPositions[_component].externalPositions[_module].virtualUnit;
+    function _externalPositionVirtualUnit(address _component, address _module) internal view returns (int256) {
+        return componentPositions[_component].externalPositions[_module].virtualUnit;
     }
 
-    function _externalPositionData(address _component, address _module) internal view returns(bytes memory) {
-    	return componentPositions[_component].externalPositions[_module].data;
+    function _externalPositionData(address _component, address _module) internal view returns (bytes memory) {
+        return componentPositions[_component].externalPositions[_module].data;
     }
 
     /**
      * Takes a real unit and divides by the position multiplier to return the virtual unit
      */
-    function _convertRealToVirtualUnit(int256 _realUnit) internal view returns(int256) {
+    function _convertRealToVirtualUnit(int256 _realUnit) internal view returns (int256) {
         return _realUnit.conservativePreciseDiv(positionMultiplier);
     }
 
     /**
      * Takes a virtual unit and multiplies by the position multiplier to return the real unit
      */
-    function _convertVirtualToRealUnit(int256 _virtualUnit) internal view returns(int256) {
+    function _convertVirtualToRealUnit(int256 _virtualUnit) internal view returns (int256) {
         return _virtualUnit.conservativePreciseMul(positionMultiplier);
     }
 
@@ -2335,7 +2393,7 @@ contract SetToken is ERC20 {
             // Increment the position count by each external position module
             address[] memory externalModules = _externalPositionModules(component);
             if (externalModules.length > 0) {
-            	positionCount = positionCount.add(externalModules.length);	
+                positionCount = positionCount.add(externalModules.length);
             }
         }
 
@@ -2348,15 +2406,9 @@ contract SetToken is ERC20 {
      * Module must be initialized on the SetToken and enabled by the controller
      */
     function _validateOnlyModule() internal view {
-        require(
-            moduleStates[msg.sender] == ISetToken.ModuleState.INITIALIZED,
-            "Only the module can call"
-        );
+        require(moduleStates[msg.sender] == ISetToken.ModuleState.INITIALIZED, "Only the module can call");
 
-        require(
-            controller.isModule(msg.sender),
-            "Module must be enabled on controller"
-        );
+        require(controller.isModule(msg.sender), "Module must be enabled on controller");
     }
 
     function _validateOnlyManager() internal view {

@@ -4,10 +4,8 @@
 // genericRouter ==> multiCalls, transfer the underlying token to the strategy
 // DPIAdapter
 
-
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
-import {IAdapter} from "../interfaces/IAdapter.sol";
-
+import { IAdapter } from "../interfaces/IAdapter.sol";
 
 /**
  * @title ISetToken
@@ -16,34 +14,37 @@ import {IAdapter} from "../interfaces/IAdapter.sol";
  * Interface for operating with SetTokens.
  */
 interface ISetToken {
-    function getComponents() external view returns(address[] memory);
+    function getComponents() external view returns (address[] memory);
 }
 
 interface ISetBasicIsstanceModuleAddress {
-    function redeem(address _setToken, uint256 _quantity,address _to) external;
+    function redeem(
+        address _setToken,
+        uint256 _quantity,
+        address _to
+    ) external;
 }
-
 
 pragma solidity 0.8.2;
 
 /// @title DPI Vampire Attack Contract for DPI Token
 /// @author Enso.finance (github.com/amateur-dev)
-/// @notice Adapter for redeeming the underlying assets from DPI 
+/// @notice Adapter for redeeming the underlying assets from DPI
 
 contract DPIAdapter is IAdapter {
     using SafeERC20 for IERC20;
 
     // state variables
     ISetBasicIsstanceModuleAddress public setBasicIssuanceModule;
-    mapping(address => uint) public whitelistedTokens;
+    mapping(address => uint256) public whitelistedTokens;
     address private manager;
-    
+
     // events
     event RedemptionSuccessful();
 
     // modifers
     modifier onlyManager {
-        require (msg.sender == manager, "DPIA: not authorised");
+        require(msg.sender == manager, "DPIA: not authorised");
         _;
     }
 
@@ -51,23 +52,18 @@ contract DPIAdapter is IAdapter {
     constructor(ISetBasicIsstanceModuleAddress setBasicIssuanceModuleAddress, address managerAddress) {
         setBasicIssuanceModule = setBasicIssuanceModuleAddress;
         manager = managerAddress;
-    } 
+    }
 
-    
-
-    
     // readerFunctions
-    function isInputToken(address token) public override view returns (bool) {
-            if (whitelistedTokens[token]==1) {
-                return true;
-            }
-            return false;
+    function isInputToken(address token) public view override returns (bool) {
+        if (whitelistedTokens[token] == 1) {
+            return true;
         }
+        return false;
+    }
 
     //TODO: To discuss with Kyle the idea of the inputTokens function
-    function inputTokens() public override view returns (address[] memory inputs) {
-        
-    }
+    function inputTokens() public view override returns (address[] memory inputs) {}
 
     /// @notice to retrieve the underlying tokens in the pool
     /// @param tokenSetAddress is the tokenSet Address
@@ -79,35 +75,42 @@ contract DPIAdapter is IAdapter {
     // executeableFunctions
 
     /// @notice Migrates the Token Set Contract's underlying assets under management
-    
+
     function execute(bytes calldata inputData) external override {
-        (address tokenSetAddress, uint256 quantity, address toWhom) = abi.decode(inputData, (address, uint256, address));
-        require (isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
+        (address tokenSetAddress, uint256 quantity, address toWhom) = abi.decode(
+            inputData,
+            (address, uint256, address)
+        );
+        require(isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
         IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
         address[] memory components = ISetToken(tokenSetAddress).getComponents();
-        uint[] memory pre = new uint[](components.length);
+        uint256[] memory pre = new uint256[](components.length);
         for (uint256 i = 0; i < components.length; i++) {
-                pre[i]=IERC20(components[i]).balanceOf(address(this));
+            pre[i] = IERC20(components[i]).balanceOf(address(this));
         }
-        setBasicIssuanceModule.redeem(
+        setBasicIssuanceModule.redeem(tokenSetAddress, quantity, toWhom);
+        uint256[] memory post = new uint256[](components.length);
+        for (uint256 i = 0; i < components.length; i++) {
+            post[i] = IERC20(components[i]).balanceOf(address(this));
+        }
+        for (uint256 i = 0; i < components.length; i++) {
+            require((post[i] >= pre[i]), "DPIA: Redemption issue");
+        }
+        emit RedemptionSuccessful();
+    }
+
+    function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
+        (address tokenSetAddress, uint256 quantity, address toWhom) = abi.decode(
+            inputData,
+            (address, uint256, address)
+        );
+        require(isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
+        bytes memory data = abi.encodeWithSelector(
+            setBasicIssuanceModule.redeem.selector,
             tokenSetAddress,
             quantity,
             toWhom
         );
-        uint[] memory post = new uint[](components.length);
-        for (uint256 i = 0; i < components.length; i++) {
-                post[i]=IERC20(components[i]).balanceOf(address(this));
-        }
-        for (uint256 i = 0; i < components.length; i++) {
-            require((post[i]>=pre[i]), "DPIA: Redemption issue");
-        }
-        emit RedemptionSuccessful();
-    }
-    
-    function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
-        (address tokenSetAddress, uint256 quantity, address toWhom) = abi.decode(inputData, (address, uint256, address));
-        require (isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
-        bytes memory data = abi.encodeWithSelector(setBasicIssuanceModule.redeem.selector, tokenSetAddress, quantity, toWhom);
         calls[0] = Call(payable(address(setBasicIssuanceModule)), data, 0);
     }
 
@@ -119,6 +122,3 @@ contract DPIAdapter is IAdapter {
         return true;
     }
 }
-
-
-
