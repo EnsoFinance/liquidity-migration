@@ -19,7 +19,6 @@ export class DPIEnvironmentBuilder {
     this.signer = signer;
   }
   async connect(): Promise<DPIEnvironment> {
-    // const registry = (await SmartPoolRegistry__factory.connect(FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS, this.signer)) as SmartPoolRegistry;
   
     const setBasicIssuanceModule = (await BasicIssuanceModule__factory.connect(FACTORY_REGISTRIES.SET_BASIC_SET_ISSUANCE_MODULE, this.signer)) as BasicIssuanceModule;
 
@@ -31,37 +30,9 @@ export class DPIEnvironmentBuilder {
 
     // deploying the DPI Adapter
     const adapter = await DPIAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress)
-
-    // const pieDaoAdmin = await registry.connect(this.signer).owner();
-    // const admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
-
-    // const pools = [];
-    // const implementations = [];
-    // implementations.push(
-    //   (await IPV2SmartPool__factory.connect("0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435", this.signer)) as IPV2SmartPool,
-    // );
-    // implementations.push(
-    //   (await PCappedSmartPool__factory.connect("0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181", this.signer)) as PCappedSmartPool,
-    // );
-
-    // for (let i = 0; i < 6; i++) {
-    //   const poolAddr = await registry.connect(this.signer).entries(i);
-    //   expect(await registry.connect(this.signer).inRegistry(poolAddr)).to.eq(true);
-    //   const proxy = (await IProxy__factory.connect(poolAddr, this.signer)) as IProxy;
-    //   const implementation = await proxy.connect(this.signer).getImplementation();
-    //   const abi = implementation === implementations[0].address ? implementations[0] : implementations[1];
-    //   try {
-    //     const pool = await this.getPool(poolAddr, abi);
-    //     pools.push(pool);
-    //     pool.print(implementation);
-    //   } catch (e) {
-    //     console.error("Couldnt handle: ", implementation); //Experi-pie?
-    //     continue;
-    //   }
-    // }
-
+    
     return new DPIEnvironment(this.signer, setBasicIssuanceModule, DPIToken, adapter);
-    // return new PieDaoEnvironment(this.signer, registry, adapter, admin, implementations, pools)
+
   }
 
   async getHolders(contract: string): Promise<Signer[]> {

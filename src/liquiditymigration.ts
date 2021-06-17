@@ -49,6 +49,10 @@ export class LiquidityMigrationBuilder {
           strategyController: this.enso.enso.controller.address
         }
       )
+      return this.liquidityMigration;
+    } else {
+      return undefined;
     }
+    
   }
 }
