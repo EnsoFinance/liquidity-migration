@@ -6,7 +6,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 // // import { shouldStakeLPToken, shouldMigrateToStrategy } from "./PieDao.behavior.txt";
 
 import { DPIEnvironmentBuilder } from "../src/dpi";
-import { Position } from "@enso/contracts";
+import { StrategyBuilder, Position } from "@enso/contracts"
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
 
@@ -49,28 +49,39 @@ describe("DPI: Unit tests", function () {
     
         // creating a strategy
 
-        // const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address)
+        const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address)
+        // console.log(s.percentages);
+        // const percentagesinNumber: number[] = [];
+        // for (let i = 0; i < s.percentages.length; i++) {
+        //     percentagesinNumber[i] = s.percentages[i].toNumber();
+        // };
     
-        // const data = ethers.utils.defaultAbiCoder.encode(['address[]', 'address[]'], [s.tokens, s.adapters])
-        // const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
-        //   this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
-        //   'PieDao',
-        //   'PIE',
-        //   s.tokens,
-        //   s.percentages,
-        //   false, //Cannot open strategy without first depositing
-        //   0,
-        //   THRESHOLD,
-        //   SLIPPAGE,
-        //   TIMELOCK,
-        //   this.ensoEnv.routers[1].contract.address,
-        //   data
-        // )
+        const data = ethers.utils.defaultAbiCoder.encode(['address[]', 'address[]'], [s.tokens, s.adapters]);
+
+        // createStrategy(address,string,string,address[],uint256[],bool,uint256,uint256,uint256,uint256,address,bytes)'
+
+        const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
+            this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
+            'DPI',
+            'DPI',
+            s.tokens,
+            s.percentages,
+            false, //Cannot open strategy without first depositing
+            0,
+            THRESHOLD,
+            SLIPPAGE,
+            TIMELOCK,
+            this.ensoEnv.routers[1].contract.address,
+            data
+        )
+        console.log(`tx: ${tx}`);
+
         // const receipt = await tx.wait()
+        // console.log(receipt);
         // const strategyAddress = receipt.events.find((ev: Event) => ev.event === 'NewStrategy').args.strategy
         // console.log('Strategy address: ', strategyAddress)
         //     this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
-      });
+    });
 
     it("Test", async function () {
         console.log("we are in the dpi test")
