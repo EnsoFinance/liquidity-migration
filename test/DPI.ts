@@ -88,12 +88,13 @@ describe("DPI: Unit tests", function () {
     for (let i = 0; i < this.DPIEnv.holders.length; i++) {
       holderBalances[i] = {
         holder: await this.DPIEnv.holders[i].getAddress(),
-        balance: await this.DPIEnv.DPIToken.balanceOf(String(await this.DPIEnv.holders[i].getAddress()))
+        balance: await this.DPIEnv.DPIToken.balanceOf((await this.DPIEnv.holders[i].getAddress()))
       }
+      console.log((await this.DPIEnv.DPIToken.balanceOf((await this.DPIEnv.holders[i].getAddress()))).toString())
     };
     
     console.log(holderBalances);
-    console.log(String(holderBalances[1].balance));
+    // console.log(String(holderBalances[1].balance));
     
     // expect(adminBalance).to.eq(BigNumber.from(0));
 
