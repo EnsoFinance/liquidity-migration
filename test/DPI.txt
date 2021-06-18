@@ -1,9 +1,9 @@
 import { ethers } from "hardhat";
-import bignumber from "bignumber.js"
+import bignumber from "bignumber.js";
 import { BigNumber, Contract, Event } from "ethers";
 import { Signers, MainnetSigner } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IStrategy__factory } from "../typechain";
+// import { IStrategy__factory } from "../typechain";
 // // import { shouldStakeLPToken, shouldMigrateToStrategy } from "./PieDao.behavior.txt";
 
 import { DPIEnvironmentBuilder } from "../src/dpi";
@@ -36,7 +36,7 @@ describe("DPI: Unit tests", function () {
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from DPI
-    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents(); // returns an array of addresses
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
@@ -44,8 +44,10 @@ describe("DPI: Unit tests", function () {
       this.DPIEnv.DPIToken.address,
       underlyingTokens,
     );
+
     for (let i = 0; i < underlyingTokens.length; i++) {
-      const percentage = (new bignumber(estimates[i].toString())).multipliedBy(DIVISOR).dividedBy(total.toString()).toFixed(0);
+      const percentage = (new bignumber(estimates[i].toString())).multipliedBy(DIVISOR).dividedBy(total.toString()).toFixed(0)
+
       positions.push({
         token: underlyingTokens[i],
         percentage: BigNumber.from(percentage),
@@ -55,29 +57,37 @@ describe("DPI: Unit tests", function () {
     // creating a strategy
 
     const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address);
+    console.log(s.percentages);
+    const percentagesinNumber: number[] = [];
+    for (let i = 0; i < s.percentages.length; i++) {
+        percentagesinNumber[i] = s.percentages[i].toNumber();
+    };
 
-    const data = ethers.utils.defaultAbiCoder.encode(["address[]", "address[]"], [s.tokens, s.adapters]);
+    // const data = ethers.utils.defaultAbiCoder.encode(["address[]", "address[]"], [s.tokens, s.adapters]);
 
     // createStrategy(address,string,string,address[],uint256[],bool,uint256,uint256,uint256,uint256,address,bytes)'
 
-    const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
-      this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
-      "DPI",
-      "DPI",
-      s.tokens,
-      s.percentages,
-      false, //Cannot open strategy without first depositing
-      0,
-      THRESHOLD,
-      SLIPPAGE,
-      TIMELOCK,
-      this.ensoEnv.routers[1].contract.address,
-      data,
-    );
-    const receipt = await tx.wait();
-    const strategyAddress = receipt.events.find((ev: Event) => ev.event === 'NewStrategy').args.strategy
-    console.log('Strategy address: ', strategyAddress)
-        this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+    // const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
+    //   this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
+    //   "DPI",
+    //   "DPI",
+    //   s.tokens,
+    //   s.percentages,
+    //   false, //Cannot open strategy without first depositing
+    //   0,
+    //   THRESHOLD,
+    //   SLIPPAGE,
+    //   TIMELOCK,
+    //   this.ensoEnv.routers[1].contract.address,
+    //   data,
+    // );
+    // console.log(`tx: ${tx}`);
+
+    // const receipt = await tx.wait()
+    // console.log(receipt);
+    // const strategyAddress = receipt.events.find((ev: Event) => ev.event === 'NewStrategy').args.strategy
+    // console.log('Strategy address: ', strategyAddress)
+    //     this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });
 
   it("Test", async function () {
