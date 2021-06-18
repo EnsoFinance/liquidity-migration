@@ -33,21 +33,20 @@ export class DPIEnvironmentBuilder {
     // deploying the DPI Adapter
     const adapter = await DPIAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress);
 
-    return new DPIEnvironment(this.signer, setBasicIssuanceModule, DPIToken, adapter);
-  }
-
-  async getHolders(contract: string): Promise<Signer[]> {
-    const addresses = DPI_HOLDERS[contract];
+    const addresses = DPI_HOLDERS[FACTORY_REGISTRIES.DPI];
     if (addresses === undefined) {
-      throw Error(`Failed to find token holder for contract: ${contract} `);
+      throw Error(`Failed to find token holder for contract: ${FACTORY_REGISTRIES.DPI} `);
     }
+    
     const signers = [];
     for (let i = 0; i < addresses.length; i++) {
       const signer = await new MainnetSigner(addresses[i]).impersonateAccount();
       signers.push(signer);
     }
-    return signers as Signer[];
+
+    return new DPIEnvironment(this.signer, setBasicIssuanceModule, DPIToken, adapter, signers);
   }
+
 }
 
 export class DPIEnvironment {
@@ -55,35 +54,13 @@ export class DPIEnvironment {
   setBasicIssuanceModule: Contract;
   DPIToken: Contract;
   adapter: Contract;
-  constructor(signer: Signer, setBasicIssuanceModule: Contract, DPIToken: Contract, adapter: Contract) {
+  holders: Signer[];
+  constructor(signer: Signer, setBasicIssuanceModule: Contract, DPIToken: Contract, adapter: Contract, holders: Signer[]) {
     this.signer = signer;
     this.setBasicIssuanceModule = setBasicIssuanceModule;
     this.DPIToken = DPIToken;
     this.adapter = adapter;
+    this.holders = holders;
   }
 }
 
-// export class PieDaoPool implements Strategy {
-//   contract: Implementation;
-//   supply: BigNumber;
-//   tokens: string[];
-//   name: string;
-//   holders: Signer[];
-
-//   constructor(contract: Implementation, supply: BigNumber, tokens: string[], name: string, holders: Signer[]) {
-//     this.contract = contract;
-//     this.supply = supply;
-//     this.tokens = tokens;
-//     this.name = name;
-//     this.holders = holders;
-//   }
-
-//   print(implementation?: string) {
-//     console.log("SmartPool: ", this.name);
-//     console.log("  Address: ", this.contract.address);
-//     if (implementation) console.log("  Implementation: ", implementation);
-//     console.log("  Supply: ", this.supply?.toString());
-//     console.log("  Tokens: ", this.tokens);
-//     console.log("");
-//   }
-// }

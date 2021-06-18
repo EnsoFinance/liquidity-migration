@@ -4,7 +4,7 @@ import { BigNumber, Contract, Event } from "ethers";
 import { Signers, MainnetSigner } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IStrategy__factory } from "../typechain";
-// // import { shouldStakeLPToken, shouldMigrateToStrategy } from "./PieDao.behavior.txt";
+
 
 import { DPIEnvironmentBuilder } from "../src/dpi";
 import { StrategyBuilder, Position } from "@enso/contracts";
@@ -20,6 +20,7 @@ describe("DPI: Unit tests", function () {
     this.signers.admin = signers[10];
 
     this.DPIEnv = await new DPIEnvironmentBuilder(this.signers.default).connect();
+    
     console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin);
@@ -77,10 +78,51 @@ describe("DPI: Unit tests", function () {
     const receipt = await tx.wait();
     const strategyAddress = receipt.events.find((ev: Event) => ev.event === 'NewStrategy').args.strategy
     console.log('Strategy address: ', strategyAddress)
-        this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });
 
-  it("Test", async function () {
-    console.log("we are in the dpi test");
+  it("Token holder should be able to withdraw from pool", async function () {
+  
+    // getting holders of DPI Tokens
+    const holderBalances = [];
+    for (let i = 0; i < this.DPIEnv.holders.length; i++) {
+      holderBalances[i] = {
+        holder: await this.DPIEnv.holders[i].getAddress(),
+        balance: await this.DPIEnv.DPIToken.balanceOf(String(await this.DPIEnv.holders[i].getAddress()))
+      }
+    };
+    
+    console.log(holderBalances);
+    console.log(String(holderBalances[1].balance));
+    
+    // expect(adminBalance).to.eq(BigNumber.from(0));
+
+    // const holderBalance = await contract.balanceOf(await holder.getAddress());
+    // expect(holderBalance).to.be.gt(BigNumber.from(0));
+
+    // await expect(contract.connect(this.pieDaoEnv.admin).joinPool(100)).to.be.revertedWith(
+    //   "revert ERC777: transfer amount exceeds balance",
+    // );
+
+    // const totalSupply = await contract.totalSupply();
+
+    // const tokenBalances = [];
+    // for (let i = 0; i < pool.tokens.length; i++) {
+    //   const token = ERC20__factory.connect(pool.tokens[i], this.signers.default);
+    //   const balance = await token.balanceOf(await holder.getAddress());
+    //   tokenBalances.push(balance);
+    // }
+
+    // const tx = await contract.connect(holder).exitPool(holderBalance);
+    // await tx.wait();
+    // // const receipt = await tx.wait();
+    // expect(await contract.balanceOf(await holder.getAddress())).to.eq(BigNumber.from(0));
+
+    // for (let i = 0; i < pool.tokens.length; i++) {
+    //   const token = ERC20__factory.connect(pool.tokens[i], this.signers.default);
+    //   const balance = await token.balanceOf(await holder.getAddress());
+    //   expect(balance).to.gt(tokenBalances[i]);
+    // }
+    // expect(await contract.totalSupply()).to.eq(totalSupply.sub(holderBalance));
   });
 });
