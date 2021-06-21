@@ -82,7 +82,6 @@ describe("DPI: Unit tests", function () {
   });
 
   it("Token holder should be able to withdraw from pool", async function () {
-  
     // getting holders of DPI Tokens
     const holderBalances = [];
     for (let i = 0; i < this.DPIEnv.holders.length; i++) {
