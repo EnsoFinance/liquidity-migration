@@ -97,54 +97,29 @@ describe("DPI: Unit tests", function () {
 
     // getting the underlying tokens
     const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    interface underlyingTokenBalances {
+      [key: string]: BigNumber
+    };
+    const ub: underlyingTokenBalances = {};
     
-  // for (let index = 0; index < underlyingTokens.length; index++) {
-  //       const tokenContract = IERC20__factory.connect(underlyingTokens[index], this.signers.default) as IERC20;
-  //       const adds = tokenContract.address;
-  //       console.log(adds);
-  //       holderBalances.forEach(async (e)=>
-  //         {
-  //           e.underlyingTokenBalances = {}; // creating an empty object
-  //           const balance = await tokenContract.balanceOf(e.holder);
-  //           console.log(balance);
-  //           // adding key value pair to the empty object created
-  //           e.underlyingTokenBalances.abc =  "balance";
-  //         }
-  //       )
-  // }
+    for (let index = 0; index < underlyingTokens.length; index++) {
+          const tokenContract = IERC20__factory.connect(underlyingTokens[index], this.signers.default) as IERC20;
+          const contractAddress = tokenContract.address;
+          holderBalances.forEach(async (e)=>
+            {          
+              const balance = await tokenContract.balanceOf(e.holder);
+              // adding key value pair to the empty object created
+              ub[contractAddress] =  balance;
+            })   
+    }
 
-  // console.log(holderBalances);
-
-    // for (let index = 0; index < holderBalances.length; index++) { // holderBalances.length = 3
-    //   for (let a = 0; a < underlyingTokens.length; a++) { // underlyingTokens.length = 14
-    //       const tokenContract = IERC20__factory.connect(underlyingTokens[a], this.signers.default) as IERC20;
-    //       const userBalanceOfUnderlyingToken = await tokenContract.balanceOf(holderBalances[index].holder);
-    //       holderBalances[index].underlyingTokenBalances = {
-    //         [tokenContract.address]: userBalanceOfUnderlyingToken
-    //       }
-    //   }
-    // }
-
-
-    // getting the balance of each of the underlying tokens for the holders
-    // for (let i = 0; i < underlyingTokens.length; i++) {
-    //   // creating the contract
-    //   const tokenContract = IERC20__factory.connect(underlyingTokens[i], this.signers.default) as IERC20;
-    //   const tempAddress = tokenContract.address;
-    //   // console.log(`Getting value for ${tempAddress}`);
-    //   // getting balance of the user
-    //   for (let index = 0; index < this.DPIEnv.holders.length; index++) {
-    //     // console.log(index,`:`, await this.DPIEnv.holders[index].getAddress());
-    //     const underlyingTokenBalance = await tokenContract.balanceOf(await this.DPIEnv.holders[index].getAddress());
-    //     // console.log(tempAddress, ":", underlyingTokenBalance.toString());
-    //     // console.log(underlyingTokenBalance.toString());
-    //     holderBalances[index].underlyingTokenBalances = {
-    //       tempAddress: underlyingTokenBalance
-    //     }
-    //     // console.log(tempAddress,":", holderBalances[index].underlyingTokenBalances);
-    //   }
-    // }
+    console.log(ub);
     
+    // redeeming the token
+
+
+
+
 
     // const tx = await contract.connect(holder).exitPool(holderBalance);
     // await tx.wait();
