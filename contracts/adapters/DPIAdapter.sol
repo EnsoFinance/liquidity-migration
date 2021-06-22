@@ -116,7 +116,6 @@ contract DPIAdapter is IAdapter {
 
     // controllingFunctions
 
-    //TODO: To require this function in the execute and ecodeExecute function call
     function addAcceptedTokensToWhitelist(address tokenAddress) public onlyManager returns (bool) {
         whitelistedTokens[tokenAddress] = 1;
         return true;

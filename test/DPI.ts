@@ -129,4 +129,15 @@ describe("DPI: Unit tests", function () {
     expect(updatedDPIBalance).to.equal(BigNumber.from(0));
     expect((updatedUnderlyingTokenBalance.gt(previousUnderlyingTokenBalance))).to.be.true;
   });
+
+  it("Token holder should be able to stake LP token", async function () {
+    const holder2 = await this.DPIEnv.holders[1];
+    const holder2Address = await holder2.getAddress();
+
+    const holder2Balance = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
+    expect(holder2Balance).to.be.gt(BigNumber.from(0));
+    await this.DPIEnv.DPIToken.connect(holder2).approve(this.liquidityMigration.address, holder2Balance)
+    await this.liquidityMigration.connect(holder2).stakeLpTokens(this.DPIEnv.DPIToken.address, holder2Balance, AcceptedProtocols.DefiPulseIndex)
+    expect((await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.DPIToken.address))[0]).to.equal(holder2Balance)
+  })
 });
