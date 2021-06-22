@@ -11,7 +11,7 @@ import { DPIEnvironmentBuilder } from "../src/dpi";
 import { StrategyBuilder, Position } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
-import { object } from "underscore";
+
 
 describe("DPI: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -97,40 +97,36 @@ describe("DPI: Unit tests", function () {
 
     // getting the underlying tokens
     const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-    interface underlyingTokenBalances {
-      [key: string]: BigNumber
-    };
-    const ub: underlyingTokenBalances = {};
+    // interface underlyingTokenBalances {
+    //   [key: string]: BigNumber
+    // };
+    // const ub: underlyingTokenBalances = {};
     
-    for (let index = 0; index < underlyingTokens.length; index++) {
-          const tokenContract = IERC20__factory.connect(underlyingTokens[index], this.signers.default) as IERC20;
-          const contractAddress = tokenContract.address;
-          holderBalances.forEach(async (e)=>
-            {          
-              const balance = await tokenContract.balanceOf(e.holder);
-              // adding key value pair to the empty object created
-              ub[contractAddress] =  balance;
-            })   
-    }
+    // for (let index = 0; index < underlyingTokens.length; index++) {
+    //       const tokenContract = IERC20__factory.connect(underlyingTokens[index], this.signers.default) as IERC20;
+    //       const contractAddress = tokenContract.address;
+    //       holderBalances.forEach(async (e)=>
+    //         {          
+    //           const balance = await tokenContract.balanceOf(e.holder);
+    //           // adding key value pair to the empty object created
+    //           ub[contractAddress] =  balance;
+    //         })   
+    // }
 
-    console.log(ub);
+    // console.log(ub);
     
     // redeeming the token
-
-
-
-
-
-    // const tx = await contract.connect(holder).exitPool(holderBalance);
-    // await tx.wait();
-    // // const receipt = await tx.wait();
-    // expect(await contract.balanceOf(await holder.getAddress())).to.eq(BigNumber.from(0));
-
-    // for (let i = 0; i < pool.tokens.length; i++) {
-    //   const token = ERC20__factory.connect(pool.tokens[i], this.signers.default);
-    //   const balance = await token.balanceOf(await holder.getAddress());
-    //   expect(balance).to.gt(tokenBalances[i]);
-    // }
-    // expect(await contract.totalSupply()).to.eq(totalSupply.sub(holderBalance));
+    const setBasicIssuanceModule = this.DPIEnv.setBasicIssuanceModule;
+    const addressWhoIsRedeeming = await this.DPIEnv.holders[0].getAddress();
+    const address_toWhom = addressWhoIsRedeeming;
+    const tokenBalance = holderBalances[0].balance;
+    const tokenContract = IERC20__factory.connect(underlyingTokens[0], this.DPIEnv.holders[0]) as IERC20;
+    const previousUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
+    const tx = await setBasicIssuanceModule.connect(this.DPIEnv.holders[0]).redeem(this.DPIEnv.DPIToken.address,tokenBalance,address_toWhom);
+    await tx.wait();
+    const updatedDPIBalance = await this.DPIEnv.DPIToken.balanceOf(address_toWhom);
+    const updatedUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
+    expect(updatedDPIBalance).to.equal(BigNumber.from(0));
+    expect((updatedUnderlyingTokenBalance.gt(previousUnderlyingTokenBalance))).to.be.true;
   });
 });
