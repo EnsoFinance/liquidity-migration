@@ -8,7 +8,7 @@ import { ClashingImplementation, IERC20, IERC20__factory, IStrategy__factory } f
 
 
 import { DPIEnvironmentBuilder } from "../src/dpi";
-import { StrategyBuilder, Position } from "@enso/contracts";
+import { StrategyBuilder, Position,Multicall } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
 
@@ -139,5 +139,41 @@ describe("DPI: Unit tests", function () {
     await this.DPIEnv.DPIToken.connect(holder2).approve(this.liquidityMigration.address, holder2Balance)
     await this.liquidityMigration.connect(holder2).stakeLpTokens(this.DPIEnv.DPIToken.address, holder2Balance, AcceptedProtocols.DefiPulseIndex)
     expect((await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.DPIToken.address))[0]).to.equal(holder2Balance)
+  });
+
+  it("Should migrate tokens to strategy", async function () {
+    
+    const routerContract = this.ensoEnv.routers[0].contract;
+
+    const holder3 = await this.DPIEnv.holders[2];
+    const holder3Address = await holder3.getAddress()
+
+    // staking the tokens in the liquidity migration contract
+    const amount = (await this.liquidityMigration.stakes(holder3Address, this.DPIEnv.DPIToken.address))[0]
+
+    // Setup migration calls using DPIAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(['address', 'uint256'], [this.DPIEnv.DPIToken.address, amount])
+    
+    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
+    // console.log(migrationCalls);
+    // // Setup transfer of tokens from router to strategy
+    // const transferCalls = [] as Multicall[]
+    // for (let i = 0; i < pool.tokens.length; i++) {
+    //   transferCalls.push(encodeSettleTransfer(routerContract, pool.tokens[i], this.strategy.address))
+    // }
+    // // Encode multicalls for GenericRouter
+    // const calls: Multicall[] = [...migrationCalls, ...transferCalls]
+    // const migrationData = await routerContract.encodeCalls(calls)
+    // // Migrate
+    // await this.liquidityMigration.connect(holder).migrate(
+    //   this.strategy.address,
+    //   poolContract.address,
+    //   AcceptedProtocols.PieDao,
+    //   migrationData,
+    //   0
+    // )
+    // const [total, ] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, pool.tokens)
+    // expect(total).to.gt(0)
+    // expect(await this.strategy.balanceOf(holderAddress)).to.gt(0)
   })
 });
