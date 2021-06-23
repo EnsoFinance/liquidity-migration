@@ -71,9 +71,9 @@ contract DPIAdapter is IAdapter {
     /// @notice Migrates the Token Set Contract's underlying assets under management
 
     function execute(bytes calldata inputData) external override {
-        (address tokenSetAddress, uint256 quantity) = abi.decode(
+        (address tokenSetAddress, uint256 quantity, address genericRouter) = abi.decode(
             inputData,
-            (address, uint256)
+            (address, uint256, address)
         );
         require(isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
         IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
@@ -82,7 +82,7 @@ contract DPIAdapter is IAdapter {
         for (uint256 i = 0; i < components.length; i++) {
             pre[i] = IERC20(components[i]).balanceOf(address(this));
         }
-        setBasicIssuanceModule.redeem(tokenSetAddress, quantity, msg.sender);
+        setBasicIssuanceModule.redeem(tokenSetAddress, quantity, genericRouter);
         uint256[] memory post = new uint256[](components.length);
         for (uint256 i = 0; i < components.length; i++) {
             post[i] = IERC20(components[i]).balanceOf(address(this));
@@ -93,21 +93,21 @@ contract DPIAdapter is IAdapter {
         emit RedemptionSuccessful();
     }
 
-    function encodeExecute(bytes calldata inputData) override public view returns (Call[] memory call) {}
-    function encodeExecuted(bytes calldata inputData) public view returns (address, uint256, address) {
+    function encodeExecute(bytes calldata inputData) override public view returns (Call[] memory calls) {
         (address tokenSetAddress, uint256 quantity, address genericRouterAddress) = abi.decode(
             inputData,
             (address, uint256, address)
         );
-        return (tokenSetAddress, quantity, genericRouterAddress);
-        // require(isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
-        // bytes memory data = abi.encodeWithSelector(
-        //     setBasicIssuanceModule.redeem.selector,
-        //     tokenSetAddress,
-        //     quantity,
-        //     genericRouterAddress
-        // );
-        // calls[0] = Call(payable(address(setBasicIssuanceModule)), data, 0);
+        require(isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
+        bytes memory data = abi.encodeWithSelector(
+            setBasicIssuanceModule.redeem.selector,
+            tokenSetAddress,
+            quantity,
+            genericRouterAddress
+        );
+        calls = new Call[](1);
+        calls[0] = Call(payable(address(setBasicIssuanceModule)), data, 0);
+        return calls;
     }
 
     // controllingFunctions

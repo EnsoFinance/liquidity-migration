@@ -188,14 +188,14 @@ describe("DPI: Unit tests", function () {
 
     // Setup migration calls using DPIAdapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(['address', 'uint256', 'address'], [this.DPIEnv.DPIToken.address, amount, routerContract.address])    
-    const [x, y, z] = await this.DPIEnv.adapter.encodeExecuted(adapterData);
-    console.log(x, y, z);
-    // console.log(migrationCalls);
+    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
+    console.log(migrationCalls);
     // // Setup transfer of tokens from router to strategy
-    // const transferCalls = [] as Multicall[]
-    // for (let i = 0; i < pool.tokens.length; i++) {
-    //   transferCalls.push(encodeSettleTransfer(routerContract, pool.tokens[i], this.strategy.address))
-    // }
+    const transferCalls = [] as Multicall[]
+    // TODO: Dipesh to discuss the follwoing with Peter
+    for (let i = 0; i < pool.tokens.length; i++) {
+      transferCalls.push(encodeSettleTransfer(routerContract, pool.tokens[i], this.strategy.address))
+    }
     // // Encode multicalls for GenericRouter
     // const calls: Multicall[] = [...migrationCalls, ...transferCalls]
     // const migrationData = await routerContract.encodeCalls(calls)
