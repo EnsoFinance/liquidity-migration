@@ -32,16 +32,16 @@ export class DPIEnvironmentBuilder {
 
     // deploying the DPI Adapter
     const adapter = await DPIAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress);
-    
+
     // adding the DPI Token as a whitelisted token
     const tx = await adapter.connect(this.signer).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI);
     await tx.wait();
-    
+
     const addresses = DPI_HOLDERS[FACTORY_REGISTRIES.DPI];
     if (addresses === undefined) {
       throw Error(`Failed to find token holder for contract: ${FACTORY_REGISTRIES.DPI} `);
     }
-    
+
     const signers = [];
     for (let i = 0; i < addresses.length; i++) {
       const signer = await new MainnetSigner(addresses[i]).impersonateAccount();
@@ -50,7 +50,6 @@ export class DPIEnvironmentBuilder {
 
     return new DPIEnvironment(this.signer, setBasicIssuanceModule, DPIToken, adapter, signers);
   }
-
 }
 
 export class DPIEnvironment {
@@ -59,7 +58,13 @@ export class DPIEnvironment {
   DPIToken: Contract;
   adapter: Contract;
   holders: Signer[];
-  constructor(signer: Signer, setBasicIssuanceModule: Contract, DPIToken: Contract, adapter: Contract, holders: Signer[]) {
+  constructor(
+    signer: Signer,
+    setBasicIssuanceModule: Contract,
+    DPIToken: Contract,
+    adapter: Contract,
+    holders: Signer[],
+  ) {
     this.signer = signer;
     this.setBasicIssuanceModule = setBasicIssuanceModule;
     this.DPIToken = DPIToken;
@@ -67,4 +72,3 @@ export class DPIEnvironment {
     this.holders = holders;
   }
 }
-

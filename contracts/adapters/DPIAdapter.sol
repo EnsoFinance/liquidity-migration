@@ -93,7 +93,7 @@ contract DPIAdapter is IAdapter {
         emit RedemptionSuccessful();
     }
 
-    function encodeExecute(bytes calldata inputData) override public view returns (Call[] memory calls) {
+    function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
         (address tokenSetAddress, uint256 quantity, address genericRouterAddress) = abi.decode(
             inputData,
             (address, uint256, address)
