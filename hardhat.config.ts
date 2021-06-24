@@ -1,17 +1,17 @@
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-import { HardhatUserConfig } from "hardhat/types";
-import { NetworkUserConfig } from "hardhat/types";
+import { HardhatUserConfig, NetworksUserConfig, NetworkUserConfig } from "hardhat/types";
 import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
-import "solidity-coverage";
 import "@typechain/hardhat";
+import "hardhat-etherscan-abi";
+import "solidity-coverage";
 import "./tasks/accounts";
 import "./tasks/clean";
-import "hardhat-etherscan-abi";
+
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -26,32 +26,53 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-let mnemonic: string;
-if (!process.env.MNEMONIC) {
-  throw new Error("Please set your MNEMONIC in a .env file");
+let mnemonic: string | undefined = process.env.MNEMONIC
+let infuraApiKey: string | undefined = process.env.INFURA_API_KEY
+let etherscanApiKey: string | undefined = process.env.ETHERSCAN_API_KEY
+let archiveNode: string | undefined = process.env.ARCHIVE_NODE
+
+let networkIndex: number = process.argv.findIndex(arg => arg === '--network')
+if (networkIndex > 0) {
+	if (process.argv[networkIndex + 1] !== 'hardhat') {
+		if (!mnemonic) {
+			throw new Error('Please set your MNEMONIC in a .env file')
+		}
+		if (!infuraApiKey) {
+			throw new Error('Please set your INFURA_API_KEY in a .env file')
+		}
+	} else {
+    if (process.argv[2] == 'test' && !archiveNode) {
+      throw new Error('Please set your ARCHIVE_NODE in a .env file')
+    }
+  }
 } else {
-  mnemonic = process.env.MNEMONIC;
+  if (process.argv[2] == 'test' && !archiveNode) {
+    throw new Error('Please set your ARCHIVE_NODE in a .env file')
+  }
 }
 
-let infuraApiKey: string;
-if (!process.env.INFURA_API_KEY) {
-  throw new Error("Please set your INFURA_API_KEY in a .env file");
-} else {
-  infuraApiKey = process.env.INFURA_API_KEY;
-}
-
-let archiveNode: string;
-if (!process.env.ARCHIVE_NODE) {
-  throw new Error("Please set your ARCHIVE_NODE url in a .env file");
-} else {
-  archiveNode = process.env.ARCHIVE_NODE;
-}
-
-let etherscanApiKey: string;
-if (!process.env.ETHERSCAN_API_KEY) {
-  throw new Error("Please set your ETHERSCAN_API_KEY in a .env file");
-} else {
-  etherscanApiKey = process.env.ETHERSCAN_API_KEY;
+function getNetworks(): NetworksUserConfig {
+	let networks: NetworksUserConfig = {
+		hardhat: {
+			chainId: chainIds.mainnet,
+		}
+	}
+  if (networks.hardhat) {
+    if (mnemonic) networks.hardhat.accounts = {
+      mnemonic
+    }
+    if (archiveNode) networks.hardhat.forking = {
+      url: archiveNode,
+      blockNumber: 12142007
+    }
+  }
+	if (mnemonic && infuraApiKey) {
+		networks.goerli = createTestnetConfig('goerli')
+		networks.kovan = createTestnetConfig('kovan')
+		networks.rinkeby = createTestnetConfig('rinkeby')
+		networks.ropsten = createTestnetConfig('ropsten')
+	}
+	return networks
 }
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
@@ -70,22 +91,7 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
-  networks: {
-    hardhat: {
-      forking: {
-        url: archiveNode,
-        blockNumber: 12142007,
-      },
-      accounts: {
-        mnemonic,
-      },
-      chainId: chainIds.mainnet,
-    },
-    goerli: createTestnetConfig("goerli"),
-    kovan: createTestnetConfig("kovan"),
-    rinkeby: createTestnetConfig("rinkeby"),
-    ropsten: createTestnetConfig("ropsten"),
-  },
+  networks: getNetworks(),
   etherscan: {
     apiKey: etherscanApiKey,
   },

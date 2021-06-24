@@ -1,5 +1,4 @@
-const hre = require("hardhat");
-const { ethers } = hre;
+import { ethers } from "hardhat";
 import { expect } from "chai";
 import { MainnetSigner } from "../types";
 import { PIE_DAO_HOLDERS } from "../src/constants";
@@ -7,7 +6,17 @@ import { BigNumber, Contract, Signer } from "ethers";
 import { StrategyBuilder, Strategy, Implementation } from "./strategy";
 
 import { FACTORY_REGISTRIES } from "../src/constants";
-import { IPV2SmartPool, PCappedSmartPool } from "../typechain";
+import {
+  PieDaoAdapter__factory,
+  SmartPoolRegistry,
+  SmartPoolRegistry__factory,
+  IPV2SmartPool,
+  IPV2SmartPool__factory,
+  PCappedSmartPool,
+  PCappedSmartPool__factory,
+  IProxy,
+  IProxy__factory
+} from "../typechain";
 
 export class PieDaoEnvironmentBuilder implements StrategyBuilder {
   signer: Signer;
@@ -16,8 +25,11 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     this.signer = signer;
   }
   async connect(): Promise<PieDaoEnvironment> {
-    const registry = await hre.ethers.getVerifiedContractAt(FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS);
+    const registry = (await SmartPoolRegistry__factory.connect(FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS, this.signer)) as SmartPoolRegistry;
     console.log("PieDaoRegistry: ", registry.address);
+
+    const PieDaoAdapterFactory = (await ethers.getContractFactory('PieDaoAdapter')) as PieDaoAdapter__factory
+    const adapter = await PieDaoAdapterFactory.deploy(registry.address)
 
     const pieDaoAdmin = await registry.connect(this.signer).owner();
     const admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
@@ -25,18 +37,18 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     const pools = [];
     const implementations = [];
     implementations.push(
-      (await hre.ethers.getVerifiedContractAt("0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435")) as IPV2SmartPool,
+      (await IPV2SmartPool__factory.connect("0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435", this.signer)) as IPV2SmartPool,
     );
     implementations.push(
-      (await hre.ethers.getVerifiedContractAt("0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181")) as PCappedSmartPool,
+      (await PCappedSmartPool__factory.connect("0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181", this.signer)) as PCappedSmartPool,
     );
 
     for (let i = 0; i < 6; i++) {
       const poolAddr = await registry.connect(this.signer).entries(i);
       expect(await registry.connect(this.signer).inRegistry(poolAddr)).to.eq(true);
-      const proxy = await hre.ethers.getVerifiedContractAt(poolAddr);
+      const proxy = (await IProxy__factory.connect(poolAddr, this.signer)) as IProxy;
       const implementation = await proxy.connect(this.signer).getImplementation();
-      const abi = implementation === implementations[0] ? implementations[0] : implementations[1];
+      const abi = implementation === implementations[0].address ? implementations[0] : implementations[1];
       try {
         const pool = await this.getPool(poolAddr, abi);
         pools.push(pool);
@@ -47,7 +59,7 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
       }
     }
 
-      return new PieDaoEnvironment(this.signer, registry, admin, implementations, pools)
+    return new PieDaoEnvironment(this.signer, registry, adapter, admin, implementations, pools)
   }
   async getHolders(contract: string): Promise<Signer[]> {
     const addresses = PIE_DAO_HOLDERS[contract];
@@ -82,18 +94,21 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
 export class PieDaoEnvironment {
   signer: Signer;
   registry: Contract;
+  adapter: Contract;
   admin: Signer;
   implementations: Implementation[];
   pools: PieDaoPool[];
   constructor(
     signer: Signer,
     registry: Contract,
+    adapter: Contract,
     admin: Signer,
     implementations: Implementation[],
     pools: PieDaoPool[],
   ) {
     this.signer = signer;
     this.registry = registry;
+    this.adapter = adapter;
     this.admin = admin;
     this.implementations = implementations;
     this.pools = pools;

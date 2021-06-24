@@ -71,7 +71,9 @@ contract PieDaoAdapter is IAdapter{
         (address inputToken, uint256 amount) = abi.decode(inputData, (address, uint256));
         require(isInputToken(inputToken), "Not PieDao pool");
         bytes memory data = abi.encodeWithSelector(PieDaoPool(inputToken).exitPool.selector, amount);
+        calls = new Call[](1);
         calls[0] = Call(payable(inputToken), data, 0);
+        return calls;
     }
 
 }
