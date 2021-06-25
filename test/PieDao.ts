@@ -1,11 +1,11 @@
+import { expect } from "chai";
 import { ethers } from "hardhat";
 import { BigNumber, Contract, Event } from "ethers";
 import { Signers, MainnetSigner } from "../types";
-import { IStrategy__factory } from "../typechain";
-import { shouldStakeLPToken, shouldMigrateToStrategy, shouldMigrateFromSmartPool } from "./PieDao.behavior";
+import { ERC20__factory, IStrategy__factory } from "../typechain";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
-import { StrategyBuilder, Position } from "@enso/contracts";
+import { StrategyBuilder, Position, Multicall, encodeSettleTransfer } from "@enso/contracts";
 import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
 
 describe("PieDao: Unit tests", function () {
@@ -59,15 +59,47 @@ describe("PieDao: Unit tests", function () {
     this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });
 
-  describe("PoolRegistry", function () {
-    shouldMigrateFromSmartPool();
+  it("Token holder should be able to stake LP token", async function () {
+    const pool = this.pieDaoEnv.pools[0];
+    const contract = await pool.contract;
+    const holder = pool.holders[0];
+    const holderAddress = await holder.getAddress();
+
+    const holderBalance = await contract.balanceOf(holderAddress);
+    expect(holderBalance).to.be.gt(BigNumber.from(0));
+    await contract.connect(holder).approve(this.liquidityMigration.address, holderBalance);
+    await this.liquidityMigration
+      .connect(holder)
+      .stakeLpTokens(contract.address, holderBalance, AcceptedProtocols.PieDao);
+    expect((await this.liquidityMigration.stakes(holderAddress, contract.address))[0]).to.equal(holderBalance);
   });
 
-  describe("Stake", function () {
-    shouldStakeLPToken();
-  });
+  it("Should migrate tokens to strategy", async function () {
+    const pool = this.pieDaoEnv.pools[0];
+    const poolContract = await pool.contract;
+    const routerContract = this.ensoEnv.routers[0].contract;
 
-  describe("Migrate", function () {
-    shouldMigrateToStrategy();
+    const holder = pool.holders[0];
+    const holderAddress = await holder.getAddress();
+    const amount = (await this.liquidityMigration.stakes(holderAddress, poolContract.address))[0];
+
+    // Setup migration calls using PieDaoAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(["address", "uint256"], [poolContract.address, amount]);
+    const migrationCalls: Multicall[] = await this.pieDaoEnv.adapter.encodeExecute(adapterData);
+    // Setup transfer of tokens from router to strategy
+    const transferCalls = [] as Multicall[];
+    for (let i = 0; i < pool.tokens.length; i++) {
+      transferCalls.push(encodeSettleTransfer(routerContract, pool.tokens[i], this.strategy.address));
+    }
+    // Encode multicalls for GenericRouter
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const migrationData = await routerContract.encodeCalls(calls);
+    // Migrate
+    await this.liquidityMigration
+      .connect(holder)
+      .migrate(this.strategy.address, poolContract.address, AcceptedProtocols.PieDao, migrationData, 0);
+    const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, pool.tokens);
+    expect(total).to.gt(0);
+    expect(await this.strategy.balanceOf(holderAddress)).to.gt(0);
   });
 });

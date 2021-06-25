@@ -7,6 +7,8 @@ import { StrategyBuilder, Strategy, Implementation } from "./strategy";
 
 import { FACTORY_REGISTRIES } from "../src/constants";
 import {
+  ERC20,
+  ERC20__factory,
   PieDaoAdapter__factory,
   SmartPoolRegistry,
   SmartPoolRegistry__factory,
@@ -37,7 +39,7 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     const pieDaoAdmin = await registry.connect(this.signer).owner();
     const admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
 
-    const pools = [];
+    const pools = [] as PieDaoPool[];
     const implementations = [];
     implementations.push(
       (await IPV2SmartPool__factory.connect(
@@ -52,19 +54,25 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
       )) as PCappedSmartPool,
     );
 
-    for (let i = 0; i < 6; i++) {
-      const poolAddr = await registry.connect(this.signer).entries(i);
+    for (let i = 0; i < 5; i++) {
+      const poolAddr = await registry.connect(this.signer).entries(i)
       expect(await registry.connect(this.signer).inRegistry(poolAddr)).to.eq(true);
       const proxy = (await IProxy__factory.connect(poolAddr, this.signer)) as IProxy;
       const implementation = await proxy.connect(this.signer).getImplementation();
-      const abi = implementation === implementations[0].address ? implementations[0] : implementations[1];
-      try {
-        const pool = await this.getPool(poolAddr, abi);
-        pools.push(pool);
-        pool.print(implementation);
-      } catch (e) {
-        console.error("Couldnt handle: ", implementation); //Experi-pie?
-        continue;
+
+      const index = implementations.findIndex(impl => impl.address == implementation)
+      if (index > -1) {
+        const abi = implementations[index]
+        try {
+          const pool = await this.getPool(poolAddr, abi);
+          pools.push(pool);
+          //pool.print(implementation);
+        } catch (e) {
+          console.error("Couldnt handle: ", implementation); //Experi-pie?
+          continue;
+        }
+      } else {
+        console.error("Implementation not found")
       }
     }
 
@@ -85,11 +93,12 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
 
   async getPool(address: string, implementation: Implementation): Promise<PieDaoPool> {
     const contract = implementation.attach(address);
+    const erc20 = (await ERC20__factory.connect(address, this.signer)) as ERC20;
     let tokens: string[], supply: BigNumber, name: string, holders: Signer[];
     [tokens, supply, name, holders] = await Promise.all([
       await contract.connect(this.signer).getTokens(),
-      await contract.connect(this.signer).totalSupply(),
-      await contract.connect(this.signer).name(),
+      await erc20.connect(this.signer).totalSupply(),
+      await erc20.connect(this.signer).name(),
       await this.getHolders(contract.address),
     ]);
     name = name === undefined ? "No Name" : name;
