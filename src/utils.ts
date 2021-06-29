@@ -1,1 +1,5 @@
-export enum Networks { Mainnet, LocalTestnet, ExternalTestnet};
+export enum Networks {
+  Mainnet,
+  LocalTestnet,
+  ExternalTestnet,
+}

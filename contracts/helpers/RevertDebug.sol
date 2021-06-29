@@ -1,4 +1,5 @@
 pragma solidity 0.8.2;
+
 //SPDX-License-Identifier: UNLICENSED
 // Original: https://github.com/authereum/contracts/blob/master/contracts/account/BaseAccount.sol
 // Author: Authereum Labs, Inc.

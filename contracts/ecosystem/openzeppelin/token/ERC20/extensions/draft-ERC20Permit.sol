@@ -49,8 +49,9 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
         // solhint-disable-next-line not-rely-on-time
         require(block.timestamp <= deadline, "ERC20Permit: expired deadline");
 
-        bytes32 structHash =
-            keccak256(abi.encode(_PERMIT_TYPEHASH, owner, spender, value, _nonces[owner].current(), deadline));
+        bytes32 structHash = keccak256(
+            abi.encode(_PERMIT_TYPEHASH, owner, spender, value, _nonces[owner].current(), deadline)
+        );
 
         bytes32 hash = _hashTypedDataV4(structHash);
 

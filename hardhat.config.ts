@@ -12,7 +12,6 @@ import "solidity-coverage";
 import "./tasks/accounts";
 import "./tasks/clean";
 
-
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 const chainIds = {
@@ -26,53 +25,55 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-let mnemonic: string | undefined = process.env.MNEMONIC
-let infuraApiKey: string | undefined = process.env.INFURA_API_KEY
-let etherscanApiKey: string | undefined = process.env.ETHERSCAN_API_KEY
-let archiveNode: string | undefined = process.env.ARCHIVE_NODE
+let mnemonic: string | undefined = process.env.MNEMONIC;
+let infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
+let etherscanApiKey: string | undefined = process.env.ETHERSCAN_API_KEY;
+let archiveNode: string | undefined = process.env.ARCHIVE_NODE;
 
-let networkIndex: number = process.argv.findIndex(arg => arg === '--network')
+let networkIndex: number = process.argv.findIndex(arg => arg === "--network");
 if (networkIndex > 0) {
-	if (process.argv[networkIndex + 1] !== 'hardhat') {
-		if (!mnemonic) {
-			throw new Error('Please set your MNEMONIC in a .env file')
-		}
-		if (!infuraApiKey) {
-			throw new Error('Please set your INFURA_API_KEY in a .env file')
-		}
-	} else {
-    if (process.argv[2] == 'test' && !archiveNode) {
-      throw new Error('Please set your ARCHIVE_NODE in a .env file')
+  if (process.argv[networkIndex + 1] !== "hardhat") {
+    if (!mnemonic) {
+      throw new Error("Please set your MNEMONIC in a .env file");
+    }
+    if (!infuraApiKey) {
+      throw new Error("Please set your INFURA_API_KEY in a .env file");
+    }
+  } else {
+    if (process.argv[2] == "test" && !archiveNode) {
+      throw new Error("Please set your ARCHIVE_NODE in a .env file");
     }
   }
 } else {
-  if (process.argv[2] == 'test' && !archiveNode) {
-    throw new Error('Please set your ARCHIVE_NODE in a .env file')
+  if (process.argv[2] == "test" && !archiveNode) {
+    throw new Error("Please set your ARCHIVE_NODE in a .env file");
   }
 }
 
 function getNetworks(): NetworksUserConfig {
-	let networks: NetworksUserConfig = {
-		hardhat: {
-			chainId: chainIds.mainnet,
-		}
-	}
+  let networks: NetworksUserConfig = {
+    hardhat: {
+      chainId: chainIds.mainnet,
+    },
+  };
   if (networks.hardhat) {
-    if (mnemonic) networks.hardhat.accounts = {
-      mnemonic
-    }
-    if (archiveNode) networks.hardhat.forking = {
-      url: archiveNode,
-      blockNumber: 12142007
-    }
+    if (mnemonic)
+      networks.hardhat.accounts = {
+        mnemonic,
+      };
+    if (archiveNode)
+      networks.hardhat.forking = {
+        url: archiveNode,
+        blockNumber: 12675000,
+      };
   }
-	if (mnemonic && infuraApiKey) {
-		networks.goerli = createTestnetConfig('goerli')
-		networks.kovan = createTestnetConfig('kovan')
-		networks.rinkeby = createTestnetConfig('rinkeby')
-		networks.ropsten = createTestnetConfig('ropsten')
-	}
-	return networks
+  if (mnemonic && infuraApiKey) {
+    networks.goerli = createTestnetConfig("goerli");
+    networks.kovan = createTestnetConfig("kovan");
+    networks.rinkeby = createTestnetConfig("rinkeby");
+    networks.ropsten = createTestnetConfig("ropsten");
+  }
+  return networks;
 }
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
@@ -105,6 +106,15 @@ const config: HardhatUserConfig = {
     compilers: [
       {
         version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 20,
+          },
+        },
+      },
+      {
+        version: "0.6.10",
         settings: {
           optimizer: {
             enabled: true,

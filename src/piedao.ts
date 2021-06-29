@@ -7,6 +7,8 @@ import { StrategyBuilder, Strategy, Implementation } from "./strategy";
 
 import { FACTORY_REGISTRIES } from "../src/constants";
 import {
+  ERC20,
+  ERC20__factory,
   PieDaoAdapter__factory,
   SmartPoolRegistry,
   SmartPoolRegistry__factory,
@@ -15,7 +17,7 @@ import {
   PCappedSmartPool,
   PCappedSmartPool__factory,
   IProxy,
-  IProxy__factory
+  IProxy__factory,
 } from "../typechain";
 
 export class PieDaoEnvironmentBuilder implements StrategyBuilder {
@@ -25,41 +27,56 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     this.signer = signer;
   }
   async connect(): Promise<PieDaoEnvironment> {
-    const registry = (await SmartPoolRegistry__factory.connect(FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS, this.signer)) as SmartPoolRegistry;
+    const registry = (await SmartPoolRegistry__factory.connect(
+      FACTORY_REGISTRIES.PIE_DAO_SMART_POOLS,
+      this.signer,
+    )) as SmartPoolRegistry;
     console.log("PieDaoRegistry: ", registry.address);
 
-    const PieDaoAdapterFactory = (await ethers.getContractFactory('PieDaoAdapter')) as PieDaoAdapter__factory
-    const adapter = await PieDaoAdapterFactory.deploy(registry.address)
+    const PieDaoAdapterFactory = (await ethers.getContractFactory("PieDaoAdapter")) as PieDaoAdapter__factory;
+    const adapter = await PieDaoAdapterFactory.deploy(registry.address);
 
     const pieDaoAdmin = await registry.connect(this.signer).owner();
     const admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
 
-    const pools = [];
+    const pools = [] as PieDaoPool[];
     const implementations = [];
     implementations.push(
-      (await IPV2SmartPool__factory.connect("0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435", this.signer)) as IPV2SmartPool,
+      (await IPV2SmartPool__factory.connect(
+        "0x706F00ea85a71EB5d7C2ce2aD61DbBE62b616435",
+        this.signer,
+      )) as IPV2SmartPool,
     );
     implementations.push(
-      (await PCappedSmartPool__factory.connect("0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181", this.signer)) as PCappedSmartPool,
+      (await PCappedSmartPool__factory.connect(
+        "0xf13f977AaC9B001f155889b9EFa7A6628Fb7a181",
+        this.signer,
+      )) as PCappedSmartPool,
     );
 
-    for (let i = 0; i < 6; i++) {
-      const poolAddr = await registry.connect(this.signer).entries(i);
+    for (let i = 0; i < 5; i++) {
+      const poolAddr = await registry.connect(this.signer).entries(i)
       expect(await registry.connect(this.signer).inRegistry(poolAddr)).to.eq(true);
       const proxy = (await IProxy__factory.connect(poolAddr, this.signer)) as IProxy;
       const implementation = await proxy.connect(this.signer).getImplementation();
-      const abi = implementation === implementations[0].address ? implementations[0] : implementations[1];
-      try {
-        const pool = await this.getPool(poolAddr, abi);
-        pools.push(pool);
-        pool.print(implementation);
-      } catch (e) {
-        console.error("Couldnt handle: ", implementation); //Experi-pie?
-        continue;
+
+      const index = implementations.findIndex(impl => impl.address == implementation)
+      if (index > -1) {
+        const abi = implementations[index]
+        try {
+          const pool = await this.getPool(poolAddr, abi);
+          pools.push(pool);
+          //pool.print(implementation);
+        } catch (e) {
+          console.error("Couldnt handle: ", implementation); //Experi-pie?
+          continue;
+        }
+      } else {
+        console.error("Implementation not found")
       }
     }
 
-    return new PieDaoEnvironment(this.signer, registry, adapter, admin, implementations, pools)
+    return new PieDaoEnvironment(this.signer, registry, adapter, admin, implementations, pools);
   }
   async getHolders(contract: string): Promise<Signer[]> {
     const addresses = PIE_DAO_HOLDERS[contract];
@@ -76,11 +93,12 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
 
   async getPool(address: string, implementation: Implementation): Promise<PieDaoPool> {
     const contract = implementation.attach(address);
+    const erc20 = (await ERC20__factory.connect(address, this.signer)) as ERC20;
     let tokens: string[], supply: BigNumber, name: string, holders: Signer[];
-    ;[tokens, supply, name, holders] = await Promise.all([
+    [tokens, supply, name, holders] = await Promise.all([
       await contract.connect(this.signer).getTokens(),
-      await contract.connect(this.signer).totalSupply(),
-      await contract.connect(this.signer).name(),
+      await erc20.connect(this.signer).totalSupply(),
+      await erc20.connect(this.signer).name(),
       await this.getHolders(contract.address),
     ]);
     name = name === undefined ? "No Name" : name;

@@ -2,7 +2,6 @@
 pragma solidity 0.8.2;
 
 interface IStrategyRouter {
-
     function sellTokens(
         address strategy,
         address[] memory tokens,

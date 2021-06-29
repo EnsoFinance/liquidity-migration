@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.2;
 
-import {IAdapter} from "../interfaces/IAdapter.sol";
+import { IAdapter } from "../interfaces/IAdapter.sol";
 
 // PieDao::SmartPoolRegistry
 interface PieDaoRegistry {
@@ -33,22 +33,23 @@ interface PieDaoPool {
         returns (address[] memory tokens, uint256[] memory amounts);
 }
 
-
-contract PieDaoAdapter is IAdapter{
-
-    address immutable public registry;
+contract PieDaoAdapter is IAdapter {
+    address public immutable registry;
 
     constructor(address _registry) {
         registry = _registry;
     }
 
-    function isInputToken(address token) public override view returns (bool) {
+    /// @notice to check if an address is a PieDao Pool
+    /// @param token: address that is to checked if it is a PieDao Pool
+    /// @return true or false depending on if it is a pool or not
+    function isInputToken(address token) public view override returns (bool) {
         return PieDaoRegistry(registry).inRegistry(token);
     }
 
-    function inputTokens() public override view returns (address[] memory inputs) {
+    function inputTokens() public view override returns (address[] memory inputs) {
         PieDaoRegistry pieDaoRegistry = PieDaoRegistry(registry);
-        for (uint i = 0; i < inputs.length; i++) {
+        for (uint256 i = 0; i < inputs.length; i++) {
             address pool = pieDaoRegistry.entries(i);
             if (pool == address(0)) {
                 break;
@@ -57,6 +58,9 @@ contract PieDaoAdapter is IAdapter{
         }
     }
 
+    /// @notice to retrieve the underlying tokens in the pool
+    /// @param inputToken is the PieDao Pool Address
+    /// @return outputs is an array of the underlying tokens in the pool
     function outputTokens(address inputToken) external view override returns (address[] memory outputs) {
         // TODO: check experipie implementation
         return PieDaoPool(inputToken).getTokens();
@@ -75,5 +79,4 @@ contract PieDaoAdapter is IAdapter{
         calls[0] = Call(payable(inputToken), data, 0);
         return calls;
     }
-
 }

@@ -4,7 +4,9 @@ interface Holders {
 
 export const FACTORY_REGISTRIES = {
   UNISWAP: "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
-  PIE_DAO_SMART_POOLS: "0xE0CBd9db30E15B9ad885D39AecaE138616807753",
+  PIE_DAO_SMART_POOLS: "0xE0CBd9db30E15B9ad885D39AecaE138616807753", // pieDao registry
+  SET_BASIC_SET_ISSUANCE_MODULE: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
+  DPI: "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b",
 };
 
 export const PIE_DAO_HOLDERS: Holders = {
@@ -14,9 +16,17 @@ export const PIE_DAO_HOLDERS: Holders = {
   "0xE4f726Adc8e89C6a6017F01eadA77865dB22dA14": ["0xA38dA4974B594204b73581ac5FBc1eBEE54CA4E0"], // BCP (balance crypto pie)
 };
 
-export const WETH: string  = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+export const DPI_HOLDERS: Holders = {
+  "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b": [
+    "0xa9e1499b4883f4c59a06557a6d25bad4802fce1a",
+    "0xfc624f8f58db41bdb95aedee1de3c1cf047105f1",
+    "0x9c03c806a2f917e4fbb70d8064efea5917ff2ce3",
+  ], // DPI
+};
 
-export const THRESHOLD = 10 // 10/1000 = 1%
-export const SLIPPAGE = 995 // 995/1000 = 99.5%
-export const TIMELOCK = 60 // 1 minute
-export const DIVISOR = 1000
+export const WETH: string = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+
+export const THRESHOLD = 10; // 10/1000 = 1%
+export const SLIPPAGE = 995; // 995/1000 = 99.5%
+export const TIMELOCK = 60; // 1 minute
+export const DIVISOR = 1000;
