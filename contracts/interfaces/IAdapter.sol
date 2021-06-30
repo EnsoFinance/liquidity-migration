@@ -14,7 +14,7 @@ interface IAdapter {
 
     function outputTokens(address inputToken) external view returns (address[] memory outputs);
 
-    function execute(bytes calldata data) external;
+    // function execute(bytes calldata data) external;
 
     function encodeExecute(bytes calldata data) external view returns (Call[] memory call);
 }

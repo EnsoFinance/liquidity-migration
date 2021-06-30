@@ -66,10 +66,10 @@ contract PieDaoAdapter is IAdapter {
         return PieDaoPool(inputToken).getTokens();
     }
 
-    function execute(bytes calldata inputData) external override {
-        (address inputToken, uint256 amount) = abi.decode(inputData, (address, uint256));
-        PieDaoPool(inputToken).exitPool(amount);
-    }
+    // function execute(bytes calldata inputData) external override {
+    //     (address inputToken, uint256 amount) = abi.decode(inputData, (address, uint256));
+    //     PieDaoPool(inputToken).exitPool(amount);
+    // }
 
     function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
         (address inputToken, uint256 amount) = abi.decode(inputData, (address, uint256));
