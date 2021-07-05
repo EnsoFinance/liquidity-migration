@@ -100,29 +100,19 @@ describe("DPI: Unit tests", function () {
     // getting the underlying tokens
     const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
     // const gb = async () => {
-    //   console.log("This should come in the begining");
     //   const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-    //   console.log("First step: Got the underlying tokens array");
     //   underlyingTokens.forEach(async (element: string) => {
-    //     console.log("Second Step: Looping through each item of the underlying tokens array");
     //     const tokenContract = IERC20__factory.connect(element, this.signers.default) as IERC20;
-    //     console.log("Created the Contract for each one of the underlying tokens", tokenContract.address);
     //     const totalSupply = await tokenContract.totalSupply();
-    //     console.log("The total supply of this contract is", totalSupply.toString());
-    //     console.log("calling the holders array so that we can loop through each of the items");
     //     const pq = async () => {
-    //       console.log("calling the pq function");
     //       holderBalances.forEach(async (e: any) => {
-    //         console.log("holder is:", e.holder);
     //         // const balance = await tokenContract.balanceOf(e.holder);
-    //         // console.log(balance.toString());
     //       });
     //     }
     //     await pq();
     //   });
     // }
     // await gb();
-    // console.log("This should come in the end");
 
     // interface underlyingTokenBalances {
     //   [key: string]: BigNumber
@@ -218,6 +208,32 @@ describe("DPI: Unit tests", function () {
     // const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
     // expect(total).to.gt(0);
     // expect(await this.strategy.balanceOf(holder2Address)).to.gt(0);
+  });
+
+
+  it("Adding to whitelist from non-manager account should fail", async function () {
+    // adding the DPI Token as a whitelisted token
+    await expect(this.DPIEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI)).to.be.reverted;
+  });
+
+  it("Getting the output token list", async function () {
+    // adding the DPI Token as a whitelisted token
+    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    const outputTokens = await this.DPIEnv.adapter.outputTokens(FACTORY_REGISTRIES.DPI);
+    expect(underlyingTokens).to.be.eql(outputTokens);
+  });
+
+  it("Migration using a non-whitelisted token should fail", async function () {
+    const routerContract = this.ensoEnv.routers[0].contract;
+    const holder3 = await this.DPIEnv.holders[2];
+    const holder3Address = await holder3.getAddress();
+
+    // Setup migration calls using DPIAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(
+      ["address", "uint256", "address"],
+      [holder3Address, BigNumber.from(100), routerContract.address],
+    );
+    await expect(this.DPIEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("DPIA: invalid tokenSetAddress");
   });
 
   it("Should migrate tokens to strategy", async function () {
