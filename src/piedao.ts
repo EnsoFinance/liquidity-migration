@@ -55,14 +55,14 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     );
 
     for (let i = 0; i < 5; i++) {
-      const poolAddr = await registry.connect(this.signer).entries(i)
+      const poolAddr = await registry.connect(this.signer).entries(i);
       expect(await registry.connect(this.signer).inRegistry(poolAddr)).to.eq(true);
       const proxy = (await IProxy__factory.connect(poolAddr, this.signer)) as IProxy;
       const implementation = await proxy.connect(this.signer).getImplementation();
 
-      const index = implementations.findIndex(impl => impl.address == implementation)
+      const index = implementations.findIndex(impl => impl.address == implementation);
       if (index > -1) {
-        const abi = implementations[index]
+        const abi = implementations[index];
         try {
           const pool = await this.getPool(poolAddr, abi);
           pools.push(pool);
@@ -72,7 +72,7 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
           continue;
         }
       } else {
-        console.error("Implementation not found")
+        console.error("Implementation not found");
       }
     }
 

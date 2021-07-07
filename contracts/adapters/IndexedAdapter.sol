@@ -8,7 +8,8 @@ import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/S
 import { IAdapter } from "../interfaces/IAdapter.sol";
 
 interface ISigmaIndexPoolV1 {
-    function getCurrentTokens() view external returns (address[] memory tokens);
+    function getCurrentTokens() external view returns (address[] memory tokens);
+
     function exitPool(uint256 poolAmountIn, uint256[] calldata minAmountsOut) external;
 }
 
@@ -90,7 +91,7 @@ contract IndexedAdapter is IAdapter {
         );
         require(isInputToken(IndexAddress), "IndexedAdapter: invalid tokenSetAddress");
         address[] memory tokens = ISigmaIndexPoolV1(IndexAddress).getCurrentTokens();
-        uint[] memory minAmount;
+        uint256[] memory minAmount;
         for (uint256 i = 0; i < tokens.length; i++) {
             minAmount[i] = 0;
         }
