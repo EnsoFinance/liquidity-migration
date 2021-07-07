@@ -47,19 +47,27 @@ describe("Indexed: Unit tests", function () {
       underlyingTokens,
     );
     // console.log(`Total is: ${total.toString()}`, estimates.forEach((element: BigNumber) => console.log(element.toString())));
+    const percentageArray = [];
     for (let i = 0; i < underlyingTokens.length; i++) {
-      const percentage = new bignumber(estimates[i].toString())
-        .multipliedBy(DIVISOR)
+      let percentage = new bignumber(estimates[i].toString())
+        .multipliedBy(1000)
         .dividedBy(total.toString())
         .toFixed(0);
-      // console.log(`Percentage for ${i} is ${percentage}`);
+      const reducer = (a: number, b: number) => a + b;  
+      percentageArray.push(Number(percentage.toString()))
+      if (
+          (i == (underlyingTokens.length-1)) && 
+          ((percentageArray.reduce(reducer))< 1000)
+          ) {
+        const diff = 1000 - percentageArray.reduce(reducer);
+        percentage = String(Number(percentage)+ diff);
+      }
       positions.push({
         token: underlyingTokens[i],
         percentage: BigNumber.from(percentage),
       });
     }
-    // console.log(positions);
-    // // creating a strategy
+    // creating a strategy
 
     const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
