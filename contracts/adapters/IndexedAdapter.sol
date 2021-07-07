@@ -7,7 +7,7 @@
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { IAdapter } from "../interfaces/IAdapter.sol";
 
-interface ISigmaIndexPoolV1 {
+interface ISigmaIndexPoolV1 is IERC20 {
     function getCurrentTokens() external view returns (address[] memory tokens);
 
     function exitPool(uint256 poolAmountIn, uint256[] calldata minAmountsOut) external;

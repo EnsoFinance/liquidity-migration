@@ -96,17 +96,16 @@ describe("Indexed: Unit tests", function () {
   });
 
   it("Token holder should be able to withdraw from pool", async function () {
-    console.log("Test");
-    // // getting holders of DPI Tokens
+    // getting holders of DPI Tokens
 
-    // const holderBalances: any[] = [];
-    // for (let i = 0; i < this.DPIEnv.holders.length; i++) {
-    //   holderBalances[i] = {
-    //     holder: await this.DPIEnv.holders[i].getAddress(),
-    //     balance: await this.DPIEnv.DPIToken.balanceOf(await this.DPIEnv.holders[i].getAddress()),
-    //   };
-    //   expect(await this.DPIEnv.DPIToken.balanceOf(await this.DPIEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
-    // }
+    const holderBalances: any[] = [];
+    for (let i = 0; i < this.IndexedEnv.holders.length; i++) {
+      holderBalances[i] = {
+        holder: await this.IndexedEnv.holders[i].getAddress(),
+        balance: await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[i].getAddress()),
+      };
+      expect(await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
+    }
 
     // // getting the underlying tokens
     // const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
