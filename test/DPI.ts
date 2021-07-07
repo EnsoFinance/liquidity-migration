@@ -51,6 +51,7 @@ describe("DPI: Unit tests", function () {
         .multipliedBy(DIVISOR)
         .dividedBy(total.toString())
         .toFixed(0);
+        console.log(`Percentage for ${i} is ${percentage}`);
       positions.push({
         token: underlyingTokens[i],
         percentage: BigNumber.from(percentage),

@@ -34,55 +34,57 @@ describe("Indexed: Unit tests", function () {
       console.log(`Liquidity Migration is undefined`);
     }
 
-    // this.ensoEnv = liquidityMigrationBuilder.enso;
-    // this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
+    this.ensoEnv = liquidityMigrationBuilder.enso;
+    this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
-    // // getting the underlying tokens from DPI
-    // const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    // getting the underlying tokens from DPI
+    const underlyingTokens = await this.IndexedEnv.adapter.outputTokens(this.IndexedEnv.degenIndexPool.address);
 
-    // // creating the Positions array (that is which token holds how much weigth)
-    // const positions = [] as Position[];
-    // const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(
-    //   this.DPIEnv.DPIToken.address,
-    //   underlyingTokens,
-    // );
-    // for (let i = 0; i < underlyingTokens.length; i++) {
-    //   const percentage = new bignumber(estimates[i].toString())
-    //     .multipliedBy(DIVISOR)
-    //     .dividedBy(total.toString())
-    //     .toFixed(0);
-    //   positions.push({
-    //     token: underlyingTokens[i],
-    //     percentage: BigNumber.from(percentage),
-    //   });
-    // }
-
+    // creating the Positions array (that is which token holds how much weigth)
+    const positions = [] as Position[];
+    const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(
+      this.IndexedEnv.degenIndexPool.address,
+      underlyingTokens,
+    );
+    // console.log(`Total is: ${total.toString()}`, estimates.forEach((element: BigNumber) => console.log(element.toString())));
+    for (let i = 0; i < underlyingTokens.length; i++) {
+      const percentage = new bignumber(estimates[i].toString())
+        .multipliedBy(DIVISOR)
+        .dividedBy(total.toString())
+        .toFixed(0);
+      // console.log(`Percentage for ${i} is ${percentage}`);
+      positions.push({
+        token: underlyingTokens[i],
+        percentage: BigNumber.from(percentage),
+      });
+    }
+    // console.log(positions);
     // // creating a strategy
 
-    // const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address);
+    const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
-    // const data = ethers.utils.defaultAbiCoder.encode(["address[]", "address[]"], [s.tokens, s.adapters]);
+    const data = ethers.utils.defaultAbiCoder.encode(["address[]", "address[]"], [s.tokens, s.adapters]);
 
-    // // createStrategy(address,string,string,address[],uint256[],bool,uint256,uint256,uint256,uint256,address,bytes)'
+    // createStrategy(address,string,string,address[],uint256[],bool,uint256,uint256,uint256,uint256,address,bytes)'
 
-    // const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
-    //   this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
-    //   "DPI",
-    //   "DPI",
-    //   s.tokens,
-    //   s.percentages,
-    //   false, //Cannot open strategy without first depositing
-    //   0,
-    //   THRESHOLD,
-    //   SLIPPAGE,
-    //   TIMELOCK,
-    //   this.ensoEnv.routers[1].contract.address,
-    //   data,
-    // );
-    // const receipt = await tx.wait();
-    // const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
-    // console.log("Strategy address: ", strategyAddress);
-    // this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+    const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
+      this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
+      "DEGEN",
+      "DEGEN",
+      s.tokens,
+      s.percentages,
+      false, //Cannot open strategy without first depositing
+      0,
+      THRESHOLD,
+      SLIPPAGE,
+      TIMELOCK,
+      this.ensoEnv.routers[1].contract.address,
+      data,
+    );
+    const receipt = await tx.wait();
+    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
+    console.log("Strategy address: ", strategyAddress);
+    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });
 
   it("Token holder should be able to withdraw from pool", async function () {
