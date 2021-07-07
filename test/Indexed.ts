@@ -19,6 +19,7 @@ describe("Indexed: Unit tests", function () {
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
+    this.underlyingTokens = [];
 
     this.IndexedEnv = await new IndexedEnvironmentBuilder(this.signers.default).connect();
 
@@ -38,17 +39,17 @@ describe("Indexed: Unit tests", function () {
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from DPI
-    const underlyingTokens = await this.IndexedEnv.adapter.outputTokens(this.IndexedEnv.degenIndexPool.address);
+    this.underlyingTokens = await this.IndexedEnv.adapter.outputTokens(this.IndexedEnv.degenIndexPool.address);
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
     const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(
       this.IndexedEnv.degenIndexPool.address,
-      underlyingTokens,
+      this.underlyingTokens,
     );
     // console.log(`Total is: ${total.toString()}`, estimates.forEach((element: BigNumber) => console.log(element.toString())));
     const percentageArray = [];
-    for (let i = 0; i < underlyingTokens.length; i++) {
+    for (let i = 0; i < this.underlyingTokens.length; i++) {
       let percentage = new bignumber(estimates[i].toString())
         .multipliedBy(1000)
         .dividedBy(total.toString())
@@ -56,14 +57,14 @@ describe("Indexed: Unit tests", function () {
       const reducer = (a: number, b: number) => a + b;  
       percentageArray.push(Number(percentage.toString()))
       if (
-          (i == (underlyingTokens.length-1)) && 
+          (i == (this.underlyingTokens.length-1)) && 
           ((percentageArray.reduce(reducer))< 1000)
           ) {
         const diff = 1000 - percentageArray.reduce(reducer);
         percentage = String(Number(percentage)+ diff);
       }
       positions.push({
-        token: underlyingTokens[i],
+        token: this.underlyingTokens[i],
         percentage: BigNumber.from(percentage),
       });
     }
@@ -96,8 +97,7 @@ describe("Indexed: Unit tests", function () {
   });
 
   it("Token holder should be able to withdraw from pool", async function () {
-    // getting holders of DPI Tokens
-
+    // getting holders of DEGEN Tokens
     const holderBalances: any[] = [];
     for (let i = 0; i < this.IndexedEnv.holders.length; i++) {
       holderBalances[i] = {
@@ -107,78 +107,41 @@ describe("Indexed: Unit tests", function () {
       expect(await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
     }
 
-    // // getting the underlying tokens
-    // const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-    // // const gb = async () => {
-    // //   const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-    // //   underlyingTokens.forEach(async (element: string) => {
-    // //     const tokenContract = IERC20__factory.connect(element, this.signers.default) as IERC20;
-    // //     const totalSupply = await tokenContract.totalSupply();
-    // //     const pq = async () => {
-    // //       holderBalances.forEach(async (e: any) => {
-    // //         // const balance = await tokenContract.balanceOf(e.holder);
-    // //       });
-    // //     }
-    // //     await pq();
-    // //   });
-    // // }
-    // // await gb();
-
-    // // interface underlyingTokenBalances {
-    // //   [key: string]: BigNumber
-    // // };
-    // // const ub: underlyingTokenBalances = {};
-
-    // // for (let index = 0; index < underlyingTokens.length; index++) {
-    // //       const tokenContract = IERC20__factory.connect(underlyingTokens[index], this.signers.default) as IERC20;
-    // //       const contractAddress = tokenContract.address;
-    // //       holderBalances.forEach(async (e)=>
-    // //         {
-    // //           const balance = await tokenContract.balanceOf(e.holder);
-    // //           // adding key value pair to the empty object created
-    // //           ub[contractAddress] =  balance;
-    // //         })
-    // // }
-
-    // // console.log(ub);
-
-    // // redeeming the token
-    // const setBasicIssuanceModule = this.DPIEnv.setBasicIssuanceModule;
-    // const addressWhoIsRedeeming = await this.DPIEnv.holders[0].getAddress();
-    // const address_toWhom = addressWhoIsRedeeming;
-    // const tokenBalance = holderBalances[0].balance;
-    // const tokenContract = IERC20__factory.connect(underlyingTokens[0], this.DPIEnv.holders[0]) as IERC20;
-    // const previousUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
-    // const tx = await setBasicIssuanceModule
-    //   .connect(this.DPIEnv.holders[0])
-    //   .redeem(this.DPIEnv.DPIToken.address, tokenBalance, address_toWhom);
-    // await tx.wait();
-    // const updatedDPIBalance = await this.DPIEnv.DPIToken.balanceOf(address_toWhom);
-    // const updatedUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
-    // expect(updatedDPIBalance).to.equal(BigNumber.from(0));
-    // expect(updatedUnderlyingTokenBalance.gt(previousUnderlyingTokenBalance)).to.be.true;
+    const previoustokenBalance = holderBalances[0].balance;
+    expect(previoustokenBalance.gt(BigNumber.from(0))).to.be.true;
+    // creating the minAmountsOut array
+    const minAmount = [];
+    for (let i = 0; i < this.underlyingTokens.length; i++) {
+      minAmount[i] = 0;
+    }
+    const tx = await this.IndexedEnv.degenIndexPool
+      .connect(this.IndexedEnv.holders[0])
+      .exitPool(previoustokenBalance, minAmount);
+    await tx.wait();
+    const posttokenBalance = await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[0].getAddress());
+    expect(posttokenBalance.isZero()).to.be.true;
   });
 
-  // it("Token holder should be able to stake LP token", async function () {
-  //   const tx = await this.DPIEnv.adapter
-  //     .connect(this.signers.default)
-  //     .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI);
-  //   await tx.wait();
-  //   const holder2 = await this.DPIEnv.holders[1];
-  //   const holder2Address = await holder2.getAddress();
+  it("Token holder should be able to stake LP token", async function () {
+    const tx = await this.IndexedEnv.adapter
+      .connect(this.signers.default)
+      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+    await tx.wait();
+    const holder2 = await this.IndexedEnv.holders[1];
+    const holder2Address = await holder2.getAddress();
 
-  //   const holder2Balance = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
-  //   expect(holder2Balance).to.be.gt(BigNumber.from(0));
-  //   await this.DPIEnv.DPIToken.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
-  //   await this.liquidityMigration
-  //     .connect(holder2)
-  //     .stakeLpTokens(this.DPIEnv.DPIToken.address, holder2Balance.div(2), AcceptedProtocols.DefiPulseIndex);
-  //   expect((await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.DPIToken.address))[0]).to.equal(
-  //     holder2Balance.div(2),
-  //   );
-  //   const holder2AfterBalance = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
-  //   expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
-  // });
+    const holder2Balance = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
+    expect(holder2Balance.gt(BigNumber.from(0))).to.be.true;
+    await this.IndexedEnv.degenIndexPool.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
+    await this.liquidityMigration
+      .connect(holder2)
+      .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder2Balance.div(3), AcceptedProtocols.Indexed);
+    expect(
+      ((await this.liquidityMigration.stakes(holder2Address, this.IndexedEnv.degenIndexPool.address))[0]).eq(holder2Balance.div(3)
+      )).to.be.true;
+    const holder2AfterBalance = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
+    expect((holder2AfterBalance).gt(BigNumber.from(0))).to.be.true;
+  });
 
   // it("Should not be able to migrate tokens if the DPI token is not whitelisted in the DPI Adapter", async function () {
   //   const routerContract = this.ensoEnv.routers[0].contract;
