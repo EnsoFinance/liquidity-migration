@@ -100,38 +100,7 @@ describe("DPI: Unit tests", function () {
 
     // getting the underlying tokens
     const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-    // const gb = async () => {
-    //   const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-    //   underlyingTokens.forEach(async (element: string) => {
-    //     const tokenContract = IERC20__factory.connect(element, this.signers.default) as IERC20;
-    //     const totalSupply = await tokenContract.totalSupply();
-    //     const pq = async () => {
-    //       holderBalances.forEach(async (e: any) => {
-    //         // const balance = await tokenContract.balanceOf(e.holder);
-    //       });
-    //     }
-    //     await pq();
-    //   });
-    // }
-    // await gb();
 
-    // interface underlyingTokenBalances {
-    //   [key: string]: BigNumber
-    // };
-    // const ub: underlyingTokenBalances = {};
-
-    // for (let index = 0; index < underlyingTokens.length; index++) {
-    //       const tokenContract = IERC20__factory.connect(underlyingTokens[index], this.signers.default) as IERC20;
-    //       const contractAddress = tokenContract.address;
-    //       holderBalances.forEach(async (e)=>
-    //         {
-    //           const balance = await tokenContract.balanceOf(e.holder);
-    //           // adding key value pair to the empty object created
-    //           ub[contractAddress] =  balance;
-    //         })
-    // }
-
-    // console.log(ub);
 
     // redeeming the token
     const setBasicIssuanceModule = this.DPIEnv.setBasicIssuanceModule;
@@ -220,9 +189,6 @@ describe("DPI: Unit tests", function () {
           0,
         ),
     ).to.be.reverted;
-    // const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
-    // expect(total).to.gt(0);
-    // expect(await this.strategy.balanceOf(holder2Address)).to.gt(0);
   });
 
   it("Adding to whitelist from non-manager account should fail", async function () {

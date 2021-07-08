@@ -143,70 +143,73 @@ describe("Indexed: Unit tests", function () {
     expect((holder2AfterBalance).gt(BigNumber.from(0))).to.be.true;
   });
 
-  // it("Should not be able to migrate tokens if the DPI token is not whitelisted in the DPI Adapter", async function () {
-  //   const routerContract = this.ensoEnv.routers[0].contract;
-  //   const holder2 = await this.DPIEnv.holders[1];
-  //   const holder2Address = await holder2.getAddress();
-  //   // staking the tokens in the liquidity migration contract
-  //   const holder2BalanceBefore = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
-  //   expect(holder2BalanceBefore).to.be.gt(BigNumber.from(0));
-  //   await this.DPIEnv.DPIToken.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
-  //   await this.liquidityMigration
-  //     .connect(holder2)
-  //     .stakeLpTokens(this.DPIEnv.DPIToken.address, holder2BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-  //   const amount = (await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.DPIToken.address))[0];
-  //   expect(amount).to.be.gt(BigNumber.from(0));
+  it("Should not be able to migrate tokens if the Degen token is not whitelisted in the Indexed Adapter", async function () {
+    const routerContract = this.ensoEnv.routers[0].contract;
+    const holder2 = await this.IndexedEnv.holders[1];
+    const holder2Address = await holder2.getAddress();
+    // staking the tokens in the liquidity migration contract
+    const holder2BalanceBefore = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
+    expect((holder2BalanceBefore).gt(BigNumber.from(0))).to.be.true;
+    await this.IndexedEnv.degenIndexPool.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
+    await this.liquidityMigration
+      .connect(holder2)
+      .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder2BalanceBefore, AcceptedProtocols.Indexed);
+    const amount = (await this.liquidityMigration.stakes(holder2Address, this.IndexedEnv.degenIndexPool.address))[0];
+    expect((amount).gt(BigNumber.from(0))).to.be.true;
 
-  //   // const holder2BalanceAfter = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
-  //   // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
+    const holder2BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
+    expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
 
-  //   // Setup migration calls using DPIAdapter contract
-  //   const adapterData = ethers.utils.defaultAbiCoder.encode(
-  //     ["address", "uint256", "address"],
-  //     [this.DPIEnv.DPIToken.address, amount, routerContract.address],
-  //   );
-  //   const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
-  //   // // Setup transfer of tokens from router to strategy
-  //   const transferCalls = [] as Multicall[];
-  //   const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-  //   // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
-  //   for (let i = 0; i < underlyingTokens.length; i++) {
-  //     transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
-  //   }
-  //   // // Encode multicalls for GenericRouter
-  //   const calls: Multicall[] = [...migrationCalls, ...transferCalls];
-  //   const migrationData = await routerContract.encodeCalls(calls);
-  //   const tx = await this.DPIEnv.adapter
-  //     .connect(this.signers.default)
-  //     .removeTokensFromWhitelist(FACTORY_REGISTRIES.DPI);
-  //   await tx.wait();
-  //   // // Migrate
-  //   await expect(
-  //     this.liquidityMigration
-  //       .connect(holder2)
-  //       .migrate(
-  //         this.strategy.address,
-  //         this.DPIEnv.DPIToken.address,
-  //         AcceptedProtocols.DefiPulseIndex,
-  //         migrationData,
-  //         0,
-  //       ),
-  //   ).to.be.reverted;
-  //   // const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
-  //   // expect(total).to.gt(0);
-  //   // expect(await this.strategy.balanceOf(holder2Address)).to.gt(0);
-  // });
+    const minAmount = [];
+    for (let i = 0; i < this.underlyingTokens.length; i++) {
+      minAmount[i] = 0;
+    }
+
+    // Setup migration calls using DPIAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(
+      ["address", "uint256"],
+      [this.IndexedEnv.degenIndexPool.address, amount],
+    );
+    console.log(adapterData);
+    const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeExecute(adapterData);
+    console.log(migrationCalls);
+    // // Setup transfer of tokens from router to strategy
+    // const transferCalls = [] as Multicall[];
+    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
+    // for (let i = 0; i < this.underlyingTokens.length; i++) {
+    //   transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
+    // }
+    // // Encode multicalls for GenericRouter
+    // const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    // const migrationData = await routerContract.encodeCalls(calls);
+    // const tx = await this.IndexedEnv.adapter
+    //   .connect(this.signers.default)
+    //   .removeTokensFromWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+    // await tx.wait();
+    // // Migrate
+    // await expect(
+    //   this.liquidityMigration
+    //     .connect(holder2)
+    //     .migrate(
+    //       this.strategy.address,
+    //       this.IndexedEnv.degenIndexPool.address,
+    //       AcceptedProtocols.Indexed,
+    //       migrationData,
+    //       0,
+    //     ),
+    // ).to.be.reverted;
+  });
 
   // it("Adding to whitelist from non-manager account should fail", async function () {
   //   // adding the DPI Token as a whitelisted token
-  //   await expect(this.DPIEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI))
+  //   await expect(this.IndexedEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX))
   //     .to.be.reverted;
   // });
 
   // it("Getting the output token list", async function () {
   //   // adding the DPI Token as a whitelisted token
-  //   const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-  //   const outputTokens = await this.DPIEnv.adapter.outputTokens(FACTORY_REGISTRIES.DPI);
+  //   const underlyingTokens = await this.IndexedEnv.degenIndexPool.getComponents();
+  //   const outputTokens = await this.IndexedEnv.adapter.outputTokens(FACTORY_REGISTRIES.DEGEN_INDEX);
   //   expect(underlyingTokens).to.be.eql(outputTokens);
   // });
 
@@ -220,42 +223,42 @@ describe("Indexed: Unit tests", function () {
   //     ["address", "uint256", "address"],
   //     [holder3Address, BigNumber.from(100), routerContract.address],
   //   );
-  //   await expect(this.DPIEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("DPIA: invalid tokenSetAddress");
+  //   await expect(this.IndexedEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("DPIA: invalid tokenSetAddress");
   // });
 
   // it("Should migrate tokens to strategy", async function () {
   //   // adding the DPI Token as a whitelisted token
-  //   const tx = await this.DPIEnv.adapter
+  //   const tx = await this.IndexedEnv.adapter
   //     .connect(this.signers.default)
-  //     .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI);
+  //     .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
   //   await tx.wait();
   //   const routerContract = this.ensoEnv.routers[0].contract;
   //   const holder3 = await this.DPIEnv.holders[2];
   //   const holder3Address = await holder3.getAddress();
 
   //   // staking the tokens in the liquidity migration contract
-  //   const holder3BalanceBefore = await this.DPIEnv.DPIToken.balanceOf(holder3Address);
+  //   const holder3BalanceBefore = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
   //   expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-  //   await this.DPIEnv.DPIToken.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
+  //   await this.IndexedEnv.degenIndexPool.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
   //   await this.liquidityMigration
   //     .connect(holder3)
-  //     .stakeLpTokens(this.DPIEnv.DPIToken.address, holder3BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-  //   const amount = (await this.liquidityMigration.stakes(holder3Address, this.DPIEnv.DPIToken.address))[0];
+  //     .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder3BalanceBefore, AcceptedProtocols.Indexed);
+  //   const amount = (await this.liquidityMigration.stakes(holder3Address, this.IndexedEnv.degenIndexPool.address))[0];
   //   expect(amount).to.be.gt(BigNumber.from(0));
-  //   const holder3BalanceAfter = await this.DPIEnv.DPIToken.balanceOf(holder3Address);
+  //   const holder3BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
   //   expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
   //   // Setup migration calls using DPIAdapter contract
   //   const adapterData = ethers.utils.defaultAbiCoder.encode(
   //     ["address", "uint256", "address"],
-  //     [this.DPIEnv.DPIToken.address, amount, routerContract.address],
+  //     [this.IndexedEnv.degenIndexPool.address, amount, routerContract.address],
   //   );
-  //   const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
+  //   const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeExecute(adapterData);
 
   //   // // Setup transfer of tokens from router to strategy
   //   const transferCalls = [] as Multicall[];
-  //   const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+  //   const underlyingTokens = await this.IndexedEnv.degenIndexPool.getComponents();
   //   // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
   //   for (let i = 0; i < underlyingTokens.length; i++) {
   //     transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
@@ -266,7 +269,7 @@ describe("Indexed: Unit tests", function () {
   //   // // Migrate
   //   await this.liquidityMigration
   //     .connect(holder3)
-  //     .migrate(this.strategy.address, this.DPIEnv.DPIToken.address, AcceptedProtocols.DefiPulseIndex, migrationData, 0);
+  //     .migrate(this.strategy.address, this.IndexedEnv.degenIndexPool.address, AcceptedProtocols.Indexed, migrationData, 0);
   //   const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
   //   expect(total).to.gt(0);
   //   expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);

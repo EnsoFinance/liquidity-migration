@@ -66,7 +66,7 @@ contract IndexedAdapter is IAdapter {
     //         inputData,
     //         (address, uint256, address)
     //     );
-    //     require(isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
+    //     require(isInputToken(tokenSetAddress), "IndexedAdapter: invalid Index Pool Address");
     //     IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
     //     address[] memory components = ISetToken(tokenSetAddress).getComponents();
     //     uint256[] memory pre = new uint256[](components.length);
@@ -85,11 +85,11 @@ contract IndexedAdapter is IAdapter {
     // }
 
     function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
-        (address IndexAddress, uint256 quantity, address genericRouterAddress) = abi.decode(
+        (address IndexAddress, uint256 quantity) = abi.decode(
             inputData,
-            (address, uint256, address)
+            (address, uint256)
         );
-        require(isInputToken(IndexAddress), "IndexedAdapter: invalid tokenSetAddress");
+        require(isInputToken(IndexAddress), "IndexedAdapter: invalid Index Pool Address");
         address[] memory tokens = ISigmaIndexPoolV1(IndexAddress).getCurrentTokens();
         uint256[] memory minAmount;
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -98,7 +98,7 @@ contract IndexedAdapter is IAdapter {
         bytes memory data = abi.encodeWithSelector(
             ISigmaIndexPoolV1(IndexAddress).exitPool.selector,
             quantity,
-            genericRouterAddress
+            minAmount
         );
         calls = new Call[](1);
         calls[0] = Call(payable(address(IndexAddress)), data, 0);
