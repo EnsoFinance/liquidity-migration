@@ -192,18 +192,18 @@ describe("Indexed: Unit tests", function () {
     ).to.be.reverted;
   });
 
-  // it("Adding to whitelist from non-manager account should fail", async function () {
-  //   // adding the DPI Token as a whitelisted token
-  //   await expect(this.IndexedEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX))
-  //     .to.be.reverted;
-  // });
+  it("Adding to whitelist from non-manager account should fail", async function () {
+    // adding the Indexed Token as a whitelisted token
+    await expect(this.IndexedEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX))
+      .to.be.reverted;
+  });
 
-  // it("Getting the output token list", async function () {
-  //   // adding the DPI Token as a whitelisted token
-  //   const underlyingTokens = await this.IndexedEnv.degenIndexPool.getComponents();
-  //   const outputTokens = await this.IndexedEnv.adapter.outputTokens(FACTORY_REGISTRIES.DEGEN_INDEX);
-  //   expect(underlyingTokens).to.be.eql(outputTokens);
-  // });
+  it("Getting the output token list", async function () {
+    // adding the DPI Token as a whitelisted token
+    const underlyingTokens = await this.IndexedEnv.degenIndexPool.getCurrentTokens();
+    const outputTokens = await this.IndexedEnv.adapter.outputTokens(FACTORY_REGISTRIES.DEGEN_INDEX);
+    expect(underlyingTokens).to.be.eql(outputTokens);
+  });
 
   // it("Migration using a non-whitelisted token should fail", async function () {
   //   const routerContract = this.ensoEnv.routers[0].contract;
@@ -250,7 +250,7 @@ describe("Indexed: Unit tests", function () {
 
   //   // // Setup transfer of tokens from router to strategy
   //   const transferCalls = [] as Multicall[];
-  //   const underlyingTokens = await this.IndexedEnv.degenIndexPool.getComponents();
+  //   const underlyingTokens = await this.IndexedEnv.degenIndexPool.getCurrentTokens();
   //   // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
   //   for (let i = 0; i < underlyingTokens.length; i++) {
   //     transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
