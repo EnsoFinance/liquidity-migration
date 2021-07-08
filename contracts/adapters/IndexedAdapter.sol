@@ -91,10 +91,7 @@ contract IndexedAdapter is IAdapter {
         );
         require(isInputToken(IndexAddress), "IndexedAdapter: invalid Index Pool Address");
         address[] memory tokens = ISigmaIndexPoolV1(IndexAddress).getCurrentTokens();
-        uint256[] memory minAmount;
-        for (uint256 i = 0; i < tokens.length; i++) {
-            minAmount[i] = 0;
-        }
+        uint256[] memory minAmount = new uint256[](tokens.length);
         bytes memory data = abi.encodeWithSelector(
             ISigmaIndexPoolV1(IndexAddress).exitPool.selector,
             quantity,

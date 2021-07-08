@@ -159,45 +159,37 @@ describe("Indexed: Unit tests", function () {
 
     const holder2BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
-
-    const minAmount = [];
-    for (let i = 0; i < this.underlyingTokens.length; i++) {
-      minAmount[i] = 0;
-    }
-
     // Setup migration calls using DPIAdapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256"],
       [this.IndexedEnv.degenIndexPool.address, amount],
     );
-    console.log(adapterData);
     const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeExecute(adapterData);
-    console.log(migrationCalls);
-    // // Setup transfer of tokens from router to strategy
-    // const transferCalls = [] as Multicall[];
+    // Setup transfer of tokens from router to strategy
+    const transferCalls = [] as Multicall[];
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
-    // for (let i = 0; i < this.underlyingTokens.length; i++) {
-    //   transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
-    // }
-    // // Encode multicalls for GenericRouter
-    // const calls: Multicall[] = [...migrationCalls, ...transferCalls];
-    // const migrationData = await routerContract.encodeCalls(calls);
-    // const tx = await this.IndexedEnv.adapter
-    //   .connect(this.signers.default)
-    //   .removeTokensFromWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
-    // await tx.wait();
-    // // Migrate
-    // await expect(
-    //   this.liquidityMigration
-    //     .connect(holder2)
-    //     .migrate(
-    //       this.strategy.address,
-    //       this.IndexedEnv.degenIndexPool.address,
-    //       AcceptedProtocols.Indexed,
-    //       migrationData,
-    //       0,
-    //     ),
-    // ).to.be.reverted;
+    for (let i = 0; i < this.underlyingTokens.length; i++) {
+      transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
+    }
+    // Encode multicalls for GenericRouter
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const migrationData = await routerContract.encodeCalls(calls);
+    const tx = await this.IndexedEnv.adapter
+      .connect(this.signers.default)
+      .removeTokensFromWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+    await tx.wait();
+    // Migrate
+    await expect(
+      this.liquidityMigration
+        .connect(holder2)
+        .migrate(
+          this.strategy.address,
+          this.IndexedEnv.degenIndexPool.address,
+          AcceptedProtocols.Indexed,
+          migrationData,
+          0,
+        ),
+    ).to.be.reverted;
   });
 
   // it("Adding to whitelist from non-manager account should fail", async function () {
