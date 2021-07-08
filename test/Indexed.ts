@@ -205,18 +205,18 @@ describe("Indexed: Unit tests", function () {
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
 
-  // it("Migration using a non-whitelisted token should fail", async function () {
-  //   const routerContract = this.ensoEnv.routers[0].contract;
-  //   const holder3 = await this.DPIEnv.holders[2];
-  //   const holder3Address = await holder3.getAddress();
+  it("Migration using a non-whitelisted token should fail", async function () {
+    const routerContract = this.ensoEnv.routers[0].contract;
+    const holder3 = await this.IndexedEnv.holders[2];
+    const holder3Address = await holder3.getAddress();
 
-  //   // Setup migration calls using DPIAdapter contract
-  //   const adapterData = ethers.utils.defaultAbiCoder.encode(
-  //     ["address", "uint256", "address"],
-  //     [holder3Address, BigNumber.from(100), routerContract.address],
-  //   );
-  //   await expect(this.IndexedEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("DPIA: invalid tokenSetAddress");
-  // });
+    // Setup migration calls using DPIAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(
+      ["address", "uint256", "address"],
+      [holder3Address, BigNumber.from(100), routerContract.address],
+    );
+    await expect(this.IndexedEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("IndexedAdapter: invalid Index Pool Address");
+  });
 
   // it("Should migrate tokens to strategy", async function () {
   //   // adding the DPI Token as a whitelisted token
@@ -225,7 +225,7 @@ describe("Indexed: Unit tests", function () {
   //     .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
   //   await tx.wait();
   //   const routerContract = this.ensoEnv.routers[0].contract;
-  //   const holder3 = await this.DPIEnv.holders[2];
+  //   const holder3 = await this.IndexedEnv.holders[2];
   //   const holder3Address = await holder3.getAddress();
 
   //   // staking the tokens in the liquidity migration contract
