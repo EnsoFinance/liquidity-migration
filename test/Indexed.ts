@@ -206,64 +206,60 @@ describe("Indexed: Unit tests", function () {
   });
 
   it("Migration using a non-whitelisted token should fail", async function () {
-    const routerContract = this.ensoEnv.routers[0].contract;
-    const holder3 = await this.IndexedEnv.holders[2];
-    const holder3Address = await holder3.getAddress();
-
     // Setup migration calls using DPIAdapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256", "address"],
-      [holder3Address, BigNumber.from(100), routerContract.address],
+      ["address", "uint256"],
+      [this.IndexedEnv.degenIndexPool.address, BigNumber.from(10000)],
     );
     await expect(this.IndexedEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("IndexedAdapter: invalid Index Pool Address");
   });
 
-  // it("Should migrate tokens to strategy", async function () {
-  //   // adding the DPI Token as a whitelisted token
-  //   const tx = await this.IndexedEnv.adapter
-  //     .connect(this.signers.default)
-  //     .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
-  //   await tx.wait();
-  //   const routerContract = this.ensoEnv.routers[0].contract;
-  //   const holder3 = await this.IndexedEnv.holders[2];
-  //   const holder3Address = await holder3.getAddress();
+  it("Should migrate tokens to strategy", async function () {
+    // adding the DPI Token as a whitelisted token
+    const tx = await this.IndexedEnv.adapter
+      .connect(this.signers.default)
+      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+    await tx.wait();
+    const routerContract = this.ensoEnv.routers[0].contract;
+    const holder3 = await this.IndexedEnv.holders[2];
+    const holder3Address = await holder3.getAddress();
 
-  //   // staking the tokens in the liquidity migration contract
-  //   const holder3BalanceBefore = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
-  //   expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
+    // staking the tokens in the liquidity migration contract
+    const holder3BalanceBefore = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
+    expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-  //   await this.IndexedEnv.degenIndexPool.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
-  //   await this.liquidityMigration
-  //     .connect(holder3)
-  //     .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder3BalanceBefore, AcceptedProtocols.Indexed);
-  //   const amount = (await this.liquidityMigration.stakes(holder3Address, this.IndexedEnv.degenIndexPool.address))[0];
-  //   expect(amount).to.be.gt(BigNumber.from(0));
-  //   const holder3BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
-  //   expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
+    await this.IndexedEnv.degenIndexPool.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
+    await this.liquidityMigration
+      .connect(holder3)
+      .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder3BalanceBefore, AcceptedProtocols.Indexed);
+    const amount = (await this.liquidityMigration.stakes(holder3Address, this.IndexedEnv.degenIndexPool.address))[0];
+    expect(amount).to.be.gt(BigNumber.from(0));
+    const holder3BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
+    expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
-  //   // Setup migration calls using DPIAdapter contract
-  //   const adapterData = ethers.utils.defaultAbiCoder.encode(
-  //     ["address", "uint256", "address"],
-  //     [this.IndexedEnv.degenIndexPool.address, amount, routerContract.address],
-  //   );
-  //   const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeExecute(adapterData);
+    // Setup migration calls using DPIAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(
+      ["address", "uint256"],
+      [this.IndexedEnv.degenIndexPool.address, amount],
+    );
+    const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeExecute(adapterData);
 
-  //   // // Setup transfer of tokens from router to strategy
-  //   const transferCalls = [] as Multicall[];
-  //   const underlyingTokens = await this.IndexedEnv.degenIndexPool.getCurrentTokens();
-  //   // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
-  //   for (let i = 0; i < underlyingTokens.length; i++) {
-  //     transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
-  //   }
-  //   // // Encode multicalls for GenericRouter
-  //   const calls: Multicall[] = [...migrationCalls, ...transferCalls];
-  //   const migrationData = await routerContract.encodeCalls(calls);
-  //   // // Migrate
-  //   await this.liquidityMigration
-  //     .connect(holder3)
-  //     .migrate(this.strategy.address, this.IndexedEnv.degenIndexPool.address, AcceptedProtocols.Indexed, migrationData, 0);
-  //   const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
-  //   expect(total).to.gt(0);
-  //   expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
-  // });
+    // // Setup transfer of tokens from router to strategy
+    const transferCalls = [] as Multicall[];
+    const underlyingTokens = await this.IndexedEnv.degenIndexPool.getCurrentTokens();
+    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
+    for (let i = 0; i < underlyingTokens.length; i++) {
+      transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
+    }
+    // // Encode multicalls for GenericRouter
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const migrationData = await routerContract.encodeCalls(calls);
+    // // Migrate
+    await this.liquidityMigration
+      .connect(holder3)
+      .migrate(this.strategy.address, this.IndexedEnv.degenIndexPool.address, AcceptedProtocols.Indexed, migrationData, 0);
+    const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
+    expect(total).to.gt(0);
+    expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
+  });
 });
