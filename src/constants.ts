@@ -31,7 +31,7 @@ export const INDEXED_HOLDERS: Holders = {
     "0x82df46c9047f3218b4df0589e44f71e21f7800cb",
     "0xE75021660E00A7FA0DF1B97da13eBAbe6D82e7ea",
     "0x168fa4917e7cD18f4eD3dc313c4975851cA9E5E7"
-  ], // DPI
+  ], // DEGEN
 };
 
 export const WETH: string = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";

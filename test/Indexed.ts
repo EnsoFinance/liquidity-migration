@@ -38,7 +38,7 @@ describe("Indexed: Unit tests", function () {
     this.ensoEnv = liquidityMigrationBuilder.enso;
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
-    // getting the underlying tokens from DPI
+    // getting the underlying tokens from DEGEN
     this.underlyingTokens = await this.IndexedEnv.adapter.outputTokens(this.IndexedEnv.degenIndexPool.address);
 
     // creating the Positions array (that is which token holds how much weigth)
@@ -159,7 +159,7 @@ describe("Indexed: Unit tests", function () {
 
     const holder2BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
-    // Setup migration calls using DPIAdapter contract
+    // Setup migration calls using DEGENAdapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256"],
       [this.IndexedEnv.degenIndexPool.address, amount],
@@ -199,14 +199,14 @@ describe("Indexed: Unit tests", function () {
   });
 
   it("Getting the output token list", async function () {
-    // adding the DPI Token as a whitelisted token
+    // adding the DEGEN Token as a whitelisted token
     const underlyingTokens = await this.IndexedEnv.degenIndexPool.getCurrentTokens();
     const outputTokens = await this.IndexedEnv.adapter.outputTokens(FACTORY_REGISTRIES.DEGEN_INDEX);
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
 
   it("Migration using a non-whitelisted token should fail", async function () {
-    // Setup migration calls using DPIAdapter contract
+    // Setup migration calls using DEGENAdapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256"],
       [this.IndexedEnv.degenIndexPool.address, BigNumber.from(10000)],
@@ -215,7 +215,7 @@ describe("Indexed: Unit tests", function () {
   });
 
   it("Should migrate tokens to strategy", async function () {
-    // adding the DPI Token as a whitelisted token
+    // adding the DEGEN Token as a whitelisted token
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
       .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
@@ -237,7 +237,7 @@ describe("Indexed: Unit tests", function () {
     const holder3BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
-    // Setup migration calls using DPIAdapter contract
+    // Setup migration calls using DEGENAdapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256"],
       [this.IndexedEnv.degenIndexPool.address, amount],
