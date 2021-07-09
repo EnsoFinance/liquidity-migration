@@ -33,10 +33,6 @@ export class DPIEnvironmentBuilder {
     // deploying the DPI Adapter
     const adapter = await DPIAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress);
 
-    // adding the DPI Token as a whitelisted token
-    const tx = await adapter.connect(this.signer).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI);
-    await tx.wait();
-
     const addresses = DPI_HOLDERS[FACTORY_REGISTRIES.DPI];
     if (addresses === undefined) {
       throw Error(`Failed to find token holder for contract: ${FACTORY_REGISTRIES.DPI} `);

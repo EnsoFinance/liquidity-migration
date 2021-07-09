@@ -1,12 +1,13 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import bignumber from "bignumber.js";
-import { BigNumber, Contract, Event } from "ethers";
-import { Signers, MainnetSigner } from "../types";
+import { BigNumber, Event } from "ethers";
+import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { ClashingImplementation, IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
+import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { DPIEnvironmentBuilder } from "../src/dpi";
+import { FACTORY_REGISTRIES } from "../src/constants";
 import { StrategyBuilder, Position, Multicall, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
@@ -99,29 +100,19 @@ describe("DPI: Unit tests", function () {
     // getting the underlying tokens
     const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
     // const gb = async () => {
-    //   console.log("This should come in the begining");
     //   const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
-    //   console.log("First step: Got the underlying tokens array");
     //   underlyingTokens.forEach(async (element: string) => {
-    //     console.log("Second Step: Looping through each item of the underlying tokens array");
     //     const tokenContract = IERC20__factory.connect(element, this.signers.default) as IERC20;
-    //     console.log("Created the Contract for each one of the underlying tokens", tokenContract.address);
     //     const totalSupply = await tokenContract.totalSupply();
-    //     console.log("The total supply of this contract is", totalSupply.toString());
-    //     console.log("calling the holders array so that we can loop through each of the items");
     //     const pq = async () => {
-    //       console.log("calling the pq function");
     //       holderBalances.forEach(async (e: any) => {
-    //         console.log("holder is:", e.holder);
     //         // const balance = await tokenContract.balanceOf(e.holder);
-    //         // console.log(balance.toString());
     //       });
     //     }
     //     await pq();
     //   });
     // }
     // await gb();
-    // console.log("This should come in the end");
 
     // interface underlyingTokenBalances {
     //   [key: string]: BigNumber
@@ -159,6 +150,8 @@ describe("DPI: Unit tests", function () {
   });
 
   it("Token holder should be able to stake LP token", async function () {
+    const tx = await this.DPIEnv.adapter.connect(this.signers.default).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI);
+    await tx.wait();
     const holder2 = await this.DPIEnv.holders[1];
     const holder2Address = await holder2.getAddress();
 
@@ -166,14 +159,87 @@ describe("DPI: Unit tests", function () {
     expect(holder2Balance).to.be.gt(BigNumber.from(0));
     await this.DPIEnv.DPIToken.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
-      .connect(holder2)
-      .stakeLpTokens(this.DPIEnv.DPIToken.address, holder2Balance, AcceptedProtocols.DefiPulseIndex);
+    .connect(holder2)
+    .stakeLpTokens(this.DPIEnv.DPIToken.address, holder2Balance.div(2), AcceptedProtocols.DefiPulseIndex);
     expect((await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.DPIToken.address))[0]).to.equal(
-      holder2Balance,
+      holder2Balance.div(2),
     );
+    const holder2AfterBalance = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
+    expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
+  });
+
+  it("Should not be able to migrate tokens if the DPI token is not whitelisted in the DPI Adapter", async function () {
+    const routerContract = this.ensoEnv.routers[0].contract;
+    const holder2 = await this.DPIEnv.holders[1];
+    const holder2Address = await holder2.getAddress();
+    // staking the tokens in the liquidity migration contract
+    const holder2BalanceBefore = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
+    expect(holder2BalanceBefore).to.be.gt(BigNumber.from(0));
+    await this.DPIEnv.DPIToken.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
+    await this.liquidityMigration
+      .connect(holder2)
+      .stakeLpTokens(this.DPIEnv.DPIToken.address, holder2BalanceBefore, AcceptedProtocols.DefiPulseIndex);
+    const amount = (await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.DPIToken.address))[0];
+    expect(amount).to.be.gt(BigNumber.from(0));
+
+    // const holder2BalanceAfter = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
+    // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
+
+    // Setup migration calls using DPIAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(
+      ["address", "uint256", "address"],
+      [this.DPIEnv.DPIToken.address, amount, routerContract.address],
+    );
+    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
+    // // Setup transfer of tokens from router to strategy
+    const transferCalls = [] as Multicall[];
+    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
+    for (let i = 0; i < underlyingTokens.length; i++) {
+      transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
+    }
+    // // Encode multicalls for GenericRouter
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const migrationData = await routerContract.encodeCalls(calls);
+    const tx = await this.DPIEnv.adapter.connect(this.signers.default).removeTokensFromWhitelist(FACTORY_REGISTRIES.DPI);
+    await tx.wait();
+    // // Migrate
+    await expect(this.liquidityMigration.connect(holder2).migrate(this.strategy.address, this.DPIEnv.DPIToken.address, AcceptedProtocols.DefiPulseIndex, migrationData, 0)).to.be.reverted;
+    // const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
+    // expect(total).to.gt(0);
+    // expect(await this.strategy.balanceOf(holder2Address)).to.gt(0);
+  });
+
+
+  it("Adding to whitelist from non-manager account should fail", async function () {
+    // adding the DPI Token as a whitelisted token
+    await expect(this.DPIEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI)).to.be.reverted;
+  });
+
+  it("Getting the output token list", async function () {
+    // adding the DPI Token as a whitelisted token
+    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    const outputTokens = await this.DPIEnv.adapter.outputTokens(FACTORY_REGISTRIES.DPI);
+    expect(underlyingTokens).to.be.eql(outputTokens);
+  });
+
+  it("Migration using a non-whitelisted token should fail", async function () {
+    const routerContract = this.ensoEnv.routers[0].contract;
+    const holder3 = await this.DPIEnv.holders[2];
+    const holder3Address = await holder3.getAddress();
+
+    // Setup migration calls using DPIAdapter contract
+    const adapterData = ethers.utils.defaultAbiCoder.encode(
+      ["address", "uint256", "address"],
+      [holder3Address, BigNumber.from(100), routerContract.address],
+    );
+    await expect(this.DPIEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("DPIA: invalid tokenSetAddress");
   });
 
   it("Should migrate tokens to strategy", async function () {
+    // adding the DPI Token as a whitelisted token
+    const tx = await this.DPIEnv.adapter.connect(this.signers.default).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI);
+    await tx.wait();
     const routerContract = this.ensoEnv.routers[0].contract;
     const holder3 = await this.DPIEnv.holders[2];
     const holder3Address = await holder3.getAddress();
