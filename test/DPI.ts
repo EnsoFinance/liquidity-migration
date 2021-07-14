@@ -6,8 +6,8 @@ import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 
-import { DPIEnvironmentBuilder } from "../src/dpi";
-import { FACTORY_REGISTRIES } from "../src/constants";
+import { TokenSetEnvironmentBuilder } from "../src/dpi";
+import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
 import { StrategyBuilder, Position, Multicall, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
@@ -20,7 +20,10 @@ describe("DPI: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-    this.DPIEnv = await new DPIEnvironmentBuilder(this.signers.default).connect();
+
+    this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default).connect(
+      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI] , FACTORY_REGISTRIES.DPI
+    );
 
     console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
 
@@ -38,12 +41,12 @@ describe("DPI: Unit tests", function () {
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from DPI
-    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
     const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(
-      this.DPIEnv.DPIToken.address,
+      this.DPIEnv.tokenSet.address,
       underlyingTokens,
     );
     for (let i = 0; i < underlyingTokens.length; i++) {
@@ -92,13 +95,13 @@ describe("DPI: Unit tests", function () {
     for (let i = 0; i < this.DPIEnv.holders.length; i++) {
       holderBalances[i] = {
         holder: await this.DPIEnv.holders[i].getAddress(),
-        balance: await this.DPIEnv.DPIToken.balanceOf(await this.DPIEnv.holders[i].getAddress()),
+        balance: await this.DPIEnv.tokenSet.balanceOf(await this.DPIEnv.holders[i].getAddress()),
       };
-      expect(await this.DPIEnv.DPIToken.balanceOf(await this.DPIEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
+      expect(await this.DPIEnv.tokenSet.balanceOf(await this.DPIEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
     }
 
     // getting the underlying tokens
-    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
 
 
     // redeeming the token
@@ -110,9 +113,9 @@ describe("DPI: Unit tests", function () {
     const previousUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
     const tx = await setBasicIssuanceModule
       .connect(this.DPIEnv.holders[0])
-      .redeem(this.DPIEnv.DPIToken.address, tokenBalance, address_toWhom);
+      .redeem(this.DPIEnv.tokenSet.address, tokenBalance, address_toWhom);
     await tx.wait();
-    const updatedDPIBalance = await this.DPIEnv.DPIToken.balanceOf(address_toWhom);
+    const updatedDPIBalance = await this.DPIEnv.tokenSet.balanceOf(address_toWhom);
     const updatedUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
     expect(updatedDPIBalance).to.equal(BigNumber.from(0));
     expect(updatedUnderlyingTokenBalance.gt(previousUnderlyingTokenBalance)).to.be.true;
@@ -126,16 +129,16 @@ describe("DPI: Unit tests", function () {
     const holder2 = await this.DPIEnv.holders[1];
     const holder2Address = await holder2.getAddress();
 
-    const holder2Balance = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
+    const holder2Balance = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
     expect(holder2Balance).to.be.gt(BigNumber.from(0));
-    await this.DPIEnv.DPIToken.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
+    await this.DPIEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.DPIEnv.DPIToken.address, holder2Balance.div(2), AcceptedProtocols.DefiPulseIndex);
-    expect((await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.DPIToken.address))[0]).to.equal(
+      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder2Balance.div(2), AcceptedProtocols.DefiPulseIndex);
+    expect((await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.tokenSet.address))[0]).to.equal(
       holder2Balance.div(2),
     );
-    const holder2AfterBalance = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
+    const holder2AfterBalance = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
     expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
   });
 
@@ -144,27 +147,27 @@ describe("DPI: Unit tests", function () {
     const holder2 = await this.DPIEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
-    const holder2BalanceBefore = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
+    const holder2BalanceBefore = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
     expect(holder2BalanceBefore).to.be.gt(BigNumber.from(0));
-    await this.DPIEnv.DPIToken.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
+    await this.DPIEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.DPIEnv.DPIToken.address, holder2BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-    const amount = (await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.DPIToken.address))[0];
+      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder2BalanceBefore, AcceptedProtocols.DefiPulseIndex);
+    const amount = (await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.tokenSet.address))[0];
     expect(amount).to.be.gt(BigNumber.from(0));
 
-    // const holder2BalanceAfter = await this.DPIEnv.DPIToken.balanceOf(holder2Address);
+    // const holder2BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DPIAdapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256", "address"],
-      [this.DPIEnv.DPIToken.address, amount, routerContract.address],
+      [this.DPIEnv.tokenSet.address, amount, routerContract.address],
     );
     const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
-    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
@@ -182,7 +185,7 @@ describe("DPI: Unit tests", function () {
         .connect(holder2)
         .migrate(
           this.strategy.address,
-          this.DPIEnv.DPIToken.address,
+          this.DPIEnv.tokenSet.address,
           AcceptedProtocols.DefiPulseIndex,
           migrationData,
           0,
@@ -198,7 +201,7 @@ describe("DPI: Unit tests", function () {
 
   it("Getting the output token list", async function () {
     // adding the DPI Token as a whitelisted token
-    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
     const outputTokens = await this.DPIEnv.adapter.outputTokens(FACTORY_REGISTRIES.DPI);
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
@@ -227,28 +230,28 @@ describe("DPI: Unit tests", function () {
     const holder3Address = await holder3.getAddress();
 
     // staking the tokens in the liquidity migration contract
-    const holder3BalanceBefore = await this.DPIEnv.DPIToken.balanceOf(holder3Address);
+    const holder3BalanceBefore = await this.DPIEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-    await this.DPIEnv.DPIToken.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
+    await this.DPIEnv.tokenSet.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
-      .stakeLpTokens(this.DPIEnv.DPIToken.address, holder3BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-    const amount = (await this.liquidityMigration.stakes(holder3Address, this.DPIEnv.DPIToken.address))[0];
+      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder3BalanceBefore, AcceptedProtocols.DefiPulseIndex);
+    const amount = (await this.liquidityMigration.stakes(holder3Address, this.DPIEnv.tokenSet.address))[0];
     expect(amount).to.be.gt(BigNumber.from(0));
-    const holder3BalanceAfter = await this.DPIEnv.DPIToken.balanceOf(holder3Address);
+    const holder3BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DPIAdapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256", "address"],
-      [this.DPIEnv.DPIToken.address, amount, routerContract.address],
+      [this.DPIEnv.tokenSet.address, amount, routerContract.address],
     );
     const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
-    const underlyingTokens = await this.DPIEnv.DPIToken.getComponents();
+    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
@@ -259,7 +262,7 @@ describe("DPI: Unit tests", function () {
     // // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      .migrate(this.strategy.address, this.DPIEnv.DPIToken.address, AcceptedProtocols.DefiPulseIndex, migrationData, 0);
+      .migrate(this.strategy.address, this.DPIEnv.tokenSet.address, AcceptedProtocols.DefiPulseIndex, migrationData, 0);
     const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);

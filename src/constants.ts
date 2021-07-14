@@ -17,7 +17,12 @@ export const PIE_DAO_HOLDERS: Holders = {
   "0xE4f726Adc8e89C6a6017F01eadA77865dB22dA14": ["0xA38dA4974B594204b73581ac5FBc1eBEE54CA4E0"], // BCP (balance crypto pie)
 };
 
-export const DPI_HOLDERS: Holders = {
+export const TOKENSET_ISSUANCE_MODULES: {[key: string]: string}= {
+  "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b": 
+    "0xd8EF3cACe8b4907117a45B0b125c68560532F94D", // DPI_SET_BASIC_ISSUANCE_MODULE
+};
+
+export const TOKENSET_HOLDERS: Holders = {
   "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b": [
     "0xa9e1499b4883f4c59a06557a6d25bad4802fce1a",
     "0xfc624f8f58db41bdb95aedee1de3c1cf047105f1",

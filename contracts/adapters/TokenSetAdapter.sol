@@ -25,7 +25,7 @@ pragma solidity 0.8.2;
 /// @author Enso.finance (github.com/amateur-dev)
 /// @notice Adapter for redeeming the underlying assets from DPI
 
-contract DPIAdapter is IAdapter {
+contract TokenSetAdapter is IAdapter {
     using SafeERC20 for IERC20;
 
     // state variables
