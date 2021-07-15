@@ -3,7 +3,7 @@ import "../helpers/Ownable.sol";
 
 // SPDX-License-Identifier: WTFPL
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.2;
 
 abstract contract Whitelistable is Ownable {
 
@@ -11,6 +11,14 @@ abstract contract Whitelistable is Ownable {
 
     event Added(address token);
     event Removed(address token);
+
+    /**
+    * @dev Require adapter registered
+    */
+    modifier onlyWhitelisted(address _strategy) {
+        require(whitelisted[_strategy], "Whitelistable#onlyWhitelisted: not whitelisted lp");
+        _;
+    }
 
     /**
     * @dev add pool token to whitelist

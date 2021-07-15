@@ -88,11 +88,15 @@ contract LiquidityMigration is Timelock {
         require(adapter.isWhitelisted(strategyToken), "LM: Pool not in protocol");
         EnsoStrategy enso = EnsoStrategy(ensoStrategy);
         require(enso.controller() == ensoContracts.strategyController, "Not Enso strategy");
+        
         uint256 balanceBefore = IERC20(ensoStrategy).balanceOf(address(this));
         Stake storage stake = stakes[msg.sender][strategyToken];
         uint256 stakeAmount = stake.amount;
         require(stakeAmount > 0, 'LM: has not staked');
+        
         delete stakes[msg.sender][strategyToken];
+        
+        
         IERC20(strategyToken).safeTransfer(ensoContracts.genericRouter, stakeAmount);
         // TODO: verify it is an enso strategy
         StrategyController(ensoContracts.strategyController).deposit(

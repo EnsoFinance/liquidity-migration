@@ -4,9 +4,8 @@ import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/S
 import { IAdapter } from "../interfaces/IAdapter.sol";
 import "../helpers/Whitelistable.sol";
 
-interface ISigmaIndexPoolV1 is IERC20 {
+interface ISigmaIndexPoolV1 {
     function getCurrentTokens() external view returns (address[] memory tokens);
-
     function exitPool(uint256 poolAmountIn, uint256[] calldata minAmountsOut) external;
 }
 
@@ -19,72 +18,51 @@ pragma solidity 0.8.2;
 contract IndexedAdapter is IAdapter, Whitelistable {
     using SafeERC20 for IERC20;
 
-    // events
-    event RedemptionSuccessful();
 
-    // constructor
     constructor(address owner_) {
         _setOwner(owner_);
     }
 
-    /// @notice to retrieve the underlying tokens in the pool
-    /// @param indexAddress is the Index Pool's Address
-    /// @return outputs is an array of the underlying tokens in the pool
-    function outputTokens(address indexAddress) external view override returns (address[] memory outputs) {
-        return outputs = ISigmaIndexPoolV1(indexAddress).getCurrentTokens();
+    function outputTokens(address _lp) 
+        public
+        view
+        override
+        returns (address[] memory outputs) 
+    {
+        outputs = ISigmaIndexPoolV1(_lp).getCurrentTokens();
     }
 
-    // executeableFunctions
-
-    /// @notice Migrates the Token Set Contract's underlying assets under management
-    // function execute(bytes calldata inputData) external override {
-    //     (address tokenSetAddress, uint256 quantity, address genericRouter) = abi.decode(
-    //         inputData,
-    //         (address, uint256, address)
-    //     );
-    //     require(isInputToken(tokenSetAddress), "IndexedAdapter: invalid Index Pool Address");
-    //     IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
-    //     address[] memory components = ISetToken(tokenSetAddress).getComponents();
-    //     uint256[] memory pre = new uint256[](components.length);
-    //     for (uint256 i = 0; i < components.length; i++) {
-    //         pre[i] = IERC20(components[i]).balanceOf(address(this));
-    //     }
-    //     setBasicIssuanceModule.redeem(tokenSetAddress, quantity, genericRouter);
-    //     uint256[] memory post = new uint256[](components.length);
-    //     for (uint256 i = 0; i < components.length; i++) {
-    //         post[i] = IERC20(components[i]).balanceOf(address(this));
-    //     }
-    //     for (uint256 i = 0; i < components.length; i++) {
-    //         require((post[i] >= pre[i]), "IA: Redemption issue");
-    //     }
-    //     emit RedemptionSuccessful();
-    // }
-
-    function encodeExecute(bytes calldata inputData) public override view returns (Call[] memory calls) {
-        (address indexAddress, uint256 quantity) = abi.decode(inputData, (address, uint256));
-        require(isWhitelisted(indexAddress), "IndexedAdapter: invalid Index Pool Address");
-        address[] memory tokens = ISigmaIndexPoolV1(indexAddress).getCurrentTokens();
-        uint256[] memory minAmount = new uint256[](tokens.length);
-        bytes memory data = abi.encodeWithSelector(
-            ISigmaIndexPoolV1(indexAddress).exitPool.selector,
-            quantity,
-            minAmount
+    function encodeExecute(address _lp, address _amount) 
+        public
+        override
+        view
+        onlyWhitelisted(_lp)
+        returns(Call memory call)
+    {
+        
+        uint256[] memory _min = new uint256[](outputTokens(_lp).length);
+         // TODO: we should calculate min expected
+        call = Call(
+            payable(_lp),
+            abi.encodeWithSelector(
+                ISigmaIndexPoolV1(_lp).exitPool.selector, 
+                _amount,
+                _min
+            ),
+            0
         );
-        calls = new Call[](1);
-        calls[0] = Call(payable(address(indexAddress)), data, 0);
-        return calls;
     }
 
     /**
-    * @param _token to view pool token
+    * @param _lp to view pool token
     * @return if token in whiteliste
     */
-    function isWhitelisted(address _token) 
+    function isWhitelisted(address _lp) 
         public
         view
         override
         returns(bool)
     {
-        return whitelisted[_token];
+        return whitelisted[_lp];
     }
 }

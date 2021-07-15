@@ -1,38 +1,58 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.2;
+pragma experimental ABIEncoderV2;
 
-import { IERC20, IStrategyToken } from "./IStrategyToken.sol";
+import "./IStrategyRouter.sol";
+import "./IStrategyToken.sol";
+import "./IOracle.sol";
+import "./IRegistry.sol";
+import "../helpers/StrategyTypes.sol";
 
-interface IStrategy is IStrategyToken {
+interface IStrategy is IStrategyToken, StrategyTypes {
     function approveToken(
         IERC20 token,
         address account,
         uint256 amount
     ) external;
 
-    function approveTokens(address account, uint256 amount) external;
-
-    function setStructure(address[] memory newItems, uint256[] memory newPercentages) external;
+    function setStructure(Item[] memory newItems) external;
 
     function withdraw(uint256 amount) external;
 
-    function mint(address account, uint256 amount) external;
+    function deposit(
+        uint256 amount,
+        IStrategyRouter router,
+        bytes memory data
+    ) external payable;
 
-    function updateManager(address newManager) external;
+    function depositFromController(
+        address account,
+        IStrategyRouter router,
+        bytes memory data
+    ) external payable returns (uint256);
+
+    function mint(address account, uint256 amount) external;
 
     function items() external view returns (address[] memory);
 
-    function percentage(address token) external view returns (uint256);
+    function getCategory(address item) external view returns (ItemCategory);
 
-    function isWhitelisted(address account) external view returns (bool);
+    function getPercentage(address item) external view returns (uint256);
+
+    function getCache(address item) external view returns (bytes memory);
+
+    function getData(address item) external view returns (ItemData memory);
 
     function controller() external view returns (address);
 
     function manager() external view returns (address);
 
-    function oracle() external view returns (address);
+    function oracle() external view returns (IOracle);
 
-    function whitelist() external view returns (address);
+    function registry() external view returns (IRegistry);
 
-    function verifyStructure(address[] memory newTokens, uint256[] memory newPercentages) external pure returns (bool);
+    function verifyStructure(Item[] memory newItems)
+        external
+        view
+        returns (bool);
 }
