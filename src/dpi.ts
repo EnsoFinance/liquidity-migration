@@ -43,12 +43,7 @@ export class TokenSetEnvironmentBuilder {
       signers.push(signer);
     }
 
-    return new TokenSetEnvironment(
-      this.signer, 
-      setBasicIssuanceModule, 
-      tokenSet, 
-      adapter, 
-      signers);
+    return new TokenSetEnvironment(this.signer, setBasicIssuanceModule, tokenSet, adapter, signers);
   }
 }
 

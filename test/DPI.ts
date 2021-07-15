@@ -20,9 +20,9 @@ describe("DPI: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-
     this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default).connect(
-      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI] , FACTORY_REGISTRIES.DPI
+      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI],
+      FACTORY_REGISTRIES.DPI,
     );
 
     console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
@@ -102,7 +102,6 @@ describe("DPI: Unit tests", function () {
 
     // getting the underlying tokens
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
-
 
     // redeeming the token
     const setBasicIssuanceModule = this.DPIEnv.setBasicIssuanceModule;

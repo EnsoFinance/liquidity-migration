@@ -85,10 +85,7 @@ contract IndexedAdapter is IAdapter {
     // }
 
     function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
-        (address IndexAddress, uint256 quantity) = abi.decode(
-            inputData,
-            (address, uint256)
-        );
+        (address IndexAddress, uint256 quantity) = abi.decode(inputData, (address, uint256));
         require(isInputToken(IndexAddress), "IndexedAdapter: invalid Index Pool Address");
         address[] memory tokens = ISigmaIndexPoolV1(IndexAddress).getCurrentTokens();
         uint256[] memory minAmount = new uint256[](tokens.length);

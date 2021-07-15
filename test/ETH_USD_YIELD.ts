@@ -20,9 +20,9 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-
     this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default).connect(
-      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD] , FACTORY_REGISTRIES.ETH_USD_YIELD
+      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD],
+      FACTORY_REGISTRIES.ETH_USD_YIELD,
     );
 
     console.log(`Token Sets Adapter: ${this.DPIEnv.adapter.address}`);
@@ -102,7 +102,6 @@ describe("ETH_USD_YIELD: Unit tests", function () {
 
     // getting the underlying tokens
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
-
 
     // redeeming the token
     const setBasicIssuanceModule = this.DPIEnv.setBasicIssuanceModule;
@@ -195,8 +194,9 @@ describe("ETH_USD_YIELD: Unit tests", function () {
 
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the ETH_USD_YIELD Token as a whitelisted token
-    await expect(this.DPIEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD))
-      .to.be.reverted;
+    await expect(
+      this.DPIEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD),
+    ).to.be.reverted;
   });
 
   it("Getting the output token list", async function () {
