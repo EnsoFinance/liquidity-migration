@@ -21,6 +21,7 @@ contract NewLiquidityMigration is Timelock {
 
     event Staked(address adapter, address strategy, uint256 amount, address account);
     event Migrated(address adapter, address lp, address strategy, address account);
+    event Created(address adapter, address strategy, address account);
 
     /**
     * @dev Require adapter registered
@@ -100,30 +101,61 @@ contract NewLiquidityMigration is Timelock {
     }
 }
 
-//     function createStrategy(
-//             address _lp,
-//             address _adapter,
-
-//     )
-//         public
-//         onlyRegistered(_adapter)
-//         onlyWhitelisted(_adapter, _lp)
-//     {
-
-//     }
-// }
-
-
-
-/*
-    // drain?
     function createStrategy(
-        _LP desired structure,
-        pass in protocol
-    ) 
+        address _lp,
+        address _adapter,
+        bytes calldata data
+    )
+        public
+        onlyRegistered(_adapter)
+        onlyWhitelisted(_adapter, _lp)
     {
-        emit all
+        (
+            address manager,
+            string memory name,
+            string memory symbol,
+            Item[] memory strategyItems,
+            bool social,
+            uint256 fee,
+            uint256 threshold,
+            uint256 slippage,
+            uint256 timelock,
+            address router,
+            bytes memory data
+        ) = abi.decode(
+            data,
+            (
+                address, string, string, Item[], bool, uint256, 
+                uint256, uint256, uint256, address, bytes
+            )
+        )
+        
+        /*
+            _validate();
+            validate same structure depending upon platform
+                - same structure from other platform 
+        */
+
+
+        address strategy = createStrategy(
+            manager,
+            name,
+            symbol,
+            strategyItems,
+            social,
+            fee,
+            threshold,
+            slippage,
+            timelock,
+            router,
+            data
+        )
+        emit Created(_adapter, strategy, msg.sender);
     }
-    
-    create strategy paramaters in an event
-*/
+}
+
+function emergencyDrain() {}
+function updateController() {}
+function updateGeneric() {}
+function addAdapter() {}
+function removeAdapter() {}
