@@ -24,7 +24,7 @@ interface PieDaoPool {
 
 contract PieDaoAdapter is IAdapter, Whitelistable {
 
-    constructor(address _registry, address owner_) {
+    constructor(address owner_) {
         _setOwner(owner_);
     }
 

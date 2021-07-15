@@ -36,6 +36,9 @@ contract LiquidityMigration {
     mapping(address => mapping(address => Stake)) public stakes; // stakes[sender][strategyToken] = Stake
     mapping(AcceptedProtocols => address) public adapters;
 
+    event Staked(uint8 indexed protocol, address strategyToken, uint256 amount, address account);
+    event Migrated(uint8 indexed protocol, address ensoStrategy, address strategyToken, address account);
+
     constructor(Adapters[] memory acceptedAdapters, EnsoContracts memory contracts) {
         for (uint256 i = 0; i < acceptedAdapters.length; i++) {
             adapters[acceptedAdapters[i].protocol] = acceptedAdapters[i].adapter;
@@ -56,6 +59,7 @@ contract LiquidityMigration {
         stake.amount += amount;
         stake.protocol = protocol;
         stake.strategyToken = strategyToken;
+        emit Staked(uint8(protocol), strategyToken, amount, msg.sender);
     }
 
     function migrate(
@@ -87,10 +91,23 @@ contract LiquidityMigration {
         uint256 gained = balanceAfter - balanceBefore;
         require(gained > minimumAmount, "Didnt receive enough Enso strategy tokens");
         IERC20(ensoStrategy).safeTransfer(msg.sender, balanceAfter - balanceBefore);
+        emit Migrated(uint8(protocol), ensoStrategy, strategyToken, msg.sender);
     }
 
     function getStake(address account, address strategyToken) public view returns (Stake memory stake) {
         stake = stakes[account][strategyToken];
+    }
+
+    function hasStaked(address account, address strategyToken) 
+        public
+        view
+        returns(bool, uint256)
+    {
+        Stake storage stake = stakes[account][strategyToken];
+        return(
+            stake.amount > 0,
+            uint256(stake.protocol)
+        );
     }
 }
 
