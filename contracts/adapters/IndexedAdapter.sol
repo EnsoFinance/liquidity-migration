@@ -2,6 +2,7 @@
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { IAdapter } from "../interfaces/IAdapter.sol";
+import "../helpers/Whitelistable.sol";
 
 interface ISigmaIndexPoolV1 is IERC20 {
     function getCurrentTokens() external view returns (address[] memory tokens);
@@ -15,37 +16,16 @@ pragma solidity 0.8.2;
 /// @author Enso.finance (github.com/amateur-dev)
 /// @notice Adapter for redeeming the underlying assets from Indexed Protocol
 
-contract IndexedAdapter is IAdapter {
+contract IndexedAdapter is IAdapter, Whitelistable {
     using SafeERC20 for IERC20;
-
-    // state variables
-    mapping(address => uint256) public whitelistedTokens;
-    address private manager;
 
     // events
     event RedemptionSuccessful();
 
-    // modifers
-    modifier onlyManager {
-        require(msg.sender == manager, "IndexedAdapter: not authorised");
-        _;
-    }
-
     // constructor
-    constructor(address managerAddress) {
-        manager = managerAddress;
+    constructor(address owner_) {
+        _setOwner(owner_);
     }
-
-    // readerFunctions
-    function isInputToken(address token) public view override returns (bool) {
-        if (whitelistedTokens[token] == 1) {
-            return true;
-        }
-        return false;
-    }
-
-    //TODO: To discuss with Kyle the idea of the inputTokens function
-    function inputTokens() public view override returns (address[] memory inputs) {}
 
     /// @notice to retrieve the underlying tokens in the pool
     /// @param indexAddress is the Index Pool's Address
@@ -80,9 +60,9 @@ contract IndexedAdapter is IAdapter {
     //     emit RedemptionSuccessful();
     // }
 
-    function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
+    function encodeExecute(bytes calldata inputData) public override view returns (Call[] memory calls) {
         (address indexAddress, uint256 quantity) = abi.decode(inputData, (address, uint256));
-        require(isInputToken(indexAddress), "IndexedAdapter: invalid Index Pool Address");
+        require(isWhitelisted(indexAddress), "IndexedAdapter: invalid Index Pool Address");
         address[] memory tokens = ISigmaIndexPoolV1(indexAddress).getCurrentTokens();
         uint256[] memory minAmount = new uint256[](tokens.length);
         bytes memory data = abi.encodeWithSelector(
@@ -95,15 +75,16 @@ contract IndexedAdapter is IAdapter {
         return calls;
     }
 
-    // controllingFunctions
-
-    function addAcceptedTokensToWhitelist(address tokenAddress) public onlyManager returns (bool) {
-        whitelistedTokens[tokenAddress] = 1;
-        return true;
-    }
-
-    function removeTokensFromWhitelist(address tokenAddress) public onlyManager returns (bool) {
-        whitelistedTokens[tokenAddress] = 0;
-        return true;
+    /**
+    * @param _token to view pool token
+    * @return if token in whiteliste
+    */
+    function isWhitelisted(address _token) 
+        public
+        view
+        override
+        returns(bool)
+    {
+        return whitelisted[_token];
     }
 }

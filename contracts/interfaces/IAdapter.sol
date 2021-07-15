@@ -8,11 +8,11 @@ interface IAdapter {
         uint256 value;
     }
 
-    function isInputToken(address token) external view returns (bool);
-
-    function inputTokens() external view returns (address[] memory input);
+    // function inputTokens() external view returns (address[] memory input);
 
     function outputTokens(address inputToken) external view returns (address[] memory outputs);
+
+    function isWhitelisted(address _token) external view returns (bool);
 
     // function execute(bytes calldata data) external;
 

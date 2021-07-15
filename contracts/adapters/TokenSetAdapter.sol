@@ -2,6 +2,8 @@
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { IAdapter } from "../interfaces/IAdapter.sol";
+import "../helpers/Whitelistable.sol";
+
 
 interface ISetToken {
     function getComponents() external view returns (address[] memory);
@@ -15,45 +17,27 @@ interface ISetBasicIsstanceModuleAddress {
     ) external;
 }
 
+
 pragma solidity 0.8.2;
 
 /// @title Token Sets Vampire Attack Contract
 /// @author Enso.finance (github.com/amateur-dev)
 /// @notice Adapter for redeeming the underlying assets from Token Sets
 
-contract TokenSetAdapter is IAdapter {
+contract TokenSetAdapter is IAdapter, Whitelistable {
     using SafeERC20 for IERC20;
 
     // state variables
     ISetBasicIsstanceModuleAddress public setBasicIssuanceModule;
-    mapping(address => uint256) public whitelistedTokens;
-    address private manager;
 
     // events
     event RedemptionSuccessful();
 
-    // modifers
-    modifier onlyManager {
-        require(msg.sender == manager, "TSA: not authorised");
-        _;
-    }
-
     // constructor
-    constructor(ISetBasicIsstanceModuleAddress setBasicIssuanceModuleAddress, address managerAddress) {
+    constructor(ISetBasicIsstanceModuleAddress setBasicIssuanceModuleAddress, address owner_) {
         setBasicIssuanceModule = setBasicIssuanceModuleAddress;
-        manager = managerAddress;
+        _setOwner(owner_);
     }
-
-    // readerFunctions
-    function isInputToken(address token) public view override returns (bool) {
-        if (whitelistedTokens[token] == 1) {
-            return true;
-        }
-        return false;
-    }
-
-    //TODO: To discuss with Kyle the idea of the inputTokens function
-    function inputTokens() public view override returns (address[] memory inputs) {}
 
     /// @notice to retrieve the underlying tokens in the pool
     /// @param tokenSetAddress is the tokenSet Address
@@ -89,12 +73,12 @@ contract TokenSetAdapter is IAdapter {
     //     emit RedemptionSuccessful();
     // }
 
-    function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
+    function encodeExecute(bytes calldata inputData) public override view returns (Call[] memory calls) {
         (address tokenSetAddress, uint256 quantity, address genericRouterAddress) = abi.decode(
             inputData,
             (address, uint256, address)
         );
-        require(isInputToken(tokenSetAddress), "TSA: invalid tokenSetAddress");
+        require(isWhitelisted(tokenSetAddress), "TSA: invalid tokenSetAddress");
         bytes memory data = abi.encodeWithSelector(
             setBasicIssuanceModule.redeem.selector,
             tokenSetAddress,
@@ -106,15 +90,16 @@ contract TokenSetAdapter is IAdapter {
         return calls;
     }
 
-    // controllingFunctions
-
-    function addAcceptedTokensToWhitelist(address tokenAddress) public onlyManager returns (bool) {
-        whitelistedTokens[tokenAddress] = 1;
-        return true;
-    }
-
-    function removeTokensFromWhitelist(address tokenAddress) public onlyManager returns (bool) {
-        whitelistedTokens[tokenAddress] = 0;
-        return true;
+    /**
+    * @param _token to view pool token
+    * @return if token in whiteliste
+    */
+    function isWhitelisted(address _token) 
+        public
+        view
+        override
+        returns(bool)
+    {
+        return whitelisted[_token];
     }
 }

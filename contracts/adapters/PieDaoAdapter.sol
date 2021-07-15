@@ -2,19 +2,8 @@
 pragma solidity 0.8.2;
 
 import { IAdapter } from "../interfaces/IAdapter.sol";
+import "../helpers/Whitelistable.sol";
 
-// PieDao::SmartPoolRegistry
-interface PieDaoRegistry {
-    function inRegistry(address _pool) external view returns (bool);
-
-    function entries(uint256 _index) external view returns (address);
-
-    function addSmartPool(address _smartPool) external;
-
-    function removeSmartPool(uint256 _index) external;
-
-    function removeSmartPoolByAddress(address _address) external;
-}
 
 // PieDao::PV2SmartPool
 // PieDao::PCappedSmartPool
@@ -33,29 +22,10 @@ interface PieDaoPool {
         returns (address[] memory tokens, uint256[] memory amounts);
 }
 
-contract PieDaoAdapter is IAdapter {
-    address public immutable registry;
+contract PieDaoAdapter is IAdapter, Whitelistable {
 
-    constructor(address _registry) {
-        registry = _registry;
-    }
-
-    /// @notice to check if an address is a PieDao Pool
-    /// @param token: address that is to checked if it is a PieDao Pool
-    /// @return true or false depending on if it is a pool or not
-    function isInputToken(address token) public view override returns (bool) {
-        return PieDaoRegistry(registry).inRegistry(token);
-    }
-
-    function inputTokens() public view override returns (address[] memory inputs) {
-        // PieDaoRegistry pieDaoRegistry = PieDaoRegistry(registry);
-        // for (uint256 i = 0; i < inputs.length; i++) {
-        //     address pool = pieDaoRegistry.entries(i);
-        //     if (pool == address(0)) {
-        //         break;
-        //     }
-        //     inputs[i] = pool;
-        // }
+    constructor(address _registry, address owner_) {
+        _setOwner(owner_);
     }
 
     /// @notice to retrieve the underlying tokens in the pool
@@ -73,10 +43,23 @@ contract PieDaoAdapter is IAdapter {
 
     function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
         (address inputToken, uint256 amount) = abi.decode(inputData, (address, uint256));
-        require(isInputToken(inputToken), "Not PieDao pool");
+        require(isWhitelisted(inputToken), "Not PieDao pool");
         bytes memory data = abi.encodeWithSelector(PieDaoPool(inputToken).exitPool.selector, amount);
         calls = new Call[](1);
         calls[0] = Call(payable(inputToken), data, 0);
         return calls;
+    }
+     
+    /**
+    * @param _token to view pool token
+    * @return if token in whiteliste
+    */
+    function isWhitelisted(address _token) 
+        public
+        view
+        override
+        returns(bool)
+    {
+        return whitelisted[_token];
     }
 }

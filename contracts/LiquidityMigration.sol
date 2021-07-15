@@ -50,7 +50,7 @@ contract LiquidityMigration {
     ) public {
         IAdapter adapter = IAdapter(adapters[protocol]);
         require(address(adapter) != address(0), "LM: Protocol not registered");
-        require(adapter.isInputToken(strategyToken), "LM: Pool not in protocol");
+        require(adapter.isWhitelisted(strategyToken), "LM: Pool not in protocol");
         IERC20(strategyToken).safeTransferFrom(msg.sender, address(this), amount);
         Stake storage stake = stakes[msg.sender][strategyToken];
         stake.amount += amount;
@@ -67,7 +67,7 @@ contract LiquidityMigration {
     ) public {
         IAdapter adapter = IAdapter(adapters[protocol]);
         require(address(adapter) != address(0), "LM: Protocol not registered");
-        require(adapter.isInputToken(strategyToken), "LM: Pool not in protocol");
+        require(adapter.isWhitelisted(strategyToken), "LM: Pool not in protocol");
         EnsoStrategy enso = EnsoStrategy(ensoStrategy);
         require(enso.controller() == ensoContracts.strategyController, "Not Enso strategy");
         uint256 balanceBefore = IERC20(ensoStrategy).balanceOf(address(this));
