@@ -4,9 +4,10 @@ pragma solidity 0.8.2;
 // Erc20
 import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { IAdapter } from "./interfaces/IAdapter.sol";
+import "./helpers/Timelock.sol";
 
 // TODO: Make external adapters? vs Store individual pools vs Verify pool in registry
-contract LiquidityMigration {
+contract LiquidityMigration is Timelock {
     using SafeERC20 for IERC20;
 
     enum AcceptedProtocols {
@@ -39,7 +40,15 @@ contract LiquidityMigration {
     event Staked(uint8 indexed protocol, address strategyToken, uint256 amount, address account);
     event Migrated(uint8 indexed protocol, address ensoStrategy, address strategyToken, address account);
 
-    constructor(Adapters[] memory acceptedAdapters, EnsoContracts memory contracts) {
+    constructor(
+        Adapters[] memory acceptedAdapters, 
+        EnsoContracts memory contracts, 
+        uint256 unlock_,
+        uint256 modify_,
+        address owner_
+    ) 
+        Timelock(unlock_, modify_, owner_)
+    {
         for (uint256 i = 0; i < acceptedAdapters.length; i++) {
             adapters[acceptedAdapters[i].protocol] = acceptedAdapters[i].adapter;
         }
@@ -50,7 +59,9 @@ contract LiquidityMigration {
         address strategyToken,
         uint256 amount,
         AcceptedProtocols protocol
-    ) public {
+    ) 
+        public 
+    {
         IAdapter adapter = IAdapter(adapters[protocol]);
         require(address(adapter) != address(0), "LM: Protocol not registered");
         require(adapter.isWhitelisted(strategyToken), "LM: Pool not in protocol");
@@ -68,7 +79,10 @@ contract LiquidityMigration {
         AcceptedProtocols protocol,
         bytes memory migrationData,
         uint256 minimumAmount
-    ) public {
+    ) 
+        public 
+        onlyUnlocked
+    {
         IAdapter adapter = IAdapter(adapters[protocol]);
         require(address(adapter) != address(0), "LM: Protocol not registered");
         require(adapter.isWhitelisted(strategyToken), "LM: Pool not in protocol");
@@ -76,8 +90,8 @@ contract LiquidityMigration {
         require(enso.controller() == ensoContracts.strategyController, "Not Enso strategy");
         uint256 balanceBefore = IERC20(ensoStrategy).balanceOf(address(this));
         Stake storage stake = stakes[msg.sender][strategyToken];
-        require(stake.strategyToken == strategyToken, "Wrong token");
         uint256 stakeAmount = stake.amount;
+        require(stakeAmount > 0, 'LM: has not staked');
         delete stakes[msg.sender][strategyToken];
         IERC20(strategyToken).safeTransfer(ensoContracts.genericRouter, stakeAmount);
         // TODO: verify it is an enso strategy
@@ -92,10 +106,6 @@ contract LiquidityMigration {
         require(gained > minimumAmount, "Didnt receive enough Enso strategy tokens");
         IERC20(ensoStrategy).safeTransfer(msg.sender, balanceAfter - balanceBefore);
         emit Migrated(uint8(protocol), ensoStrategy, strategyToken, msg.sender);
-    }
-
-    function getStake(address account, address strategyToken) public view returns (Stake memory stake) {
-        stake = stakes[account][strategyToken];
     }
 
     function hasStaked(address account, address strategyToken) 

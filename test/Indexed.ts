@@ -123,7 +123,7 @@ describe("Indexed: Unit tests", function () {
   it("Token holder should be able to stake LP token", async function () {
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
-      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+      .add(FACTORY_REGISTRIES.DEGEN_INDEX);
     await tx.wait();
     const holder2 = await this.IndexedEnv.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -178,7 +178,7 @@ describe("Indexed: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
-      .removeTokensFromWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+      .remove(FACTORY_REGISTRIES.DEGEN_INDEX);
     await tx.wait();
     // Migrate
     await expect(
@@ -197,7 +197,7 @@ describe("Indexed: Unit tests", function () {
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the Indexed Token as a whitelisted token
     await expect(
-      this.IndexedEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX),
+      this.IndexedEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.DEGEN_INDEX),
     ).to.be.reverted;
   });
 
@@ -223,7 +223,7 @@ describe("Indexed: Unit tests", function () {
     // adding the DEGEN Token as a whitelisted token
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
-      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+      .add(FACTORY_REGISTRIES.DEGEN_INDEX);
     await tx.wait();
     const routerContract = this.ensoEnv.routers[0].contract;
     const holder3 = await this.IndexedEnv.holders[2];

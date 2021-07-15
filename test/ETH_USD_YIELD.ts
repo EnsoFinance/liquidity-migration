@@ -122,7 +122,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
   it("Token holder should be able to stake LP token", async function () {
     const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
-      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD);
+      .add(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
     const holder2 = await this.ETHUSDYieldEnv.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -175,7 +175,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
-      .removeTokensFromWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD);
+      .remove(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
     // // Migrate
     await expect(
@@ -194,7 +194,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the ETH_USD_YIELD Token as a whitelisted token
     await expect(
-      this.ETHUSDYieldEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD),
+      this.ETHUSDYieldEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.ETH_USD_YIELD),
     ).to.be.reverted;
   });
 
@@ -222,7 +222,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // adding the ETH_USD_YIELD Token as a whitelisted token
     const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
-      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD);
+      .add(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
     const routerContract = this.ensoEnv.routers[0].contract;
     const holder3 = await this.ETHUSDYieldEnv.holders[2];

@@ -123,7 +123,7 @@ describe("DPI: Unit tests", function () {
   it("Token holder should be able to stake LP token", async function () {
     const tx = await this.DPIEnv.adapter
       .connect(this.signers.default)
-      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI);
+      .add(FACTORY_REGISTRIES.DPI);
     await tx.wait();
     const holder2 = await this.DPIEnv.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -176,7 +176,7 @@ describe("DPI: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.DPIEnv.adapter
       .connect(this.signers.default)
-      .removeTokensFromWhitelist(FACTORY_REGISTRIES.DPI);
+      .remove(FACTORY_REGISTRIES.DPI);
     await tx.wait();
     // // Migrate
     await expect(
@@ -194,7 +194,7 @@ describe("DPI: Unit tests", function () {
 
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the DPI Token as a whitelisted token
-    await expect(this.DPIEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI))
+    await expect(this.DPIEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.DPI))
       .to.be.reverted;
   });
 
@@ -221,7 +221,7 @@ describe("DPI: Unit tests", function () {
     // adding the DPI Token as a whitelisted token
     const tx = await this.DPIEnv.adapter
       .connect(this.signers.default)
-      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DPI);
+      .add(FACTORY_REGISTRIES.DPI);
     await tx.wait();
     const routerContract = this.ensoEnv.routers[0].contract;
     const holder3 = await this.DPIEnv.holders[2];
