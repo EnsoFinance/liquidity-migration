@@ -48,14 +48,14 @@ contract PieDaoAdapter is IAdapter {
     }
 
     function inputTokens() public view override returns (address[] memory inputs) {
-        PieDaoRegistry pieDaoRegistry = PieDaoRegistry(registry);
-        for (uint256 i = 0; i < inputs.length; i++) {
-            address pool = pieDaoRegistry.entries(i);
-            if (pool == address(0)) {
-                break;
-            }
-            inputs[i] = pool;
-        }
+        // PieDaoRegistry pieDaoRegistry = PieDaoRegistry(registry);
+        // for (uint256 i = 0; i < inputs.length; i++) {
+        //     address pool = pieDaoRegistry.entries(i);
+        //     if (pool == address(0)) {
+        //         break;
+        //     }
+        //     inputs[i] = pool;
+        // }
     }
 
     /// @notice to retrieve the underlying tokens in the pool

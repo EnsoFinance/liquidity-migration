@@ -4,7 +4,7 @@ import bignumber from "bignumber.js";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
+import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { FACTORY_REGISTRIES } from "../src/constants";

@@ -199,7 +199,6 @@ describe("DPI: Unit tests", function () {
   });
 
   it("Getting the output token list", async function () {
-    // adding the DPI Token as a whitelisted token
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
     const outputTokens = await this.DPIEnv.adapter.outputTokens(FACTORY_REGISTRIES.DPI);
     expect(underlyingTokens).to.be.eql(outputTokens);
