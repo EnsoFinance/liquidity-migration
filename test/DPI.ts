@@ -215,7 +215,7 @@ describe("DPI: Unit tests", function () {
       ["address", "uint256", "address"],
       [holder3Address, BigNumber.from(100), routerContract.address],
     );
-    await expect(this.DPIEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("DPIA: invalid tokenSetAddress");
+    await expect(this.DPIEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("TSA: invalid tokenSetAddress");
   });
 
   it("Should migrate tokens to strategy", async function () {

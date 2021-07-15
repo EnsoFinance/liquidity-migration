@@ -1,9 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
 
-// liquidityMigration contract => gets the LP Tokens => sends these to the genericRouter
-// genericRouter ==> multiCalls, transfer the underlying token to the strategy
-// DPIAdapter
-
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { IAdapter } from "../interfaces/IAdapter.sol";
 
@@ -15,9 +11,9 @@ interface ISigmaIndexPoolV1 is IERC20 {
 
 pragma solidity 0.8.2;
 
-/// @title DPI Vampire Attack Contract for DPI Token
+/// @title Indexed Vampire Attack Contract
 /// @author Enso.finance (github.com/amateur-dev)
-/// @notice Adapter for redeeming the underlying assets from DPI
+/// @notice Adapter for redeeming the underlying assets from Indexed Protocol
 
 contract IndexedAdapter is IAdapter {
     using SafeERC20 for IERC20;
@@ -79,7 +75,7 @@ contract IndexedAdapter is IAdapter {
     //         post[i] = IERC20(components[i]).balanceOf(address(this));
     //     }
     //     for (uint256 i = 0; i < components.length; i++) {
-    //         require((post[i] >= pre[i]), "DPIA: Redemption issue");
+    //         require((post[i] >= pre[i]), "IA: Redemption issue");
     //     }
     //     emit RedemptionSuccessful();
     // }

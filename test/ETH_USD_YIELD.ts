@@ -20,16 +20,16 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-    this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default).connect(
+    this.ETHUSDYieldEnv = await new TokenSetEnvironmentBuilder(this.signers.default).connect(
       TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD],
       FACTORY_REGISTRIES.ETH_USD_YIELD,
     );
 
-    console.log(`Token Sets Adapter: ${this.DPIEnv.adapter.address}`);
+    console.log(`Token Sets Adapter: ${this.ETHUSDYieldEnv.adapter.address}`);
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin);
 
-    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.DPIEnv.adapter);
+    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.ETHUSDYieldEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
     if (liquitityMigrationDeployed != undefined) {
       console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);
@@ -41,12 +41,12 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from ETH_USD_YIELD
-    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
+    const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
     const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(
-      this.DPIEnv.tokenSet.address,
+      this.ETHUSDYieldEnv.tokenSet.address,
       underlyingTokens,
     );
     for (let i = 0; i < underlyingTokens.length; i++) {
@@ -92,81 +92,81 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // getting holders of ETH_USD_YIELD Tokens
 
     const holderBalances: any[] = [];
-    for (let i = 0; i < this.DPIEnv.holders.length; i++) {
+    for (let i = 0; i < this.ETHUSDYieldEnv.holders.length; i++) {
       holderBalances[i] = {
-        holder: await this.DPIEnv.holders[i].getAddress(),
-        balance: await this.DPIEnv.tokenSet.balanceOf(await this.DPIEnv.holders[i].getAddress()),
+        holder: await this.ETHUSDYieldEnv.holders[i].getAddress(),
+        balance: await this.ETHUSDYieldEnv.tokenSet.balanceOf(await this.ETHUSDYieldEnv.holders[i].getAddress()),
       };
-      expect(await this.DPIEnv.tokenSet.balanceOf(await this.DPIEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
+      expect(await this.ETHUSDYieldEnv.tokenSet.balanceOf(await this.ETHUSDYieldEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
     }
 
     // getting the underlying tokens
-    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
+    const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
 
     // redeeming the token
-    const setBasicIssuanceModule = this.DPIEnv.setBasicIssuanceModule;
-    const addressWhoIsRedeeming = await this.DPIEnv.holders[0].getAddress();
+    const setBasicIssuanceModule = this.ETHUSDYieldEnv.setBasicIssuanceModule;
+    const addressWhoIsRedeeming = await this.ETHUSDYieldEnv.holders[0].getAddress();
     const address_toWhom = addressWhoIsRedeeming;
     const tokenBalance = holderBalances[0].balance;
-    const tokenContract = IERC20__factory.connect(underlyingTokens[0], this.DPIEnv.holders[0]) as IERC20;
+    const tokenContract = IERC20__factory.connect(underlyingTokens[0], this.ETHUSDYieldEnv.holders[0]) as IERC20;
     const previousUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
     const tx = await setBasicIssuanceModule
-      .connect(this.DPIEnv.holders[0])
-      .redeem(this.DPIEnv.tokenSet.address, tokenBalance, address_toWhom);
+      .connect(this.ETHUSDYieldEnv.holders[0])
+      .redeem(this.ETHUSDYieldEnv.tokenSet.address, tokenBalance, address_toWhom);
     await tx.wait();
-    const updatedDPIBalance = await this.DPIEnv.tokenSet.balanceOf(address_toWhom);
+    const updatedBalance = await this.ETHUSDYieldEnv.tokenSet.balanceOf(address_toWhom);
     const updatedUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
-    expect(updatedDPIBalance).to.equal(BigNumber.from(0));
+    expect(updatedBalance).to.equal(BigNumber.from(0));
     expect(updatedUnderlyingTokenBalance.gt(previousUnderlyingTokenBalance)).to.be.true;
   });
 
   it("Token holder should be able to stake LP token", async function () {
-    const tx = await this.DPIEnv.adapter
+    const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
       .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
-    const holder2 = await this.DPIEnv.holders[1];
+    const holder2 = await this.ETHUSDYieldEnv.holders[1];
     const holder2Address = await holder2.getAddress();
 
-    const holder2Balance = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
+    const holder2Balance = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder2Address);
     expect(holder2Balance).to.be.gt(BigNumber.from(0));
-    await this.DPIEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
+    await this.ETHUSDYieldEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder2Balance.div(2), AcceptedProtocols.DefiPulseIndex);
-    expect((await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.tokenSet.address))[0]).to.equal(
+      .stakeLpTokens(this.ETHUSDYieldEnv.tokenSet.address, holder2Balance.div(2), AcceptedProtocols.DefiPulseIndex);
+    expect((await this.liquidityMigration.stakes(holder2Address, this.ETHUSDYieldEnv.tokenSet.address))[0]).to.equal(
       holder2Balance.div(2),
     );
-    const holder2AfterBalance = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
+    const holder2AfterBalance = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder2Address);
     expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
   });
 
   it("Should not be able to migrate tokens if the ETH_USD_YIELD token is not whitelisted in the Token Sets Adapter", async function () {
     const routerContract = this.ensoEnv.routers[0].contract;
-    const holder2 = await this.DPIEnv.holders[1];
+    const holder2 = await this.ETHUSDYieldEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
-    const holder2BalanceBefore = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
+    const holder2BalanceBefore = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder2Address);
     expect(holder2BalanceBefore).to.be.gt(BigNumber.from(0));
-    await this.DPIEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
+    await this.ETHUSDYieldEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder2BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-    const amount = (await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.tokenSet.address))[0];
+      .stakeLpTokens(this.ETHUSDYieldEnv.tokenSet.address, holder2BalanceBefore, AcceptedProtocols.DefiPulseIndex);
+    const amount = (await this.liquidityMigration.stakes(holder2Address, this.ETHUSDYieldEnv.tokenSet.address))[0];
     expect(amount).to.be.gt(BigNumber.from(0));
 
-    // const holder2BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
+    // const holder2BalanceAfter = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder2Address);
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
-    // Setup migration calls using DPIAdapter contract
+    // Setup migration calls using Adapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256", "address"],
-      [this.DPIEnv.tokenSet.address, amount, routerContract.address],
+      [this.ETHUSDYieldEnv.tokenSet.address, amount, routerContract.address],
     );
-    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
+    const migrationCalls: Multicall[] = await this.ETHUSDYieldEnv.adapter.encodeExecute(adapterData);
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
-    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
+    const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
@@ -174,7 +174,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // // Encode multicalls for GenericRouter
     const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
-    const tx = await this.DPIEnv.adapter
+    const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
       .removeTokensFromWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
@@ -184,7 +184,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
         .connect(holder2)
         .migrate(
           this.strategy.address,
-          this.DPIEnv.tokenSet.address,
+          this.ETHUSDYieldEnv.tokenSet.address,
           AcceptedProtocols.DefiPulseIndex,
           migrationData,
           0,
@@ -195,63 +195,63 @@ describe("ETH_USD_YIELD: Unit tests", function () {
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the ETH_USD_YIELD Token as a whitelisted token
     await expect(
-      this.DPIEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD),
+      this.ETHUSDYieldEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD),
     ).to.be.reverted;
   });
 
   it("Getting the output token list", async function () {
     // adding the ETH_USD_YIELD Token as a whitelisted token
-    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
-    const outputTokens = await this.DPIEnv.adapter.outputTokens(FACTORY_REGISTRIES.ETH_USD_YIELD);
+    const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
+    const outputTokens = await this.ETHUSDYieldEnv.adapter.outputTokens(FACTORY_REGISTRIES.ETH_USD_YIELD);
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
 
   it("Migration using a non-whitelisted token should fail", async function () {
     const routerContract = this.ensoEnv.routers[0].contract;
-    const holder3 = await this.DPIEnv.holders[2];
+    const holder3 = await this.ETHUSDYieldEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
-    // Setup migration calls using DPIAdapter contract
+    // Setup migration calls using Adapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256", "address"],
       [holder3Address, BigNumber.from(100), routerContract.address],
     );
-    await expect(this.DPIEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("DPIA: invalid tokenSetAddress");
+    await expect(this.ETHUSDYieldEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("TSA: invalid tokenSetAddress");
   });
 
   it("Should migrate tokens to strategy", async function () {
     // adding the ETH_USD_YIELD Token as a whitelisted token
-    const tx = await this.DPIEnv.adapter
+    const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
       .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
     const routerContract = this.ensoEnv.routers[0].contract;
-    const holder3 = await this.DPIEnv.holders[2];
+    const holder3 = await this.ETHUSDYieldEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
     // staking the tokens in the liquidity migration contract
-    const holder3BalanceBefore = await this.DPIEnv.tokenSet.balanceOf(holder3Address);
+    const holder3BalanceBefore = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-    await this.DPIEnv.tokenSet.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
+    await this.ETHUSDYieldEnv.tokenSet.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
-      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder3BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-    const amount = (await this.liquidityMigration.stakes(holder3Address, this.DPIEnv.tokenSet.address))[0];
+      .stakeLpTokens(this.ETHUSDYieldEnv.tokenSet.address, holder3BalanceBefore, AcceptedProtocols.DefiPulseIndex);
+    const amount = (await this.liquidityMigration.stakes(holder3Address, this.ETHUSDYieldEnv.tokenSet.address))[0];
     expect(amount).to.be.gt(BigNumber.from(0));
-    const holder3BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder3Address);
+    const holder3BalanceAfter = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
-    // Setup migration calls using DPIAdapter contract
+    // Setup migration calls using Adapter contract
     const adapterData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256", "address"],
-      [this.DPIEnv.tokenSet.address, amount, routerContract.address],
+      [this.ETHUSDYieldEnv.tokenSet.address, amount, routerContract.address],
     );
-    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
+    const migrationCalls: Multicall[] = await this.ETHUSDYieldEnv.adapter.encodeExecute(adapterData);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
-    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
+    const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
@@ -262,7 +262,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      .migrate(this.strategy.address, this.DPIEnv.tokenSet.address, AcceptedProtocols.DefiPulseIndex, migrationData, 0);
+      .migrate(this.strategy.address, this.ETHUSDYieldEnv.tokenSet.address, AcceptedProtocols.DefiPulseIndex, migrationData, 0);
     const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);

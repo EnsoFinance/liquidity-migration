@@ -1,9 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
 
-// liquidityMigration contract => gets the LP Tokens => sends these to the genericRouter
-// genericRouter ==> multiCalls, transfer the underlying token to the strategy
-// DPIAdapter
-
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { IAdapter } from "../interfaces/IAdapter.sol";
 
@@ -21,9 +17,9 @@ interface ISetBasicIsstanceModuleAddress {
 
 pragma solidity 0.8.2;
 
-/// @title DPI Vampire Attack Contract for DPI Token
+/// @title Token Sets Vampire Attack Contract
 /// @author Enso.finance (github.com/amateur-dev)
-/// @notice Adapter for redeeming the underlying assets from DPI
+/// @notice Adapter for redeeming the underlying assets from Token Sets
 
 contract TokenSetAdapter is IAdapter {
     using SafeERC20 for IERC20;
@@ -38,7 +34,7 @@ contract TokenSetAdapter is IAdapter {
 
     // modifers
     modifier onlyManager {
-        require(msg.sender == manager, "DPIA: not authorised");
+        require(msg.sender == manager, "TSA: not authorised");
         _;
     }
 
@@ -75,7 +71,7 @@ contract TokenSetAdapter is IAdapter {
     //         inputData,
     //         (address, uint256, address)
     //     );
-    //     require(isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
+    //     require(isInputToken(tokenSetAddress), "TSA: invalid tokenSetAddress");
     //     IERC20(tokenSetAddress).transferFrom(msg.sender, address(this), quantity);
     //     address[] memory components = ISetToken(tokenSetAddress).getComponents();
     //     uint256[] memory pre = new uint256[](components.length);
@@ -88,7 +84,7 @@ contract TokenSetAdapter is IAdapter {
     //         post[i] = IERC20(components[i]).balanceOf(address(this));
     //     }
     //     for (uint256 i = 0; i < components.length; i++) {
-    //         require((post[i] >= pre[i]), "DPIA: Redemption issue");
+    //         require((post[i] >= pre[i]), "TSA: Redemption issue");
     //     }
     //     emit RedemptionSuccessful();
     // }
@@ -98,7 +94,7 @@ contract TokenSetAdapter is IAdapter {
             inputData,
             (address, uint256, address)
         );
-        require(isInputToken(tokenSetAddress), "DPIA: invalid tokenSetAddress");
+        require(isInputToken(tokenSetAddress), "TSA: invalid tokenSetAddress");
         bytes memory data = abi.encodeWithSelector(
             setBasicIssuanceModule.redeem.selector,
             tokenSetAddress,
