@@ -54,8 +54,8 @@ contract IndexedAdapter is IAdapter {
     /// @notice to retrieve the underlying tokens in the pool
     /// @param IndexAddress is the Index Pool's Address
     /// @return outputs is an array of the underlying tokens in the pool
-    function outputTokens(address IndexAddress) external view override returns (address[] memory outputs) {
-        return outputs = ISigmaIndexPoolV1(IndexAddress).getCurrentTokens();
+    function outputTokens(address indexAddress) external view override returns (address[] memory outputs) {
+        return outputs = ISigmaIndexPoolV1(indexAddress).getCurrentTokens();
     }
 
     // executeableFunctions
@@ -85,9 +85,9 @@ contract IndexedAdapter is IAdapter {
     // }
 
     function encodeExecute(bytes calldata inputData) public view override returns (Call[] memory calls) {
-        (address IndexAddress, uint256 quantity) = abi.decode(inputData, (address, uint256));
-        require(isInputToken(IndexAddress), "IndexedAdapter: invalid Index Pool Address");
-        address[] memory tokens = ISigmaIndexPoolV1(IndexAddress).getCurrentTokens();
+        (address indexAddress, uint256 quantity) = abi.decode(inputData, (address, uint256));
+        require(isInputToken(indexAddress), "IndexedAdapter: invalid Index Pool Address");
+        address[] memory tokens = ISigmaIndexPoolV1(indexAddress).getCurrentTokens();
         uint256[] memory minAmount = new uint256[](tokens.length);
         bytes memory data = abi.encodeWithSelector(
             ISigmaIndexPoolV1(IndexAddress).exitPool.selector,
@@ -95,7 +95,7 @@ contract IndexedAdapter is IAdapter {
             minAmount
         );
         calls = new Call[](1);
-        calls[0] = Call(payable(address(IndexAddress)), data, 0);
+        calls[0] = Call(payable(address(indexAddress)), data, 0);
         return calls;
     }
 
