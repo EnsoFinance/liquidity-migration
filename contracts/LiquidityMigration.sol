@@ -9,9 +9,9 @@ import "./enso/IStrategyController.sol";
 import "./enso/IStrategyRouter.sol";
 import "./enso/IStrategy.sol";
 import "./helpers/Timelock.sol";
-import "./helpers/Oracle.sol";
+import "./helpers/Ownable.sol";
 
-contract NewLiquidityMigration is Timelock {
+contract NewLiquidityMigration is Ownable, Timelock {
     using SafeERC20 for IERC20;
 
     address public generic;
@@ -162,6 +162,12 @@ contract NewLiquidityMigration is Timelock {
 // function emergencyDrain() {}
 // function updateController() {}
 // function updateGeneric() {}
-// function addAdapter() {}
-// function removeAdapter() {}
+
+function addAdapter(address newAdapter_) public onlyOwner {
+    addapter[newAdapter_] = true;
+}
+
+function removeAdapter(address oldAdapter_) public onlyOwner {
+    addapter[oldAdapter_] = false;
+}
 
