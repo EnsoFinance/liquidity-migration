@@ -9,14 +9,13 @@ import "./enso/IStrategyController.sol";
 import "./enso/IStrategyRouter.sol";
 import "./enso/IStrategy.sol";
 import "./helpers/Timelock.sol";
-import "./helpers/Ownable.sol";
 
-contract NewLiquidityMigration is Ownable, Timelock {
+contract NewLiquidityMigration is Timelock {
+    
     using SafeERC20 for IERC20;
 
     address public generic;
     address public controller;
-    address public oracale;
     IStrategyProxyFactory public factory;
     
     mapping (address => bool) public adapters;
@@ -34,8 +33,6 @@ contract NewLiquidityMigration is Ownable, Timelock {
         _;
     }
 
-
-
     /**
     * @dev Require adapter allows lp
     */
@@ -51,8 +48,7 @@ contract NewLiquidityMigration is Ownable, Timelock {
         address controller_,
         uint256 unlock_,
         uint256 modify_,
-        address owner_,
-        address oracle_
+        address owner_
     ) 
         Timelock(unlock_, modify_, owner_)
     {
@@ -62,7 +58,6 @@ contract NewLiquidityMigration is Ownable, Timelock {
         generic = generic_;
         factory = factory_;
         controller = controller_;
-        oracle = oracle_;
     }
 
     function stake(
@@ -106,14 +101,14 @@ contract NewLiquidityMigration is Ownable, Timelock {
         _strategy.transfer(msg.sender, (_after - _before));
         emit Migrated(_adapter, _lp, address(_strategy), msg.sender);
     }
-}
+
 
     function createStrategy(
         address _lp,
         address _adapter,
         bytes calldata data
     )
-        public
+        public 
         onlyRegistered(_adapter)
         onlyWhitelisted(_adapter, _lp)
     {
@@ -135,7 +130,7 @@ contract NewLiquidityMigration is Ownable, Timelock {
                 address, string, string, Item[], bool, uint256, 
                 uint256, uint256, uint256, address, bytes
             )
-        )
+        );
         
         for (uint i = 0; i < strategyItems.length; i++) {
             require(IAdapter(_adapter).underlyingTokenInTheLp(strategyItems[i].item) == true);
@@ -143,9 +138,9 @@ contract NewLiquidityMigration is Ownable, Timelock {
         require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens);
 
         address strategy = createStrategy(
-            manager, {this is coming from decoding the incoming parameter}
-            name,  {this is coming from decoding the incoming parameter}
-            symbol,  {this is coming from decoding the incoming parameter}
+            manager, 
+            name,  
+            symbol,
             strategyItems,
             social,
             fee,
@@ -154,20 +149,28 @@ contract NewLiquidityMigration is Ownable, Timelock {
             timelock,
             router,
             data
-        )
+        );
         emit Created(_adapter, strategy, msg.sender);
     }
-}
 
-// function emergencyDrain() {}
-// function updateController() {}
-// function updateGeneric() {}
 
-function addAdapter(address newAdapter_) public onlyOwner {
-    addapter[newAdapter_] = true;
-}
 
-function removeAdapter(address oldAdapter_) public onlyOwner {
-    addapter[oldAdapter_] = false;
+    // function emergencyDrain() {}
+
+    function updateController(address newController) public onlyOwner {
+        controller = newController;
+    }
+    
+    function updateGeneric(address newGeneric) public onlyOwner {
+        generic = newGeneric;
+    }
+    
+    function addAdapter(address newAdapter_) public onlyOwner {
+        addapter[newAdapter_] = true;
+    }
+    
+    function removeAdapter(address oldAdapter_) public onlyOwner {
+        addapter[oldAdapter_] = false;
+    }
 }
 
