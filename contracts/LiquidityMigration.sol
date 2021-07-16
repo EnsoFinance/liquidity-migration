@@ -9,12 +9,14 @@ import "./enso/IStrategyController.sol";
 import "./enso/IStrategyRouter.sol";
 import "./enso/IStrategy.sol";
 import "./helpers/Timelock.sol";
+import "./helpers/Oracle.sol";
 
 contract NewLiquidityMigration is Timelock {
     using SafeERC20 for IERC20;
 
     address public generic;
     address public controller;
+    address public oracale;
     IStrategyProxyFactory public factory;
     mapping (address => bool) public adapters;
     mapping (address => mapping (address => uint256)) public staked;
@@ -46,7 +48,8 @@ contract NewLiquidityMigration is Timelock {
         address controller_,
         uint256 unlock_,
         uint256 modify_,
-        address owner_
+        address owner_,
+        address oracle_
     ) 
         Timelock(unlock_, modify_, owner_)
     {
@@ -56,6 +59,7 @@ contract NewLiquidityMigration is Timelock {
         generic = generic_;
         factory = factory_;
         controller = controller_;
+        oracle = oracle_;
     }
 
     function stake(
@@ -121,7 +125,7 @@ contract NewLiquidityMigration is Timelock {
             uint256 slippage,
             uint256 timelock,
             address router,
-            bytes memory data
+            bytes memory data_1
         ) = abi.decode(
             data,
             (
@@ -130,17 +134,37 @@ contract NewLiquidityMigration is Timelock {
             )
         )
         
+
+        address[] underlyingTokens = IAdapter(_adapter).outputTokens(_lp);  // array of underlying tokens which should be equal to the strategyItems.item
+        [uint256 total, uint256[] memory estimates] = oracle.estimateTotal(_lp, underlyingTokens);
+        for (uint i = 0; i < strategyItems.length; i++) {
+            address underlyingTokenAddress = strategyItems[i].item;
+            uint percentage = estimates[i].mul(1000).div(total);
+            // need to cross check with the strategyItems
+
+        }
+        [address[] memory underlyingTokens_1, address[] memory adapters_1] = abi.decode(
+            data_1,
+            (
+                address[], address[]
+            );
+        // to compare underlyingTokens_1 with the underlyingTokens
+        // do we / can we check the adapters_1
+
+
+        
+    
+
         /*
             _validate();
             validate same structure depending upon platform
                 - same structure from other platform 
         */
 
-
         // address strategy = createStrategy(
-        //     manager,
-        //     name,
-        //     symbol,
+        //     manager, {this is coming from decoding the incoming parameter}
+        //     name,  {this is coming from decoding the incoming parameter}
+        //     symbol,  {this is coming from decoding the incoming parameter}
         //     strategyItems,
         //     social,
         //     fee,
@@ -159,3 +183,4 @@ contract NewLiquidityMigration is Timelock {
 // function updateGeneric() {}
 // function addAdapter() {}
 // function removeAdapter() {}
+
