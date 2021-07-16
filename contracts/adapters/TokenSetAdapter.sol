@@ -4,7 +4,6 @@ import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/S
 import { IAdapter } from "../interfaces/IAdapter.sol";
 import "../helpers/Whitelistable.sol";
 
-
 interface ISetToken {
     function getComponents() external view returns (address[] memory);
 }
@@ -22,7 +21,6 @@ pragma solidity 0.8.2;
 
 contract TokenSetAdapter is IAdapter, Whitelistable {
     using SafeERC20 for IERC20;
-
 
     address public generic;
     ISetModule public setModule;
@@ -77,5 +75,23 @@ contract TokenSetAdapter is IAdapter, Whitelistable {
         returns(bool)
     {
         return whitelisted[_lp];
+    }
+
+    function addToUnderlyingTokenMapping(address _lp) internal override {
+        address[] underlyingTokens = outputTokens(_lp);
+        for (uint256 i = 0; i < underlyingTokens.length; i++) {
+            address utAddress = underlyingTokens[i];
+            underlyingTokenInTheLp[_lp][utAddress] = true;
+        }
+        numberOfUnderlyingTokens[_lp] = underlyingTokens.length;
+    }
+
+    function removeFromUnderlyingTokenMapping(address _lp) internal override {
+        address[] underlyingTokens = outputTokens(_lp);
+        for (uint256 i = 0; i < underlyingTokens.length; i++) {
+            address utAddress = underlyingTokens[i];
+            underlyingTokenInTheLp[_lp][utAddress] = false;
+        }
+        numberOfUnderlyingTokens[_lp] = 0;
     }
 }

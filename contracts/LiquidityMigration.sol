@@ -18,6 +18,7 @@ contract NewLiquidityMigration is Timelock {
     address public controller;
     address public oracale;
     IStrategyProxyFactory public factory;
+    
     mapping (address => bool) public adapters;
     mapping (address => mapping (address => uint256)) public staked;
 
@@ -32,6 +33,8 @@ contract NewLiquidityMigration is Timelock {
         require(adapters[_adapter], "Claimable#onlyState: not registered adapter");
         _;
     }
+
+
 
     /**
     * @dev Require adapter allows lp
@@ -134,46 +137,24 @@ contract NewLiquidityMigration is Timelock {
             )
         )
         
-
-        address[] underlyingTokens = IAdapter(_adapter).outputTokens(_lp);  // array of underlying tokens which should be equal to the strategyItems.item
-        [uint256 total, uint256[] memory estimates] = oracle.estimateTotal(_lp, underlyingTokens);
         for (uint i = 0; i < strategyItems.length; i++) {
-            address underlyingTokenAddress = strategyItems[i].item;
-            uint percentage = estimates[i].mul(1000).div(total);
-            // need to cross check with the strategyItems
-
+            require(IAdapter(_adapter).underlyingTokenInTheLp(strategyItems[i].item) == true);
         }
-        [address[] memory underlyingTokens_1, address[] memory adapters_1] = abi.decode(
-            data_1,
-            (
-                address[], address[]
-            );
-        // to compare underlyingTokens_1 with the underlyingTokens
-        // do we / can we check the adapters_1
+        require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens);
 
-
-        
-    
-
-        /*
-            _validate();
-            validate same structure depending upon platform
-                - same structure from other platform 
-        */
-
-        // address strategy = createStrategy(
-        //     manager, {this is coming from decoding the incoming parameter}
-        //     name,  {this is coming from decoding the incoming parameter}
-        //     symbol,  {this is coming from decoding the incoming parameter}
-        //     strategyItems,
-        //     social,
-        //     fee,
-        //     threshold,
-        //     slippage,
-        //     timelock,
-        //     router,
-        //     data
-        // )
+        address strategy = createStrategy(
+            manager, {this is coming from decoding the incoming parameter}
+            name,  {this is coming from decoding the incoming parameter}
+            symbol,  {this is coming from decoding the incoming parameter}
+            strategyItems,
+            social,
+            fee,
+            threshold,
+            slippage,
+            timelock,
+            router,
+            data
+        )
         emit Created(_adapter, strategy, msg.sender);
     }
 }

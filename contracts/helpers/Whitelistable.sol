@@ -8,6 +8,8 @@ pragma solidity 0.8.2;
 abstract contract Whitelistable is Ownable {
 
     mapping(address => bool) public whitelisted;
+    mapping (address => mapping (address => bool)) public underlyingTokenInTheLp;
+    mapping (address => uint256) public numberOfUnderlyingTokens;
 
     event Added(address token);
     event Removed(address token);
@@ -29,6 +31,7 @@ abstract contract Whitelistable is Ownable {
         onlyOwner 
     {
         _add(_token);
+        addToUnderlyingTokenMapping(_token);
     }
 
     /**
@@ -41,6 +44,7 @@ abstract contract Whitelistable is Ownable {
     {
         for (uint256 i = 0; i < _tokens.length; i++) {
             _add(_tokens[i]);
+            addToUnderlyingTokenMapping(_tokens[i]);
         }
     }
 
@@ -53,6 +57,7 @@ abstract contract Whitelistable is Ownable {
         onlyOwner
     {
         _remove(_token);
+        removeFromUnderlyingTokenMapping(_token);
     }
 
     /**
@@ -65,6 +70,7 @@ abstract contract Whitelistable is Ownable {
     {
         for (uint256 i = 0; i < _tokens.length; i++) {
             _remove(_tokens[i]);
+            removeFromUnderlyingTokenMapping(_tokens[i]);
         }
     }
 
@@ -82,4 +88,7 @@ abstract contract Whitelistable is Ownable {
         whitelisted[_token] = false;
         emit Removed(_token);
     }
+
+    function addToUnderlyingTokenMapping(address _token) internal virtual;
+    function removeFromUnderlyingTokenMapping(address _token) internal virtual;
 }
