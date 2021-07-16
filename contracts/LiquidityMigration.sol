@@ -166,11 +166,11 @@ contract NewLiquidityMigration is Timelock {
     }
     
     function addAdapter(address newAdapter_) public onlyOwner {
-        addapter[newAdapter_] = true;
+        adapters[newAdapter_] = true;
     }
     
     function removeAdapter(address oldAdapter_) public onlyOwner {
-        addapter[oldAdapter_] = false;
+        adapters[oldAdapter_] = false;
     }
 }
 
