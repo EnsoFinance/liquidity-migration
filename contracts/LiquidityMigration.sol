@@ -132,8 +132,8 @@ contract NewLiquidityMigration is IStrategyProxyFactory, Timelock {
         );
         
         for (uint i = 0; i < strategyItems.length; i++) {
-            address ta = strategyItems[i].item;
-            require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(ta) == true);
+            address tokenAddress = strategyItems[i].item;
+            require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(tokenAddress) == true);
         }
         
         require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens(_lp));
@@ -149,7 +149,7 @@ contract NewLiquidityMigration is IStrategyProxyFactory, Timelock {
             slippage,
             timelock,
             router,
-            data
+            data_1
         );
         emit Created(_adapter, strategy, msg.sender);
     }
