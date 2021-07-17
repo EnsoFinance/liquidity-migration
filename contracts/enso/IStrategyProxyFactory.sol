@@ -9,12 +9,8 @@ interface IStrategyProxyFactory is StrategyTypes{
         address manager,
         string memory name,
         string memory symbol,
-        Item[] memory strategyItems,
-        bool social,
-        uint256 fee,
-        uint256 threshold,
-        uint256 slippage,
-        uint256 timelock,
+        StrategyItem[] memory strategyItems,
+        StrategyState memory strategyState,
         address router,
         bytes memory data
     ) external payable returns (address);

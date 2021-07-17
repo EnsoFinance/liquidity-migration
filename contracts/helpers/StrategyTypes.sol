@@ -1,16 +1,18 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
-
-pragma solidity 0.8.2;
+pragma solidity >=0.6.0 <0.9.0;
 
 interface StrategyTypes {
 
     enum ItemCategory {NULL, BASIC, STRATEGY, NFT, SYNTH, UNISWAP_V2, UNISWAP_V3, BALANCER, SUSHI, SUSHI_FARM, CURVE, CURVE_GAUGE, AAVE, COMPOUND, YEARN_V1, YEARN_V2}
     enum TimelockCategory {RESTRUCTURE, THRESHOLD, SLIPPAGE, TIMELOCK, PERFORMANCE}
 
-    struct ItemData {
-        ItemCategory category;
+    struct StrategyItem {
+        address item;
         uint16 percentage;
+        ItemCategory category;
         bytes cache;
+        address[] adapters;
+        address[] path;
     }
 
     struct Item {
@@ -18,20 +20,25 @@ interface StrategyTypes {
         ItemData data;
     }
 
+    struct ItemData {
+        ItemCategory category;
+        bytes cache;
+    }
+
+    struct TradeData {
+        address[] adapters;
+        address[] path;
+    }
+
+
     struct StrategyState {
-        uint256 lastTokenValue;
         uint32 timelock;
         uint16 rebalanceThreshold;
         uint16 slippage;
         uint16 performanceFee;
         bool social;
-        bool initialized;
     }
 
-    /**
-        @notice A time lock requirement for changing the state of this Strategy
-        @dev WARNING: Only one TimelockCategory can be pending at a time
-    */
     struct Timelock {
         TimelockCategory category;
         uint256 timestamp;

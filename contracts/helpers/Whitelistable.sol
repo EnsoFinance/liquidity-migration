@@ -8,9 +8,9 @@ pragma solidity 0.8.2;
 abstract contract Whitelistable is Ownable {
 
     mapping(address => bool) public whitelisted;
-    
-    mapping (address => uint256) public count;
-    mapping (address => mapping (address => bool)) public underlying;
+
+    mapping (address => uint256) internal _count;
+    mapping (address => mapping (address => bool)) internal _underlying;
 
     event Added(address token);
     event Removed(address token);
@@ -27,12 +27,12 @@ abstract contract Whitelistable is Ownable {
     * @dev add pool token to whitelist
     * @param _token pool address
     */
-    function add(address _token) 
-        public 
-        onlyOwner 
+    function add(address _token)
+        public
+        onlyOwner
     {
         _add(_token);
-        addToUnderlyingTokenMapping(_token);
+        _addUnderlying(_token);
     }
 
     /**
@@ -45,7 +45,7 @@ abstract contract Whitelistable is Ownable {
     {
         for (uint256 i = 0; i < _tokens.length; i++) {
             _add(_tokens[i]);
-            addToUnderlyingTokenMapping(_tokens[i]);
+            _addUnderlying(_tokens[i]);
         }
     }
 
@@ -53,12 +53,12 @@ abstract contract Whitelistable is Ownable {
     * @dev remove pool token from whitelist
     * @param _token pool address
     */
-    function remove(address _token) 
+    function remove(address _token)
         public
         onlyOwner
     {
         _remove(_token);
-        removeFromUnderlyingTokenMapping(_token);
+        _removeUnderlying(_token);
     }
 
     /**
@@ -71,18 +71,18 @@ abstract contract Whitelistable is Ownable {
     {
         for (uint256 i = 0; i < _tokens.length; i++) {
             _remove(_tokens[i]);
-            removeFromUnderlyingTokenMapping(_tokens[i]);
+            _removeUnderlying(_tokens[i]);
         }
     }
 
-    function _add(address _token) 
+    function _add(address _token)
         internal
     {
         whitelisted[_token] = true;
         emit Added(_token);
     }
 
-    function _remove(address _token) 
+    function _remove(address _token)
         internal
     {
         require(whitelisted[_token], 'Whitelistable#_Remove: not exist');
@@ -90,6 +90,6 @@ abstract contract Whitelistable is Ownable {
         emit Removed(_token);
     }
 
-    function addToUnderlyingTokenMapping(address _token) internal virtual;
-    function removeFromUnderlyingTokenMapping(address _token) internal virtual;
+    function _addUnderlying(address _token) internal virtual;
+    function _removeUnderlying(address _token) internal virtual;
 }
