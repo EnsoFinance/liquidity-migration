@@ -19,19 +19,19 @@ interface IStrategyProxyFactory is StrategyTypes{
         bytes memory data
     ) external payable returns (address);
 
-    function updateProxyVersion(address proxy) external;
+    // function updateProxyVersion(address proxy) external;
 
-    function implementation() external view returns (address);
+    // function implementation() external view returns (address);
 
-    function controller() external view returns (address);
+    // function controller() external view returns (address);
 
-    function oracle() external view returns (address);
+    // function oracle() external view returns (address);
 
-    function registry() external view returns (address);
+    // function registry() external view returns (address);
 
-    function version() external view returns (string memory);
+    // function version() external view returns (string memory);
 
-    function getManager(address proxy) external view returns (address);
+    // function getManager(address proxy) external view returns (address);
 
-    function salt(address manager, string memory name, string memory symbol) external pure returns (bytes32);
+    // function salt(address manager, string memory name, string memory symbol) external pure returns (bytes32);
 }

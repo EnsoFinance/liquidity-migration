@@ -9,7 +9,7 @@ import "./enso/IStrategyController.sol";
 import "./enso/IStrategy.sol";
 import "./helpers/Timelock.sol";
 
-contract NewLiquidityMigration is IStrategyProxyFactory, Timelock{
+contract NewLiquidityMigration is IStrategyProxyFactory, Timelock {
     
     using SafeERC20 for IERC20;
     
@@ -133,8 +133,9 @@ contract NewLiquidityMigration is IStrategyProxyFactory, Timelock{
         
         for (uint i = 0; i < strategyItems.length; i++) {
             address ta = strategyItems[i].item;
-            // require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(ta) == true);
+            require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(ta) == true);
         }
+        
         require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens(_lp));
 
         address strategy = createStrategy(
