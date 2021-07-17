@@ -133,12 +133,12 @@ contract NewLiquidityMigration is IStrategyProxyFactory, Timelock {
         
         for (uint i = 0; i < strategyItems.length; i++) {
             address tokenAddress = strategyItems[i].item;
-            require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(tokenAddress) == true);
+            // require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(tokenAddress) == true);
         }
         
         require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens(_lp));
 
-        address strategy = createStrategy(
+        address strategy = factory.createStrategy(
             manager, 
             name,  
             symbol,
