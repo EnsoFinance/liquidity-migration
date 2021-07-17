@@ -8,8 +8,9 @@ import "./enso/IStrategyProxyFactory.sol";
 import "./enso/IStrategyController.sol";
 import "./enso/IStrategy.sol";
 import "./helpers/Timelock.sol";
+import "./helpers/StrategyTypes.sol";
 
-contract NewLiquidityMigration is IStrategyProxyFactory, Timelock {
+contract NewLiquidityMigration is Timelock {
     
     using SafeERC20 for IERC20;
     
