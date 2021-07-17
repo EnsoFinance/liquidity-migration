@@ -3,150 +3,183 @@ pragma solidity 0.8.2;
 
 // Erc20
 import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
-import { IAdapter } from "./interfaces/IAdapter.sol";
+import "./interfaces/IAdapter.sol";
+import "./enso/IStrategyProxyFactory.sol";
+import "./enso/IStrategyController.sol";
+import "./enso/IStrategy.sol";
+import "./helpers/Timelocked.sol";
+import "./helpers/StrategyTypes.sol";
 
-// TODO: Make external adapters? vs Store individual pools vs Verify pool in registry
-contract LiquidityMigration {
+contract LiquidityMigration is Timelocked, StrategyTypes {
     using SafeERC20 for IERC20;
 
-    enum AcceptedProtocols {
-        PieDao,
-        DPI,
-        TokenSets
-    } // Accepted protocols
+    address public generic;
+    address public controller;
+    IStrategyProxyFactory public factory;
 
-    struct EnsoContracts {
-        address genericRouter;
-        address strategyController;
+    mapping (address => bool) public adapters;
+    mapping (address => mapping (address => uint256)) public staked;
+
+    event Staked(address adapter, address strategy, uint256 amount, address account);
+    event Migrated(address adapter, address lp, address strategy, address account);
+    event Created(address adapter, address lp, address strategy, address account);
+
+    /**
+    * @dev Require adapter registered
+    */
+    modifier onlyRegistered(address _adapter) {
+        require(adapters[_adapter], "Claimable#onlyState: not registered adapter");
+        _;
     }
 
-    // External strategy tokens
-    struct Stake {
-        uint256 amount;
-        address strategyToken; // TODO: save to storage or reconstruct event logs? (prove with sha3(sender, token) )
-        AcceptedProtocols protocol;
+    /**
+    * @dev Require adapter allows lp
+    */
+    modifier onlyWhitelisted(address _adapter, address _lp) {
+        require(IAdapter(_adapter).isWhitelisted(_lp), "Claimable#onlyState: not whitelisted strategy");
+        _;
     }
 
-    struct Adapters {
-        AcceptedProtocols protocol;
-        address adapter;
-    }
-
-    EnsoContracts public ensoContracts;
-    mapping(address => mapping(address => Stake)) public stakes; // stakes[sender][strategyToken] = Stake
-    mapping(AcceptedProtocols => address) public adapters;
-
-    constructor(Adapters[] memory acceptedAdapters, EnsoContracts memory contracts) {
-        for (uint256 i = 0; i < acceptedAdapters.length; i++) {
-            adapters[acceptedAdapters[i].protocol] = acceptedAdapters[i].adapter;
+    constructor(
+        address[] memory adapters_,
+        address generic_,
+        IStrategyProxyFactory factory_,
+        address controller_,
+        uint256 _unlock,
+        uint256 _modify,
+        address _owner
+    )
+        Timelocked(_unlock, _modify, _owner)
+    {
+        for (uint256 i = 0; i < adapters_.length; i++) {
+            adapters[adapters_[i]] = true;
         }
-        ensoContracts = contracts;
+        generic = generic_;
+        factory = factory_;
+        controller = controller_;
     }
 
-    function stakeLpTokens(
-        address strategyToken,
-        uint256 amount,
-        AcceptedProtocols protocol
-    ) public {
-        IAdapter adapter = IAdapter(adapters[protocol]);
-        require(address(adapter) != address(0), "LM: Protocol not registered");
-        require(adapter.isInputToken(strategyToken), "LM: Pool not in protocol");
-        IERC20(strategyToken).safeTransferFrom(msg.sender, address(this), amount);
-        Stake storage stake = stakes[msg.sender][strategyToken];
-        stake.amount += amount;
-        stake.protocol = protocol;
-        stake.strategyToken = strategyToken;
+    function stake(
+        address _lp,
+        uint256 _amount,
+        address _adapter
+    )
+        public
+        onlyRegistered(_adapter)
+        onlyWhitelisted(_adapter, _lp)
+    {
+        IERC20(_lp).safeTransferFrom(msg.sender, address(this), _amount);
+
+        staked[msg.sender][_lp] += _amount;
+        emit Staked(_adapter, _lp, _amount, msg.sender);
     }
 
     function migrate(
-        address ensoStrategy,
-        address strategyToken,
-        AcceptedProtocols protocol,
-        bytes memory migrationData,
-        uint256 minimumAmount
-    ) public {
-        IAdapter adapter = IAdapter(adapters[protocol]);
-        require(address(adapter) != address(0), "LM: Protocol not registered");
-        require(adapter.isInputToken(strategyToken), "LM: Pool not in protocol");
-        EnsoStrategy enso = EnsoStrategy(ensoStrategy);
-        require(enso.controller() == ensoContracts.strategyController, "Not Enso strategy");
-        uint256 balanceBefore = IERC20(ensoStrategy).balanceOf(address(this));
-        Stake storage stake = stakes[msg.sender][strategyToken];
-        require(stake.strategyToken == strategyToken, "Wrong token");
-        uint256 stakeAmount = stake.amount;
-        delete stakes[msg.sender][strategyToken];
-        IERC20(strategyToken).safeTransfer(ensoContracts.genericRouter, stakeAmount);
-        // TODO: verify it is an enso strategy
-        StrategyController(ensoContracts.strategyController).deposit(
-            EnsoStrategy(ensoStrategy),
-            IStrategyRouter(ensoContracts.genericRouter),
-            migrationData
+        address _lp,
+        address _adapter,
+        IStrategy _strategy,
+        bytes memory migrationData
+    )
+        public
+        onlyUnlocked
+        onlyRegistered(_adapter)
+        onlyWhitelisted(_adapter, _lp)
+    {
+        require(IStrategyController(controller).initialized(address(_strategy)), "NewLiquidityMigration#migrate: not enso strategy");
+
+        uint256 _stake = staked[msg.sender][_lp];
+        require(_stake > 0, "NewLiquidityMigration#migrate: not staked");
+
+        delete staked[msg.sender][_lp];
+        IERC20(_lp).safeTransfer(generic, _stake);
+
+        uint256 _before = _strategy.balanceOf(address(this));
+        _strategy.deposit(0, IStrategyRouter(generic), migrationData);
+        uint256 _after = _strategy.balanceOf(address(this));
+
+        _strategy.transfer(msg.sender, (_after - _before));
+        emit Migrated(_adapter, _lp, address(_strategy), msg.sender);
+    }
+
+
+    function createStrategy(
+        address _lp,
+        address _adapter,
+        bytes calldata data
+    )
+        public
+        onlyRegistered(_adapter)
+        onlyWhitelisted(_adapter, _lp)
+    {
+        ( , , , StrategyItem[] memory strategyItems) = abi.decode(
+            data,
+            (address, string, string, StrategyItem[])
         );
-        uint256 balanceAfter = IERC20(ensoStrategy).balanceOf(address(this));
-        require(balanceAfter > balanceBefore, "Didnt receive Enso strategy tokens");
-        uint256 gained = balanceAfter - balanceBefore;
-        require(gained > minimumAmount, "Didnt receive enough Enso strategy tokens");
-        IERC20(ensoStrategy).safeTransfer(msg.sender, balanceAfter - balanceBefore);
+        _validateItems(_adapter, _lp, strategyItems);
+        address strategy = _createStrategy(data);
+        emit Created(_adapter, _lp, strategy, msg.sender);
     }
 
-    function getStake(address account, address strategyToken) public view returns (Stake memory stake) {
-        stake = stakes[account][strategyToken];
+    function updateController(address _controller)
+        public
+        onlyOwner
+    {
+        require(controller != _controller, "LiquidityMigration#updateController: already exists");
+        controller = _controller;
     }
-}
 
-// Enso::StrategyController
-interface StrategyController {
-    function deposit(
-        EnsoStrategy strategy,
-        IStrategyRouter router,
-        bytes memory data
-    ) external payable;
-}
+    function updateGeneric(address _generic)
+        public
+        onlyOwner
+    {
+        require(generic != _generic, "LiquidityMigration#updateGeneric: already exists");
+        generic = _generic;
+    }
 
-// TODO: does the external contract use the provided ABI or it's local version
-interface IStrategyRouter {
-    function sellTokens(
-        address strategy,
-        address[] memory tokens,
-        address[] memory routers
-    ) external;
+    function addAdapter(address _adapter)
+        public
+        onlyOwner
+    {
+        require(!adapters[_adapter], "LiquidityMigration#updateAdapter: already exists");
+        adapters[_adapter] = true;
+    }
 
-    function buyTokens(
-        address strategy,
-        address[] memory tokens,
-        address[] memory routers
-    ) external;
+    function removeAdapter(address _adapter)
+        public
+        onlyOwner
+    {
+        require(adapters[_adapter], "LiquidityMigration#updateAdapter: does not exist");
+        adapters[_adapter] = false;
+    }
 
-    function deposit(address strategy, bytes calldata data) external;
+    function _validateItems(address adapter, address lp, StrategyItem[] memory strategyItems) private view {
+        for (uint i = 0; i < strategyItems.length; i++) {
+            require(IAdapter(adapter).isUnderlying(lp, strategyItems[i].item), "LiquidityMigration#createStrategy: incorrect length");
+        }
+        require(strategyItems.length == IAdapter(adapter).numberOfUnderlying(lp), "SLiquidityMigration#createStrategy: does not exist");
+    }
 
-    function controller() external view returns (address);
-
-    function weth() external view returns (address);
-}
-
-// Enso::Strategy
-interface EnsoStrategy {
-    function approveTokens(address account, uint256 amount) external;
-
-    function setStructure(address[] memory newItems, uint256[] memory newPercentages) external;
-
-    function withdraw(uint256 amount) external;
-
-    function mint(address account, uint256 amount) external;
-
-    function items() external view returns (address[] memory);
-
-    function percentage(address token) external view returns (uint256);
-
-    function isWhitelisted(address account) external view returns (bool);
-
-    function controller() external view returns (address);
-
-    function manager() external view returns (address);
-
-    function oracle() external view returns (address);
-
-    function whitelist() external view returns (address);
-
-    function verifyStructure(address[] memory newTokens, uint256[] memory newPercentages) external pure returns (bool);
+    function _createStrategy(bytes memory data) private returns (address) {
+        (
+            address manager,
+            string memory name,
+            string memory symbol,
+            StrategyItem[] memory strategyItems,
+            StrategyState memory strategyState,
+            address router,
+            bytes memory depositData
+        ) = abi.decode(
+            data,
+            (address, string, string, StrategyItem[], StrategyState, address, bytes)
+        );
+        return factory.createStrategy(
+            manager,
+            name,
+            symbol,
+            strategyItems,
+            strategyState,
+            router,
+            depositData
+        );
+    }
 }

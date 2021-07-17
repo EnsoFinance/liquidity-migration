@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumber, Contract, Event } from "ethers";
-import { Signers, MainnetSigner } from "../types";
+import { BigNumber, Event } from "ethers";
+import { Signers } from "../types";
 import { ERC20__factory, IStrategy__factory } from "../typechain";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
@@ -71,6 +71,7 @@ describe("PieDao: Unit tests", function () {
     await this.liquidityMigration
       .connect(holder)
       .stakeLpTokens(contract.address, holderBalance, AcceptedProtocols.PieDao);
+    expect(((await this.liquidityMigration.getStake(holderAddress, contract.address)).amount).eq(holderBalance)).to.be.true;
     expect((await this.liquidityMigration.stakes(holderAddress, contract.address))[0]).to.equal(holderBalance);
   });
 
@@ -102,4 +103,11 @@ describe("PieDao: Unit tests", function () {
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holderAddress)).to.gt(0);
   });
+
+  it("Getting the output token list", async function () {
+    const underlyingTokens = await this.pieDaoEnv.pools[0].contract.getTokens();
+    const outputTokens = await this.pieDaoEnv.adapter.outputTokens(this.pieDaoEnv.pools[0].contract.address);
+    expect(underlyingTokens).to.be.eql(outputTokens);
+  });
+
 });

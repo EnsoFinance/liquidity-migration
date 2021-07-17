@@ -44,12 +44,7 @@ export class IndexedEnvironment {
   degenIndexPool: Contract;
   adapter: Contract;
   holders: Signer[];
-  constructor(
-    signer: Signer,
-    degenIndexPool: Contract,
-    adapter: Contract,
-    holders: Signer[],
-  ) {
+  constructor(signer: Signer, degenIndexPool: Contract, adapter: Contract, holders: Signer[]) {
     this.signer = signer;
     this.degenIndexPool = degenIndexPool;
     this.adapter = adapter;

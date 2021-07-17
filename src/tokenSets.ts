@@ -1,41 +1,40 @@
 import { ethers } from "hardhat";
 import { MainnetSigner } from "../types";
-import { DPI_HOLDERS } from "./constants";
 import { Contract, Signer } from "ethers";
 
-import { FACTORY_REGISTRIES } from "./constants";
+import { TOKENSET_HOLDERS } from "./constants";
 import {
   SetToken__factory,
   SetToken,
   BasicIssuanceModule__factory,
   BasicIssuanceModule,
-  DPIAdapter__factory,
+  TokenSetAdapter__factory,
 } from "../typechain";
 
-export class DPIEnvironmentBuilder {
+export class TokenSetEnvironmentBuilder {
   signer: Signer;
 
   constructor(signer: Signer) {
     this.signer = signer;
   }
-  async connect(): Promise<DPIEnvironment> {
+  async connect(tokenSetsIssuanceModule: string, tokenSetPoolAddress: string): Promise<TokenSetEnvironment> {
     const setBasicIssuanceModule = (await BasicIssuanceModule__factory.connect(
-      FACTORY_REGISTRIES.SET_BASIC_SET_ISSUANCE_MODULE,
+      tokenSetsIssuanceModule,
       this.signer,
     )) as BasicIssuanceModule;
 
-    const DPIToken = (await SetToken__factory.connect(FACTORY_REGISTRIES.DPI, this.signer)) as SetToken;
+    const tokenSet = (await SetToken__factory.connect(tokenSetPoolAddress, this.signer)) as SetToken;
 
-    const DPIAdapterFactory = (await ethers.getContractFactory("DPIAdapter")) as DPIAdapter__factory;
+    const tokenSetAdapterFactory = (await ethers.getContractFactory("TokenSetAdapter")) as TokenSetAdapter__factory;
 
     const signerAddress = await this.signer.getAddress();
 
     // deploying the DPI Adapter
-    const adapter = await DPIAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress);
+    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress);
 
-    const addresses = DPI_HOLDERS[FACTORY_REGISTRIES.DPI];
+    const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress];
     if (addresses === undefined) {
-      throw Error(`Failed to find token holder for contract: ${FACTORY_REGISTRIES.DPI} `);
+      throw Error(`Failed to find token holder for contract: ${tokenSetPoolAddress} `);
     }
 
     const signers = [];
@@ -44,26 +43,26 @@ export class DPIEnvironmentBuilder {
       signers.push(signer);
     }
 
-    return new DPIEnvironment(this.signer, setBasicIssuanceModule, DPIToken, adapter, signers);
+    return new TokenSetEnvironment(this.signer, setBasicIssuanceModule, tokenSet, adapter, signers);
   }
 }
 
-export class DPIEnvironment {
+export class TokenSetEnvironment {
   signer: Signer;
   setBasicIssuanceModule: Contract;
-  DPIToken: Contract;
+  tokenSet: Contract;
   adapter: Contract;
   holders: Signer[];
   constructor(
     signer: Signer,
     setBasicIssuanceModule: Contract,
-    DPIToken: Contract,
+    tokenSet: Contract,
     adapter: Contract,
     holders: Signer[],
   ) {
     this.signer = signer;
     this.setBasicIssuanceModule = setBasicIssuanceModule;
-    this.DPIToken = DPIToken;
+    this.tokenSet = tokenSet;
     this.adapter = adapter;
     this.holders = holders;
   }

@@ -4,7 +4,7 @@ import bignumber from "bignumber.js";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
+import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { FACTORY_REGISTRIES } from "../src/constants";
@@ -50,18 +50,12 @@ describe("Indexed: Unit tests", function () {
     // console.log(`Total is: ${total.toString()}`, estimates.forEach((element: BigNumber) => console.log(element.toString())));
     const percentageArray = [];
     for (let i = 0; i < this.underlyingTokens.length; i++) {
-      let percentage = new bignumber(estimates[i].toString())
-        .multipliedBy(1000)
-        .dividedBy(total.toString())
-        .toFixed(0);
-      const reducer = (a: number, b: number) => a + b;  
-      percentageArray.push(Number(percentage.toString()))
-      if (
-          (i == (this.underlyingTokens.length-1)) && 
-          ((percentageArray.reduce(reducer))< 1000)
-          ) {
+      let percentage = new bignumber(estimates[i].toString()).multipliedBy(1000).dividedBy(total.toString()).toFixed(0);
+      const reducer = (a: number, b: number) => a + b;
+      percentageArray.push(Number(percentage.toString()));
+      if (i == this.underlyingTokens.length - 1 && percentageArray.reduce(reducer) < 1000) {
         const diff = 1000 - percentageArray.reduce(reducer);
-        percentage = String(Number(percentage)+ diff);
+        percentage = String(Number(percentage) + diff);
       }
       positions.push({
         token: this.underlyingTokens[i],
@@ -104,7 +98,9 @@ describe("Indexed: Unit tests", function () {
         holder: await this.IndexedEnv.holders[i].getAddress(),
         balance: await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[i].getAddress()),
       };
-      expect(await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
+      expect(await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[i].getAddress())).to.gt(
+        BigNumber.from(0),
+      );
     }
 
     const previoustokenBalance = holderBalances[0].balance;
@@ -118,14 +114,16 @@ describe("Indexed: Unit tests", function () {
       .connect(this.IndexedEnv.holders[0])
       .exitPool(previoustokenBalance, minAmount);
     await tx.wait();
-    const posttokenBalance = await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[0].getAddress());
+    const posttokenBalance = await this.IndexedEnv.degenIndexPool.balanceOf(
+      await this.IndexedEnv.holders[0].getAddress(),
+    );
     expect(posttokenBalance.isZero()).to.be.true;
   });
 
   it("Token holder should be able to stake LP token", async function () {
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
-      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+      .add(FACTORY_REGISTRIES.DEGEN_INDEX);
     await tx.wait();
     const holder2 = await this.IndexedEnv.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -137,10 +135,12 @@ describe("Indexed: Unit tests", function () {
       .connect(holder2)
       .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder2Balance.div(3), AcceptedProtocols.Indexed);
     expect(
-      ((await this.liquidityMigration.stakes(holder2Address, this.IndexedEnv.degenIndexPool.address))[0]).eq(holder2Balance.div(3)
-      )).to.be.true;
+      (await this.liquidityMigration.stakes(holder2Address, this.IndexedEnv.degenIndexPool.address))[0].eq(
+        holder2Balance.div(3),
+      ),
+    ).to.be.true;
     const holder2AfterBalance = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
-    expect((holder2AfterBalance).gt(BigNumber.from(0))).to.be.true;
+    expect(holder2AfterBalance.gt(BigNumber.from(0))).to.be.true;
   });
 
   it("Should not be able to migrate tokens if the Degen token is not whitelisted in the Indexed Adapter", async function () {
@@ -149,13 +149,15 @@ describe("Indexed: Unit tests", function () {
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
     const holder2BalanceBefore = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
-    expect((holder2BalanceBefore).gt(BigNumber.from(0))).to.be.true;
-    await this.IndexedEnv.degenIndexPool.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
+    expect(holder2BalanceBefore.gt(BigNumber.from(0))).to.be.true;
+    await this.IndexedEnv.degenIndexPool
+      .connect(holder2)
+      .approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
       .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder2BalanceBefore, AcceptedProtocols.Indexed);
     const amount = (await this.liquidityMigration.stakes(holder2Address, this.IndexedEnv.degenIndexPool.address))[0];
-    expect((amount).gt(BigNumber.from(0))).to.be.true;
+    expect(amount.gt(BigNumber.from(0))).to.be.true;
 
     const holder2BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
@@ -176,7 +178,7 @@ describe("Indexed: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
-      .removeTokensFromWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+      .remove(FACTORY_REGISTRIES.DEGEN_INDEX);
     await tx.wait();
     // Migrate
     await expect(
@@ -194,8 +196,9 @@ describe("Indexed: Unit tests", function () {
 
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the Indexed Token as a whitelisted token
-    await expect(this.IndexedEnv.adapter.connect(this.signers.admin).addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX))
-      .to.be.reverted;
+    await expect(
+      this.IndexedEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.DEGEN_INDEX),
+    ).to.be.reverted;
   });
 
   it("Getting the output token list", async function () {
@@ -211,14 +214,16 @@ describe("Indexed: Unit tests", function () {
       ["address", "uint256"],
       [this.IndexedEnv.degenIndexPool.address, BigNumber.from(10000)],
     );
-    await expect(this.IndexedEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("IndexedAdapter: invalid Index Pool Address");
+    await expect(this.IndexedEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith(
+      "IndexedAdapter: invalid Index Pool Address",
+    );
   });
 
   it("Should migrate tokens to strategy", async function () {
     // adding the DEGEN Token as a whitelisted token
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
-      .addAcceptedTokensToWhitelist(FACTORY_REGISTRIES.DEGEN_INDEX);
+      .add(FACTORY_REGISTRIES.DEGEN_INDEX);
     await tx.wait();
     const routerContract = this.ensoEnv.routers[0].contract;
     const holder3 = await this.IndexedEnv.holders[2];
@@ -228,7 +233,9 @@ describe("Indexed: Unit tests", function () {
     const holder3BalanceBefore = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-    await this.IndexedEnv.degenIndexPool.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
+    await this.IndexedEnv.degenIndexPool
+      .connect(holder3)
+      .approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
       .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder3BalanceBefore, AcceptedProtocols.Indexed);
@@ -257,7 +264,13 @@ describe("Indexed: Unit tests", function () {
     // // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      .migrate(this.strategy.address, this.IndexedEnv.degenIndexPool.address, AcceptedProtocols.Indexed, migrationData, 0);
+      .migrate(
+        this.strategy.address,
+        this.IndexedEnv.degenIndexPool.address,
+        AcceptedProtocols.Indexed,
+        migrationData,
+        0,
+      );
     const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);

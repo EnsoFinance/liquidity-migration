@@ -8,13 +8,13 @@ interface IAdapter {
         uint256 value;
     }
 
-    function isInputToken(address token) external view returns (bool);
-
-    function inputTokens() external view returns (address[] memory input);
-
     function outputTokens(address inputToken) external view returns (address[] memory outputs);
 
-    // function execute(bytes calldata data) external;
+    function encodeExecute(address _lp, address _amount) external view returns (Call memory call);
 
-    function encodeExecute(bytes calldata data) external view returns (Call[] memory call);
+    function isWhitelisted(address _token) external view returns (bool);
+
+    function isUnderlying(address _lp, address _token) external view returns (bool);
+
+    function numberOfUnderlying(address _lp) external view returns (uint256);
 }
