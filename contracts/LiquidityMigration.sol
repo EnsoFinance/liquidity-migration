@@ -133,8 +133,7 @@ contract NewLiquidityMigration is Timelocked, StrategyTypes {
         );
         
         for (uint i = 0; i < strategyItems.length; i++) {
-            address tokenAddress = strategyItems[i].item;
-            require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(tokenAddress) == true);
+            require(IAdapter(_adapter).underlyingTokenInTheLp(_lp, strategyItems[i].item) == true);
         }
         
         require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens(_lp));
