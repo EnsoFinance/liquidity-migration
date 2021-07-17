@@ -20,13 +20,6 @@ describe("DPI: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-    this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default).connect(
-      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI],
-      FACTORY_REGISTRIES.DPI,
-    );
-
-    console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
-
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin);
 
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.DPIEnv.adapter);
@@ -39,6 +32,13 @@ describe("DPI: Unit tests", function () {
 
     this.ensoEnv = liquidityMigrationBuilder.enso;
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
+
+    this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
+      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI],
+      FACTORY_REGISTRIES.DPI,
+    );
+
+    console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
 
     // getting the underlying tokens from DPI
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();

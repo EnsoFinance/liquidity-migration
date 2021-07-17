@@ -19,13 +19,6 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-    this.ETHUSDYieldEnv = await new TokenSetEnvironmentBuilder(this.signers.default).connect(
-      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD],
-      FACTORY_REGISTRIES.ETH_USD_YIELD,
-    );
-
-    console.log(`Token Sets Adapter: ${this.ETHUSDYieldEnv.adapter.address}`);
-
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin);
 
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.ETHUSDYieldEnv.adapter);
@@ -38,6 +31,13 @@ describe("ETH_USD_YIELD: Unit tests", function () {
 
     this.ensoEnv = liquidityMigrationBuilder.enso;
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
+
+    this.ETHUSDYieldEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
+      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD],
+      FACTORY_REGISTRIES.ETH_USD_YIELD,
+    );
+
+    console.log(`Token Sets Adapter: ${this.ETHUSDYieldEnv.adapter.address}`);
 
     // getting the underlying tokens from ETH_USD_YIELD
     const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();

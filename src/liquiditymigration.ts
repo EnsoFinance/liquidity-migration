@@ -3,6 +3,7 @@ import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { IAdapter, LiquidityMigration, LiquidityMigration__factory } from "../typechain";
 import { EnsoBuilder, EnsoEnvironment } from "@enso/contracts";
+import { getBlockTime } from './utils'
 
 export enum AcceptedProtocols {
   Indexed,
@@ -41,11 +42,18 @@ export class LiquidityMigrationBuilder {
       "LiquidityMigration",
     )) as LiquidityMigration__factory;
 
+    const now = await getBlockTime();
+
     if (this.enso.routers[0].contract) {
-      this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(this.adapters, {
-        genericRouter: this.enso.routers[0].contract.address,
-        strategyController: this.enso.enso.controller.address,
-      });
+      this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(
+        this.adapters.map(a => a.adapter),
+        this.enso.routers[0].contract.address,
+        this.enso.enso.strategyFactory.address,
+        this.enso.enso.controller.address,
+        now,
+        ethers.constants.MaxUint256,
+        this.signer.address
+      );
       return this.liquidityMigration;
     } else {
       return undefined;
