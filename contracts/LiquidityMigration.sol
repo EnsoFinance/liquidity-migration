@@ -103,7 +103,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     }
 
 
-    function creatingStrategy(
+    function createStrategy(
         address _lp,
         address _adapter,
         bytes calldata data
@@ -132,11 +132,11 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
             )
         );
         
-        for (uint i = 0; i < strategyItems.length; i++) {
-            require(IAdapter(_adapter).underlying(_lp, strategyItems[i].item));
-        }
+        require(strategyItems.length == IAdapter(_adapter).count(_lp), "LiquidityMigration#createStrategy: incorrect length");
         
-        require(strategyItems.length == IAdapter(_adapter).count(_lp));
+        for (uint i = 0; i < strategyItems.length; i++) {
+            require(IAdapter(_adapter).underlying(_lp, strategyItems[i].item), "LiquidityMigration#createStrategy: does not exist");
+        }
 
         address strategy = factory.createStrategy(
             manager, 
