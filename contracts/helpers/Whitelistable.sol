@@ -8,8 +8,9 @@ pragma solidity 0.8.2;
 abstract contract Whitelistable is Ownable {
 
     mapping(address => bool) public whitelisted;
-    mapping (address => mapping (address => bool)) public underlyingTokenInTheLp;
-    mapping (address => uint256) public numberOfUnderlyingTokens;
+    
+    mapping (address => uint256) public count;
+    mapping (address => mapping (address => bool)) public underlying;
 
     event Added(address token);
     event Removed(address token);
@@ -17,8 +18,8 @@ abstract contract Whitelistable is Ownable {
     /**
     * @dev Require adapter registered
     */
-    modifier onlyWhitelisted(address _strategy) {
-        require(whitelisted[_strategy], "Whitelistable#onlyWhitelisted: not whitelisted lp");
+    modifier onlyWhitelisted(address _lp) {
+        require(whitelisted[_lp], "Whitelistable#onlyWhitelisted: not whitelisted lp");
         _;
     }
 

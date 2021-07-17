@@ -133,10 +133,10 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         );
         
         for (uint i = 0; i < strategyItems.length; i++) {
-            require(IAdapter(_adapter).underlyingTokenInTheLp(_lp, strategyItems[i].item) == true);
+            require(IAdapter(_adapter).underlying(_lp, strategyItems[i].item));
         }
         
-        require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens(_lp));
+        require(strategyItems.length == IAdapter(_adapter).count(_lp));
 
         address strategy = factory.createStrategy(
             manager, 
@@ -185,7 +185,6 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         require(adapters[_adapter], "LiquidityMigration#updateAdapter: does not exist");
         adapters[_adapter] = false;
     }
-
         // function emergencyDrain() {}
 }
 
