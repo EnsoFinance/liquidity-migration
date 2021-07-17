@@ -6,14 +6,13 @@ import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/Sa
 import { IAdapter } from "./interfaces/IAdapter.sol";
 import "./enso/IStrategyProxyFactory.sol";
 import "./enso/IStrategyController.sol";
-import "./enso/IStrategyRouter.sol";
 import "./enso/IStrategy.sol";
 import "./helpers/Timelock.sol";
 
-contract NewLiquidityMigration is Timelock {
+contract NewLiquidityMigration is IStrategyProxyFactory, Timelock{
     
     using SafeERC20 for IERC20;
-
+    
     address public generic;
     address public controller;
     IStrategyProxyFactory public factory;
@@ -103,7 +102,7 @@ contract NewLiquidityMigration is Timelock {
     }
 
 
-    function createStrategy(
+    function creatingStrategy(
         address _lp,
         address _adapter,
         bytes calldata data
@@ -133,9 +132,10 @@ contract NewLiquidityMigration is Timelock {
         );
         
         for (uint i = 0; i < strategyItems.length; i++) {
-            require(IAdapter(_adapter).underlyingTokenInTheLp(strategyItems[i].item) == true);
+            address ta = strategyItems[i].item;
+            // require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(ta) == true);
         }
-        require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens);
+        require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens(_lp));
 
         address strategy = createStrategy(
             manager, 
