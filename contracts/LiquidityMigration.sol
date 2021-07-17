@@ -10,7 +10,7 @@ import "./enso/IStrategy.sol";
 import "./helpers/Timelocked.sol";
 import "./helpers/StrategyTypes.sol";
 
-contract NewLiquidityMigration is Timelocked, StrategyTypes {
+contract LiquidityMigration is Timelocked, StrategyTypes {
     
     using SafeERC20 for IERC20;
     
@@ -154,24 +154,38 @@ contract NewLiquidityMigration is Timelocked, StrategyTypes {
         emit Created(_adapter, strategy, msg.sender);
     }
 
-
-
-    // function emergencyDrain() {}
-
-    function updateController(address newController) public onlyOwner {
-        controller = newController;
+    function updateController(address _controller) 
+        public 
+        onlyOwner 
+    {
+        require(controller != _controller, "LiquidityMigration#updateController: already exists");
+        controller = _controller;
     }
     
-    function updateGeneric(address newGeneric) public onlyOwner {
-        generic = newGeneric;
+    function updateGeneric(address _generic) 
+        public 
+        onlyOwner 
+    {
+        require(generic != _generic, "LiquidityMigration#updateGeneric: already exists");
+        generic = _generic;
     }
     
-    function addAdapter(address newAdapter_) public onlyOwner {
-        adapters[newAdapter_] = true;
+    function addAdapter(address _adapter) 
+        public 
+        onlyOwner 
+    {
+        require(!adapters[_adapter], "LiquidityMigration#updateAdapter: already exists");
+        adapters[_adapter] = true;
     }
     
-    function removeAdapter(address oldAdapter_) public onlyOwner {
-        adapters[oldAdapter_] = false;
+    function removeAdapter(address _adapter) 
+        public 
+        onlyOwner 
+    {
+        require(adapters[_adapter], "LiquidityMigration#updateAdapter: does not exist");
+        adapters[_adapter] = false;
     }
+
+        // function emergencyDrain() {}
 }
 
