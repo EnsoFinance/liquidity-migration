@@ -5,7 +5,7 @@ import "./Ownable.sol";
 pragma solidity 0.8.2;
 
 
-contract Timelock is Ownable {
+contract Timelocked is Ownable {
 
     uint256 public unlocked; // timestamp unlock migration
     uint256 public modify;   // timestamp disallow changes

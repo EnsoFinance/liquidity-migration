@@ -7,10 +7,10 @@ import { IAdapter } from "./interfaces/IAdapter.sol";
 import "./enso/IStrategyProxyFactory.sol";
 import "./enso/IStrategyController.sol";
 import "./enso/IStrategy.sol";
-import "./helpers/Timelock.sol";
+import "./helpers/Timelocked.sol";
 import "./helpers/StrategyTypes.sol";
 
-contract NewLiquidityMigration is Timelock, StrategyTypes {
+contract NewLiquidityMigration is Timelocked, StrategyTypes {
     
     using SafeERC20 for IERC20;
     
@@ -46,13 +46,12 @@ contract NewLiquidityMigration is Timelock, StrategyTypes {
         address generic_,
         IStrategyProxyFactory factory_,
         address controller_,
-        uint256 unlock_,
-        uint256 modify_,
-        address owner_
+        uint256 _unlock,
+        uint256 _modify,
+        address _owner
     ) 
-    Timelock(unlock_, modify_,owner_)
+        Timelocked(_unlock, _modify, _owner)
     {
-        
         for (uint256 i = 0; i < adapters_.length; i++) {
             adapters[adapters_[i]] = true;
         }
