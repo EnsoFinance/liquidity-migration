@@ -1,11 +1,9 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.2;
 
+import "../helpers/Whitelistable.sol";
 
-abstract contract IAdapter {
-    mapping (address => mapping (address => bool)) public underlyingTokenInTheLp;
-    mapping (address => uint256) public numberOfUnderlyingTokens;
-    
+abstract contract IAdapter is Whitelistable {
     struct Call {
         address payable target;
         bytes callData;

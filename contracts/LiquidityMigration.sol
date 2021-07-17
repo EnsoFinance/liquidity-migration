@@ -10,7 +10,7 @@ import "./enso/IStrategy.sol";
 import "./helpers/Timelock.sol";
 import "./helpers/StrategyTypes.sol";
 
-contract NewLiquidityMigration is Timelock {
+contract NewLiquidityMigration is Timelock, StrategyTypes {
     
     using SafeERC20 for IERC20;
     
@@ -50,8 +50,9 @@ contract NewLiquidityMigration is Timelock {
         uint256 modify_,
         address owner_
     ) 
-        Timelock(unlock_, modify_, owner_)
+    Timelock(unlock_, modify_,owner_)
     {
+        
         for (uint256 i = 0; i < adapters_.length; i++) {
             adapters[adapters_[i]] = true;
         }
@@ -134,7 +135,7 @@ contract NewLiquidityMigration is Timelock {
         
         for (uint i = 0; i < strategyItems.length; i++) {
             address tokenAddress = strategyItems[i].item;
-            // require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(tokenAddress) == true);
+            require(IAdapter(_adapter).underlyingTokenInTheLp(_lp)(tokenAddress) == true);
         }
         
         require(strategyItems.length == IAdapter(_adapter).numberOfUnderlyingTokens(_lp));
