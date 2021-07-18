@@ -163,7 +163,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
                 require(IAdapter(adapter).isUnderlying(lp, strategyItems[i].item), "LiquidityMigration#createStrategy: incorrect length");
             }
         }
-        require(total == IAdapter(adapter).numberOfUnderlying(lp), "SLiquidityMigration#createStrategy: does not exist");
+        require(total == IAdapter(adapter).numberOfUnderlying(lp), "LiquidityMigration#createStrategy: does not exist");
     }
 
     function _createStrategy(bytes memory data) private returns (address) {
