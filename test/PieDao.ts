@@ -41,6 +41,8 @@ describe("PieDao: Unit tests", function () {
         percentage: BigNumber.from(0),
       });
     }
+
+    // TODO: NOTE, this is version 2
     const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
     const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
