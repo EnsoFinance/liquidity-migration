@@ -24,7 +24,7 @@ describe("Timelocked Test", function () {
         this.signers.admin = signers[10];
 
         const mockContractFactory = (await ethers.getContractFactory("mockFundHolder",)) as MockFundHolder__factory;
-        this.blocktimestamp = await getBlockTime();
+        this.blocktimestamp = await getBlockTime(0);
         console.log(
             `Approximate Deployment blocktime is ${this.blocktimestamp.toString()}`
             );
@@ -34,14 +34,14 @@ describe("Timelocked Test", function () {
     });
 
     it("only the Owner of the Contract is able update Modify blocktime", async function () {
-        const newBlockTimeForModification = (await getBlockTime()).add(500);
+        const newBlockTimeForModification = (await getBlockTime(0)).add(500);
         await expect(this.mockFundHolder.connect(this.signers.otherAccount).updateUnlock(newBlockTimeForModification)).to.be.revertedWith("Ownable: caller is not the owner");
         await this.mockFundHolder.connect(this.signers.default).updateUnlock(newBlockTimeForModification);
         expect((await this.mockFundHolder.unlocked()).eq(newBlockTimeForModification)).to.be.true;
     });
 
     it("Owner of the Contract is not able update Modify if the Modify timeperiod has lapsed", async function () {
-        const newBlockTimeForModification = (await getBlockTime()).add(500);
+        const newBlockTimeForModification = (await getBlockTime(0)).add(500);
         // increasing blocktime
         const time = this.blocktimestamp.add(5000)
         await ethers.provider.send('evm_setNextBlockTimestamp', [time.toNumber()]);
