@@ -8,9 +8,9 @@ import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
-import { StrategyBuilder, Position, Multicall, encodeSettleTransfer } from "@enso/contracts";
+import { Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
-import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
+import { DIVISOR, STRATEGY_STATE } from "../src/constants";
 
 describe("DPI: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -62,25 +62,18 @@ describe("DPI: Unit tests", function () {
 
     // creating a strategy
 
-    const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address);
-
-    const data = ethers.utils.defaultAbiCoder.encode(["address[]", "address[]"], [s.tokens, s.adapters]);
+    const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
     // createStrategy(address,string,string,address[],uint256[],bool,uint256,uint256,uint256,uint256,address,bytes)'
 
     const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
-      this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
+      this.signers.default.address,
       "DPI",
       "DPI",
-      s.tokens,
-      s.percentages,
-      false, //Cannot open strategy without first depositing
-      0,
-      THRESHOLD,
-      SLIPPAGE,
-      TIMELOCK,
+      strategyItems,
+      STRATEGY_STATE,
       this.ensoEnv.routers[1].contract.address,
-      data,
+      '0x',
     );
     const receipt = await tx.wait();
     const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;

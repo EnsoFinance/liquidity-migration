@@ -5,8 +5,8 @@ import { Signers } from "../types";
 import { ERC20__factory, IStrategy__factory } from "../typechain";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
-import { StrategyBuilder, Position, Multicall, encodeSettleTransfer } from "@enso/contracts";
-import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
+import { Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { DIVISOR, STRATEGY_STATE } from "../src/constants";
 
 describe("PieDao: Unit tests", function () {
   before(async function () {
@@ -36,22 +36,16 @@ describe("PieDao: Unit tests", function () {
     }
 
     // TODO: NOTE, this is version 2
-    const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address);
+    const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
-    const data = ethers.utils.defaultAbiCoder.encode(["address[]", "address[]"], [s.tokens, s.adapters]);
     const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
-      this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
+      this.signers.default.address,
       "PieDao",
       "PIE",
-      s.tokens,
-      s.percentages,
-      false, //Cannot open strategy without first depositing
-      0,
-      THRESHOLD,
-      SLIPPAGE,
-      TIMELOCK,
+      strategyItems,
+      STRATEGY_STATE,
       this.ensoEnv.routers[1].contract.address,
-      data,
+      '0x',
     );
     const receipt = await tx.wait();
     const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
