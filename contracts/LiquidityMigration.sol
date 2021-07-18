@@ -153,10 +153,17 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     }
 
     function _validateItems(address adapter, address lp, StrategyItem[] memory strategyItems) private view {
+        uint256 total = strategyItems.length;
         for (uint i = 0; i < strategyItems.length; i++) {
-            require(IAdapter(adapter).isUnderlying(lp, strategyItems[i].item), "LiquidityMigration#createStrategy: incorrect length");
+            // Strategies may have reserve tokens (such as weth) that don't have value
+            // So we must be careful not to invalidate a strategy for having them
+            if (strategyItems[i].percentage == 0) {
+                total--;
+            } else {
+                require(IAdapter(adapter).isUnderlying(lp, strategyItems[i].item), "LiquidityMigration#createStrategy: incorrect length");
+            }
         }
-        require(strategyItems.length == IAdapter(adapter).numberOfUnderlying(lp), "SLiquidityMigration#createStrategy: does not exist");
+        require(total == IAdapter(adapter).numberOfUnderlying(lp), "LiquidityMigration#createStrategy: does not exist");
     }
 
     function _createStrategy(bytes memory data) private returns (address) {

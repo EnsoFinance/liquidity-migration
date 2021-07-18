@@ -1,3 +1,6 @@
+import { BigNumber } from "ethers"
+import { StrategyState } from "@enso/contracts"
+
 interface Holders {
   [key: string]: string[] | undefined;
 }
@@ -53,7 +56,12 @@ export const INDEXED_HOLDERS: Holders = {
 
 export const WETH: string = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
-export const THRESHOLD = 10; // 10/1000 = 1%
-export const SLIPPAGE = 995; // 995/1000 = 99.5%
-export const TIMELOCK = 60; // 1 minute
 export const DIVISOR = 1000;
+
+export const STRATEGY_STATE: StrategyState = {
+	timelock: BigNumber.from(60),
+	rebalanceThreshold: BigNumber.from(10),
+	slippage: BigNumber.from(995),
+	performanceFee: BigNumber.from(50),
+	social: true
+}

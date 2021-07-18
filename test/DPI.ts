@@ -8,9 +8,9 @@ import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
-import { StrategyBuilder, Position, Multicall, encodeSettleTransfer } from "@enso/contracts";
+import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
-import { DIVISOR, THRESHOLD, TIMELOCK, SLIPPAGE } from "../src/constants";
+import { WETH, DIVISOR, STRATEGY_STATE } from "../src/constants";
 
 describe("DPI: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -20,15 +20,16 @@ describe("DPI: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-    this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default).connect(
+    this.ensoEnv = await new EnsoBuilder(this.signers.admin).mainnet().build();
+
+    this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.ensoEnv).connect(
       TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI],
       FACTORY_REGISTRIES.DPI,
     );
 
     console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
 
-    const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin);
-
+    const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.ensoEnv);
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.DPIEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
     if (liquitityMigrationDeployed != undefined) {
@@ -37,7 +38,6 @@ describe("DPI: Unit tests", function () {
       console.log(`Liquidity Migration is undefined`);
     }
 
-    this.ensoEnv = liquidityMigrationBuilder.enso;
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from DPI
@@ -45,7 +45,7 @@ describe("DPI: Unit tests", function () {
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
-    const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(
+    const [total, estimates] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(
       this.DPIEnv.tokenSet.address,
       underlyingTokens,
     );
@@ -59,28 +59,24 @@ describe("DPI: Unit tests", function () {
         percentage: BigNumber.from(percentage),
       });
     }
+    if (positions.findIndex(pos => pos.token.toLowerCase() == WETH.toLowerCase()) == -1) {
+      positions.push({
+        token: WETH,
+        percentage: BigNumber.from(0),
+      });
+    }
 
     // creating a strategy
-
-    const s = new StrategyBuilder(positions, this.ensoEnv.adapters.uniswap.contract.address);
-
-    const data = ethers.utils.defaultAbiCoder.encode(["address[]", "address[]"], [s.tokens, s.adapters]);
-
-    // createStrategy(address,string,string,address[],uint256[],bool,uint256,uint256,uint256,uint256,address,bytes)'
+    const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
     const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
-      this.liquidityMigration.address, //Because strategies can't be social without initial deposit, must make LiquidityMigration contract manager
+      this.signers.default.address,
       "DPI",
       "DPI",
-      s.tokens,
-      s.percentages,
-      false, //Cannot open strategy without first depositing
-      0,
-      THRESHOLD,
-      SLIPPAGE,
-      TIMELOCK,
-      this.ensoEnv.routers[1].contract.address,
-      data,
+      strategyItems,
+      STRATEGY_STATE,
+      ethers.constants.AddressZero,
+      '0x',
     );
     const receipt = await tx.wait();
     const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
@@ -133,8 +129,8 @@ describe("DPI: Unit tests", function () {
     await this.DPIEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder2Balance.div(2), AcceptedProtocols.DefiPulseIndex);
-    expect((await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.tokenSet.address))[0]).to.equal(
+      .stake(this.DPIEnv.tokenSet.address, holder2Balance.div(2), this.DPIEnv.adapter.address);
+    expect(await this.liquidityMigration.staked(holder2Address, this.DPIEnv.tokenSet.address)).to.equal(
       holder2Balance.div(2),
     );
     const holder2AfterBalance = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
@@ -151,29 +147,25 @@ describe("DPI: Unit tests", function () {
     await this.DPIEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder2BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-    const amount = (await this.liquidityMigration.stakes(holder2Address, this.DPIEnv.tokenSet.address))[0];
+      .stake(this.DPIEnv.tokenSet.address, holder2BalanceBefore, this.DPIEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder2Address, this.DPIEnv.tokenSet.address);
     expect(amount).to.be.gt(BigNumber.from(0));
 
     // const holder2BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder2Address);
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DPIAdapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256", "address"],
-      [this.DPIEnv.tokenSet.address, amount, routerContract.address],
-    );
-    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
+    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeExecute(this.DPIEnv.tokenSet.address, amount);
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
+      transferCalls.push(await encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
     // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
+    
     const tx = await this.DPIEnv.adapter
       .connect(this.signers.default)
       .remove(FACTORY_REGISTRIES.DPI);
@@ -183,11 +175,10 @@ describe("DPI: Unit tests", function () {
       this.liquidityMigration
         .connect(holder2)
         .migrate(
-          this.strategy.address,
           this.DPIEnv.tokenSet.address,
-          AcceptedProtocols.DefiPulseIndex,
-          migrationData,
-          0,
+          this.DPIEnv.adapter.address,
+          this.strategy.address,
+          migrationData
         ),
     ).to.be.reverted;
   });
@@ -209,12 +200,7 @@ describe("DPI: Unit tests", function () {
     const holder3 = await this.DPIEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
-    // Setup migration calls using DPIAdapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256", "address"],
-      [holder3Address, BigNumber.from(100), routerContract.address],
-    );
-    await expect(this.DPIEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("TSA: invalid tokenSetAddress");
+    await expect(this.DPIEnv.adapter.encodeExecute(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
   });
 
   it("Should migrate tokens to strategy", async function () {
@@ -234,34 +220,28 @@ describe("DPI: Unit tests", function () {
     await this.DPIEnv.tokenSet.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
-      .stakeLpTokens(this.DPIEnv.tokenSet.address, holder3BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-    const amount = (await this.liquidityMigration.stakes(holder3Address, this.DPIEnv.tokenSet.address))[0];
+      .stake(this.DPIEnv.tokenSet.address, holder3BalanceBefore, this.DPIEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder3Address, this.DPIEnv.tokenSet.address);
     expect(amount).to.be.gt(BigNumber.from(0));
     const holder3BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
-    // Setup migration calls using DPIAdapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256", "address"],
-      [this.DPIEnv.tokenSet.address, amount, routerContract.address],
-    );
-    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeExecute(adapterData);
+    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeExecute(this.DPIEnv.tokenSet.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
     // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      .migrate(this.strategy.address, this.DPIEnv.tokenSet.address, AcceptedProtocols.DefiPulseIndex, migrationData, 0);
-    const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
+      .migrate(this.DPIEnv.tokenSet.address, this.DPIEnv.adapter.address, this.strategy.address, migrationData);
+    const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });

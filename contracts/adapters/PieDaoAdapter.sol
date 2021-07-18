@@ -9,7 +9,6 @@ interface IPieDaoPool {
 }
 
 contract PieDaoAdapter is AbstractAdapter {
-
     constructor(address owner_) AbstractAdapter(owner_) {}
 
     function outputTokens(address _lp)
@@ -21,7 +20,7 @@ contract PieDaoAdapter is AbstractAdapter {
         outputs = IPieDaoPool(_lp).getTokens();
     }
 
-    function encodeExecute(address _lp, address _amount)
+    function encodeExecute(address _lp, uint256 _amount)
         public
         override
         view
@@ -32,7 +31,6 @@ contract PieDaoAdapter is AbstractAdapter {
             payable(_lp),
             abi.encodeWithSelector(
                 IPieDaoPool(_lp).exitPool.selector,
-                _lp,
                 _amount
             ),
             0

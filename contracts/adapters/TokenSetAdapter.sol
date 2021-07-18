@@ -42,7 +42,7 @@ contract TokenSetAdapter is AbstractAdapter {
         outputs = ISetToken(_lp).getComponents();
     }
 
-    function encodeExecute(address _lp, address _amount)
+    function encodeExecute(address _lp, uint256 _amount)
         public
         override
         view

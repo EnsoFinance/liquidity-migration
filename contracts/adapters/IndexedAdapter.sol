@@ -29,7 +29,7 @@ contract IndexedAdapter is AbstractAdapter {
         outputs = ISigmaIndexPoolV1(_lp).getCurrentTokens();
     }
 
-    function encodeExecute(address _lp, address _amount)
+    function encodeExecute(address _lp, uint256 _amount)
         public
         override
         view

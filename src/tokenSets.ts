@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import { MainnetSigner } from "../types";
 import { Contract, Signer } from "ethers";
+import { EnsoEnvironment } from "@enso/contracts";
 
 import { TOKENSET_HOLDERS } from "./constants";
 import {
@@ -13,9 +14,11 @@ import {
 
 export class TokenSetEnvironmentBuilder {
   signer: Signer;
+  enso: EnsoEnvironment;
 
-  constructor(signer: Signer) {
+  constructor(signer: Signer, enso: EnsoEnvironment) {
     this.signer = signer;
+    this.enso = enso;
   }
   async connect(tokenSetsIssuanceModule: string, tokenSetPoolAddress: string): Promise<TokenSetEnvironment> {
     const setBasicIssuanceModule = (await BasicIssuanceModule__factory.connect(
@@ -29,8 +32,9 @@ export class TokenSetEnvironmentBuilder {
 
     const signerAddress = await this.signer.getAddress();
 
+    const generiRouter: string = this.enso?.routers[0]?.contract?.address || ethers.constants.AddressZero
     // deploying the DPI Adapter
-    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, signerAddress);
+    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, generiRouter, signerAddress);
 
     const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress];
     if (addresses === undefined) {
