@@ -245,4 +245,21 @@ describe("DPI: Unit tests", function () {
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
+
+  it("BatchAdd and BatchRemove for Whitelistable", async function () {
+    const tx = await this.DPIEnv.adapter
+      .connect(this.signers.default)
+      .addBatch([FACTORY_REGISTRIES.DPI, FACTORY_REGISTRIES.ETH_USD_YIELD]);
+    await tx.wait();
+    expect(await this.DPIEnv.adapter.connect(this.signers.default).isWhitelisted(FACTORY_REGISTRIES.DPI)).to.be.true;
+    expect(await this.DPIEnv.adapter.connect(this.signers.default).isWhitelisted(FACTORY_REGISTRIES.ETH_USD_YIELD)).to.be.true;
+
+    const tx2 = await this.DPIEnv.adapter
+      .connect(this.signers.default)
+      .removeBatch([FACTORY_REGISTRIES.DPI, FACTORY_REGISTRIES.ETH_USD_YIELD]);
+    await tx2.wait();
+    expect(await this.DPIEnv.adapter.connect(this.signers.default).isWhitelisted(FACTORY_REGISTRIES.DPI)).to.be.false;
+    expect(await this.DPIEnv.adapter.connect(this.signers.default).isWhitelisted(FACTORY_REGISTRIES.ETH_USD_YIELD)).to.be.false;
+  })
+
 });
