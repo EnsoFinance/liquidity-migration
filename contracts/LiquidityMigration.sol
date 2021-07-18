@@ -6,7 +6,6 @@ import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/Sa
 import "./interfaces/IAdapter.sol";
 import "./enso/IStrategyProxyFactory.sol";
 import "./enso/IStrategyController.sol";
-import "./enso/IStrategy.sol";
 import "./helpers/Timelocked.sol";
 import "./helpers/StrategyTypes.sol";
 
@@ -150,6 +149,14 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     {
         require(adapters[_adapter], "LiquidityMigration#updateAdapter: does not exist");
         adapters[_adapter] = false;
+    }
+
+    function hasStaked(address _account, address _lp) 
+        public
+        view
+        returns(bool)
+    {
+        return staked[_account][_lp] > 0;
     }
 
     function _validateItems(address adapter, address lp, StrategyItem[] memory strategyItems) private view {

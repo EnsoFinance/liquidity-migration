@@ -12,7 +12,7 @@ interface ISigmaIndexPoolV1 {
 
 
 /// @title Indexed Vampire Attack Contract
-/// @author Enso.finance (github.com/amateur-dev)
+/// @author Enso.finance (github.com/EnsoFinance)
 /// @notice Adapter for redeeming the underlying assets from Indexed Protocol
 
 contract IndexedAdapter is AbstractAdapter {
