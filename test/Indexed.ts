@@ -8,9 +8,9 @@ import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { FACTORY_REGISTRIES } from "../src/constants";
-import { Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
-import { DIVISOR, STRATEGY_STATE } from "../src/constants";
+import { WETH, DIVISOR, STRATEGY_STATE } from "../src/constants";
 
 describe("Indexed: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -21,12 +21,14 @@ describe("Indexed: Unit tests", function () {
     this.signers.admin = signers[10];
     this.underlyingTokens = [];
 
+    this.ensoEnv = await new EnsoBuilder(this.signers.admin).mainnet().build();
+
     this.IndexedEnv = await new IndexedEnvironmentBuilder(this.signers.default).connect();
+    this.degenIndexPoolERC20 = IERC20__factory.connect(this.IndexedEnv.degenIndexPool.address, this.signers.default);
 
     console.log(`Indexed Adapter: ${this.IndexedEnv.adapter.address}`);
 
-    const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin);
-
+    const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.ensoEnv);
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, this.IndexedEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
     if (liquitityMigrationDeployed != undefined) {
@@ -35,7 +37,6 @@ describe("Indexed: Unit tests", function () {
       console.log(`Liquidity Migration is undefined`);
     }
 
-    this.ensoEnv = liquidityMigrationBuilder.enso;
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from DEGEN
@@ -43,7 +44,7 @@ describe("Indexed: Unit tests", function () {
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
-    const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(
+    const [total, estimates] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(
       this.IndexedEnv.degenIndexPool.address,
       this.underlyingTokens,
     );
@@ -62,17 +63,23 @@ describe("Indexed: Unit tests", function () {
         percentage: BigNumber.from(percentage),
       });
     }
-    // creating a strategy
+    if (positions.findIndex(pos => pos.token.toLowerCase() == WETH.toLowerCase()) == -1) {
+      positions.push({
+        token: WETH,
+        percentage: BigNumber.from(0),
+      });
+    }
 
+    // creating a strategy
     const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
-    
+
     const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
       this.signers.default.address,
       "DEGEN",
       "DEGEN",
       strategyItems,
       STRATEGY_STATE,
-      this.ensoEnv.routers[1].contract.address,
+      ethers.constants.AddressZero,
       '0x',
     );
     const receipt = await tx.wait();
@@ -84,12 +91,13 @@ describe("Indexed: Unit tests", function () {
   it("Token holder should be able to withdraw from pool", async function () {
     // getting holders of DEGEN Tokens
     const holderBalances: any[] = [];
+
     for (let i = 0; i < this.IndexedEnv.holders.length; i++) {
       holderBalances[i] = {
         holder: await this.IndexedEnv.holders[i].getAddress(),
-        balance: await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[i].getAddress()),
+        balance: await this.degenIndexPoolERC20.balanceOf(await this.IndexedEnv.holders[i].getAddress()),
       };
-      expect(await this.IndexedEnv.degenIndexPool.balanceOf(await this.IndexedEnv.holders[i].getAddress())).to.gt(
+      expect(await this.degenIndexPoolERC20.balanceOf(await this.IndexedEnv.holders[i].getAddress())).to.gt(
         BigNumber.from(0),
       );
     }
@@ -105,7 +113,7 @@ describe("Indexed: Unit tests", function () {
       .connect(this.IndexedEnv.holders[0])
       .exitPool(previoustokenBalance, minAmount);
     await tx.wait();
-    const posttokenBalance = await this.IndexedEnv.degenIndexPool.balanceOf(
+    const posttokenBalance = await this.degenIndexPoolERC20.balanceOf(
       await this.IndexedEnv.holders[0].getAddress(),
     );
     expect(posttokenBalance.isZero()).to.be.true;
@@ -119,18 +127,18 @@ describe("Indexed: Unit tests", function () {
     const holder2 = await this.IndexedEnv.holders[1];
     const holder2Address = await holder2.getAddress();
 
-    const holder2Balance = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
+    const holder2Balance = await this.degenIndexPoolERC20.balanceOf(holder2Address);
     expect(holder2Balance.gt(BigNumber.from(0))).to.be.true;
-    await this.IndexedEnv.degenIndexPool.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
+    await this.degenIndexPoolERC20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder2Balance.div(3), AcceptedProtocols.Indexed);
+      .stake(this.IndexedEnv.degenIndexPool.address, holder2Balance.div(3), this.IndexedEnv.adapter.address);
     expect(
-      (await this.liquidityMigration.stakes(holder2Address, this.IndexedEnv.degenIndexPool.address))[0].eq(
+      (await this.liquidityMigration.staked(holder2Address, this.IndexedEnv.degenIndexPool.address)).eq(
         holder2Balance.div(3),
       ),
     ).to.be.true;
-    const holder2AfterBalance = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
+    const holder2AfterBalance = await this.degenIndexPoolERC20.balanceOf(holder2Address);
     expect(holder2AfterBalance.gt(BigNumber.from(0))).to.be.true;
   });
 
@@ -139,25 +147,21 @@ describe("Indexed: Unit tests", function () {
     const holder2 = await this.IndexedEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
-    const holder2BalanceBefore = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
+    const holder2BalanceBefore = await this.degenIndexPoolERC20.balanceOf(holder2Address);
     expect(holder2BalanceBefore.gt(BigNumber.from(0))).to.be.true;
-    await this.IndexedEnv.degenIndexPool
+    await this.degenIndexPoolERC20
       .connect(holder2)
       .approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder2BalanceBefore, AcceptedProtocols.Indexed);
-    const amount = (await this.liquidityMigration.stakes(holder2Address, this.IndexedEnv.degenIndexPool.address))[0];
+      .stake(this.IndexedEnv.degenIndexPool.address, holder2BalanceBefore, this.IndexedEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder2Address, this.IndexedEnv.degenIndexPool.address);
     expect(amount.gt(BigNumber.from(0))).to.be.true;
 
-    const holder2BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder2Address);
+    const holder2BalanceAfter = await this.degenIndexPoolERC20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
     // Setup migration calls using DEGENAdapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256"],
-      [this.IndexedEnv.degenIndexPool.address, amount],
-    );
-    const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeExecute(adapterData);
+    const migrationCall: Multicall = await this.IndexedEnv.adapter.encodeExecute(this.IndexedEnv.degenIndexPool.address, amount);
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
@@ -165,7 +169,7 @@ describe("Indexed: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
     }
     // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
@@ -176,11 +180,10 @@ describe("Indexed: Unit tests", function () {
       this.liquidityMigration
         .connect(holder2)
         .migrate(
-          this.strategy.address,
           this.IndexedEnv.degenIndexPool.address,
-          AcceptedProtocols.Indexed,
-          migrationData,
-          0,
+          this.IndexedEnv.adapter.address,
+          this.strategy.address,
+          migrationData
         ),
     ).to.be.reverted;
   });
@@ -201,12 +204,8 @@ describe("Indexed: Unit tests", function () {
 
   it("Migration using a non-whitelisted token should fail", async function () {
     // Setup migration calls using DEGENAdapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256"],
-      [this.IndexedEnv.degenIndexPool.address, BigNumber.from(10000)],
-    );
-    await expect(this.IndexedEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith(
-      "IndexedAdapter: invalid Index Pool Address",
+    await expect(this.IndexedEnv.adapter.encodeExecute(this.IndexedEnv.degenIndexPool.address, BigNumber.from(10000))).to.be.revertedWith(
+      "Whitelistable#onlyWhitelisted: not whitelisted lp",
     );
   });
 
@@ -221,26 +220,22 @@ describe("Indexed: Unit tests", function () {
     const holder3Address = await holder3.getAddress();
 
     // staking the tokens in the liquidity migration contract
-    const holder3BalanceBefore = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
+    const holder3BalanceBefore = await this.degenIndexPoolERC20.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-    await this.IndexedEnv.degenIndexPool
+    await this.degenIndexPoolERC20
       .connect(holder3)
       .approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
-      .stakeLpTokens(this.IndexedEnv.degenIndexPool.address, holder3BalanceBefore, AcceptedProtocols.Indexed);
-    const amount = (await this.liquidityMigration.stakes(holder3Address, this.IndexedEnv.degenIndexPool.address))[0];
+      .stake(this.IndexedEnv.degenIndexPool.address, holder3BalanceBefore, this.IndexedEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder3Address, this.IndexedEnv.degenIndexPool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
-    const holder3BalanceAfter = await this.IndexedEnv.degenIndexPool.balanceOf(holder3Address);
+    const holder3BalanceAfter = await this.degenIndexPoolERC20.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DEGENAdapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256"],
-      [this.IndexedEnv.degenIndexPool.address, amount],
-    );
-    const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeExecute(adapterData);
+    const migrationCall: Multicall = await this.IndexedEnv.adapter.encodeExecute(this.IndexedEnv.degenIndexPool.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
@@ -250,19 +245,18 @@ describe("Indexed: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
     // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration
       .connect(holder3)
       .migrate(
-        this.strategy.address,
         this.IndexedEnv.degenIndexPool.address,
-        AcceptedProtocols.Indexed,
-        migrationData,
-        0,
+        this.IndexedEnv.adapter.address,
+        this.strategy.address,
+        migrationData
       );
-    const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
+    const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });

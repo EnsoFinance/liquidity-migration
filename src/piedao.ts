@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { MainnetSigner } from "../types";
 import { PIE_DAO_HOLDERS } from "../src/constants";
 import { BigNumber, Contract, Signer } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { StrategyBuilder, Strategy, Implementation } from "./strategy";
 
 import { FACTORY_REGISTRIES } from "../src/constants";
@@ -21,9 +22,9 @@ import {
 } from "../typechain";
 
 export class PieDaoEnvironmentBuilder implements StrategyBuilder {
-  signer: Signer;
+  signer: SignerWithAddress;
 
-  constructor(signer: Signer) {
+  constructor(signer: SignerWithAddress) {
     this.signer = signer;
   }
   async connect(): Promise<PieDaoEnvironment> {
@@ -34,7 +35,7 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     console.log("PieDaoRegistry: ", registry.address);
 
     const PieDaoAdapterFactory = (await ethers.getContractFactory("PieDaoAdapter")) as PieDaoAdapter__factory;
-    const adapter = await PieDaoAdapterFactory.deploy(registry.address);
+    const adapter = await PieDaoAdapterFactory.deploy(this.signer.address);
 
     const pieDaoAdmin = await registry.connect(this.signer).owner();
     const admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
@@ -110,14 +111,14 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
 }
 
 export class PieDaoEnvironment {
-  signer: Signer;
+  signer: SignerWithAddress;
   registry: Contract;
   adapter: Contract;
   admin: Signer;
   implementations: Implementation[];
   pools: PieDaoPool[];
   constructor(
-    signer: Signer,
+    signer: SignerWithAddress,
     registry: Contract,
     adapter: Contract,
     admin: Signer,

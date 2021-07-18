@@ -21,7 +21,7 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         virtual
         returns (address[] memory outputs);
 
-    function encodeExecute(address _lp, address _amount)
+    function encodeExecute(address _lp, uint256 _amount)
         public
         override
         virtual

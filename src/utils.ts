@@ -8,8 +8,8 @@ export enum Networks {
   ExternalTestnet,
 }
 
-export async function getBlockTime(): Promise<BigNumber> {
+export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
   const blockNumber = await ethers.provider.send('eth_blockNumber', [])
   const block = await ethers.provider.send('eth_getBlockByNumber', [blockNumber, true])
-  return BigNumber.from(block.timestamp)
+  return BigNumber.from(block.timestamp).add(timeInSeconds)
 }

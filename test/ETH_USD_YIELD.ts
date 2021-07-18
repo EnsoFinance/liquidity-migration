@@ -8,8 +8,8 @@ import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
-import { Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
-import { DIVISOR, STRATEGY_STATE } from "../src/constants";
+import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { WETH, DIVISOR, STRATEGY_STATE } from "../src/constants";
 
 describe("ETH_USD_YIELD: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -19,8 +19,16 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-    const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin);
+    this.ensoEnv = await new EnsoBuilder(this.signers.admin).mainnet().build();
 
+    this.ETHUSDYieldEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.ensoEnv).connect(
+      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD],
+      FACTORY_REGISTRIES.ETH_USD_YIELD,
+    );
+
+    console.log(`Token Sets Adapter: ${this.ETHUSDYieldEnv.adapter.address}`);
+
+    const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.ensoEnv);
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.ETHUSDYieldEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
     if (liquitityMigrationDeployed != undefined) {
@@ -29,25 +37,18 @@ describe("ETH_USD_YIELD: Unit tests", function () {
       console.log(`Liquidity Migration is undefined`);
     }
 
-    this.ensoEnv = liquidityMigrationBuilder.enso;
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
-
-    this.ETHUSDYieldEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
-      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD],
-      FACTORY_REGISTRIES.ETH_USD_YIELD,
-    );
-
-    console.log(`Token Sets Adapter: ${this.ETHUSDYieldEnv.adapter.address}`);
 
     // getting the underlying tokens from ETH_USD_YIELD
     const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
-    const [total, estimates] = await this.ensoEnv.enso.oracle.estimateTotal(
+    const [total, estimates] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(
       this.ETHUSDYieldEnv.tokenSet.address,
       underlyingTokens,
     );
+
     for (let i = 0; i < underlyingTokens.length; i++) {
       const percentage = new bignumber(estimates[i].toString())
         .multipliedBy(DIVISOR)
@@ -58,12 +59,15 @@ describe("ETH_USD_YIELD: Unit tests", function () {
         percentage: BigNumber.from(percentage),
       });
     }
+    if (positions.findIndex(pos => pos.token.toLowerCase() == WETH.toLowerCase()) == -1) {
+      positions.push({
+        token: WETH,
+        percentage: BigNumber.from(0),
+      });
+    }
 
     // creating a strategy
-
     const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
-
-    // // createStrategy(address,string,string,address[],uint256[],bool,uint256,uint256,uint256,uint256,address,bytes)'
 
     const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
       this.signers.default.address,
@@ -71,7 +75,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
       "ETH_USD_YIELD",
       strategyItems,
       STRATEGY_STATE,
-      this.ensoEnv.routers[1].contract.address,
+      ethers.constants.AddressZero,
       '0x',
     );
     const receipt = await tx.wait();
@@ -125,8 +129,8 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     await this.ETHUSDYieldEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.ETHUSDYieldEnv.tokenSet.address, holder2Balance.div(2), AcceptedProtocols.DefiPulseIndex);
-    expect((await this.liquidityMigration.stakes(holder2Address, this.ETHUSDYieldEnv.tokenSet.address))[0]).to.equal(
+      .stake(this.ETHUSDYieldEnv.tokenSet.address, holder2Balance.div(2), this.ETHUSDYieldEnv.adapter.address);
+    expect(await this.liquidityMigration.staked(holder2Address, this.ETHUSDYieldEnv.tokenSet.address)).to.equal(
       holder2Balance.div(2),
     );
     const holder2AfterBalance = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder2Address);
@@ -143,19 +147,15 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     await this.ETHUSDYieldEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
-      .stakeLpTokens(this.ETHUSDYieldEnv.tokenSet.address, holder2BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-    const amount = (await this.liquidityMigration.stakes(holder2Address, this.ETHUSDYieldEnv.tokenSet.address))[0];
+      .stake(this.ETHUSDYieldEnv.tokenSet.address, holder2BalanceBefore, this.ETHUSDYieldEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder2Address, this.ETHUSDYieldEnv.tokenSet.address);
     expect(amount).to.be.gt(BigNumber.from(0));
 
     // const holder2BalanceAfter = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder2Address);
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using Adapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256", "address"],
-      [this.ETHUSDYieldEnv.tokenSet.address, amount, routerContract.address],
-    );
-    const migrationCalls: Multicall[] = await this.ETHUSDYieldEnv.adapter.encodeExecute(adapterData);
+    const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeExecute(this.ETHUSDYieldEnv.tokenSet.address, amount);
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
@@ -164,7 +164,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
     // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
@@ -175,11 +175,10 @@ describe("ETH_USD_YIELD: Unit tests", function () {
       this.liquidityMigration
         .connect(holder2)
         .migrate(
-          this.strategy.address,
           this.ETHUSDYieldEnv.tokenSet.address,
-          AcceptedProtocols.DefiPulseIndex,
-          migrationData,
-          0,
+          this.ETHUSDYieldEnv.adapter.address,
+          this.strategy.address,
+          migrationData
         ),
     ).to.be.reverted;
   });
@@ -204,11 +203,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     const holder3Address = await holder3.getAddress();
 
     // Setup migration calls using Adapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256", "address"],
-      [holder3Address, BigNumber.from(100), routerContract.address],
-    );
-    await expect(this.ETHUSDYieldEnv.adapter.encodeExecute(adapterData)).to.be.revertedWith("TSA: invalid tokenSetAddress");
+    await expect(this.ETHUSDYieldEnv.adapter.encodeExecute(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
   });
 
   it("Should migrate tokens to strategy", async function () {
@@ -228,18 +223,14 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     await this.ETHUSDYieldEnv.tokenSet.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
-      .stakeLpTokens(this.ETHUSDYieldEnv.tokenSet.address, holder3BalanceBefore, AcceptedProtocols.DefiPulseIndex);
-    const amount = (await this.liquidityMigration.stakes(holder3Address, this.ETHUSDYieldEnv.tokenSet.address))[0];
+      .stake(this.ETHUSDYieldEnv.tokenSet.address, holder3BalanceBefore, this.ETHUSDYieldEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder3Address, this.ETHUSDYieldEnv.tokenSet.address);
     expect(amount).to.be.gt(BigNumber.from(0));
     const holder3BalanceAfter = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using Adapter contract
-    const adapterData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256", "address"],
-      [this.ETHUSDYieldEnv.tokenSet.address, amount, routerContract.address],
-    );
-    const migrationCalls: Multicall[] = await this.ETHUSDYieldEnv.adapter.encodeExecute(adapterData);
+    const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeExecute(this.ETHUSDYieldEnv.tokenSet.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
@@ -249,13 +240,13 @@ describe("ETH_USD_YIELD: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
     // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
+    const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      .migrate(this.strategy.address, this.ETHUSDYieldEnv.tokenSet.address, AcceptedProtocols.DefiPulseIndex, migrationData, 0);
-    const [total] = await this.ensoEnv.enso.oracle.estimateTotal(this.strategy.address, underlyingTokens);
+      .migrate(this.ETHUSDYieldEnv.tokenSet.address, this.ETHUSDYieldEnv.adapter.address, this.strategy.address, migrationData);
+    const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
