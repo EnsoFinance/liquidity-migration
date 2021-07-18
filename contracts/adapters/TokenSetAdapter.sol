@@ -3,7 +3,6 @@ pragma solidity 0.8.2;
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./AbstractAdapter.sol";
-// import "../helpers/Whitelistable.sol";
 
 interface ISetToken {
     function getComponents() external view returns (address[] memory);

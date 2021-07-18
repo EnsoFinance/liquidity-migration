@@ -20,13 +20,17 @@ export class TokenSetEnvironmentBuilder {
     this.signer = signer;
     this.enso = enso;
   }
-  async connect(tokenSetsIssuanceModule: string, tokenSetPoolAddress: string): Promise<TokenSetEnvironment> {
+  async connect(tokenSetsIssuanceModule: string, tokenSetPoolAddresses: string[]): Promise<TokenSetEnvironment> {
     const setBasicIssuanceModule = (await BasicIssuanceModule__factory.connect(
       tokenSetsIssuanceModule,
       this.signer,
     )) as BasicIssuanceModule;
+    
+    const tokenSetArray: Contract[]= [];
 
-    const tokenSet = (await SetToken__factory.connect(tokenSetPoolAddress, this.signer)) as SetToken;
+    for (let i=0; i<tokenSetPoolAddresses.length; i++) {
+      tokenSetArray[i] = (await SetToken__factory.connect(tokenSetPoolAddresses[i], this.signer)) as SetToken; 
+    }
 
     const tokenSetAdapterFactory = (await ethers.getContractFactory("TokenSetAdapter")) as TokenSetAdapter__factory;
 
@@ -36,33 +40,40 @@ export class TokenSetEnvironmentBuilder {
     // deploying the DPI Adapter
     const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, generiRouter, signerAddress);
 
-    const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress];
-    if (addresses === undefined) {
-      throw Error(`Failed to find token holder for contract: ${tokenSetPoolAddress} `);
+    const addressesArray: string[][] = [];
+    for (let index = 0; index < tokenSetPoolAddresses.length; index++) {
+      const addresses = TOKENSET_HOLDERS[tokenSetPoolAddresses[index]];
+      if (addresses === undefined) {
+        throw Error(`Failed to find token holder for contract: ${tokenSetPoolAddresses[index]} `);
+      }
+      addressesArray[index] = addresses;
     }
 
-    const signers = [];
-    for (let i = 0; i < addresses.length; i++) {
-      const signer = await new MainnetSigner(addresses[i]).impersonateAccount();
-      signers.push(signer);
-    }
-
-    return new TokenSetEnvironment(this.signer, setBasicIssuanceModule, tokenSet, adapter, signers);
+    const signersArray: Signer[][] = [];
+    addressesArray.forEach(async (e) => {
+      const signers = [];
+      for (let i = 0; i < e.length; i++) {
+        const signer = await new MainnetSigner(e[i]).impersonateAccount();
+        signers.push(signer);
+      }
+    });
+    
+    return new TokenSetEnvironment(this.signer, setBasicIssuanceModule, tokenSetArray, adapter, signersArray);
   }
 }
 
 export class TokenSetEnvironment {
   signer: Signer;
   setBasicIssuanceModule: Contract;
-  tokenSet: Contract;
+  tokenSet: Contract[];
   adapter: Contract;
-  holders: Signer[];
+  holders: Signer[][];
   constructor(
     signer: Signer,
     setBasicIssuanceModule: Contract,
-    tokenSet: Contract,
+    tokenSet: Contract[],
     adapter: Contract,
-    holders: Signer[],
+    holders: Signer[][],
   ) {
     this.signer = signer;
     this.setBasicIssuanceModule = setBasicIssuanceModule;

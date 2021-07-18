@@ -1,13 +1,13 @@
 import { ethers } from "hardhat";
 import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { IAdapter, LiquidityMigration, LiquidityMigration__factory } from "../typechain";
+import { IAdapter, LiquidityMigration__factory } from "../typechain";
 import { EnsoEnvironment } from "@enso/contracts";
 import { getBlockTime } from './utils'
 
 export enum AcceptedProtocols {
   Indexed,
-  DefiPulseIndex,
+  TokenSets,
   PieDao,
 }
 
