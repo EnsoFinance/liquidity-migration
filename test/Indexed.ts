@@ -19,6 +19,7 @@ describe("Indexed: Unit tests", function () {
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
+    this.signers.otherAccount = signers[5];
     this.underlyingTokens = [];
 
     this.ensoEnv = await new EnsoBuilder(this.signers.admin).mainnet().build();
@@ -77,28 +78,76 @@ describe("Indexed: Unit tests", function () {
     }
 
     // creating a strategy
-    const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
+    this.strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
-    const data = ethers.utils.defaultAbiCoder.encode(
+
+    this.data = ethers.utils.defaultAbiCoder.encode(
       ["address", "string", "string", "tuple(address item, uint16 percentage, uint256 category, bytes cache, address[] adapters, address[] path)[]", "tuple(uint32 timelock, uint16 rebalanceThreshold, uint16 slippage, uint16 performanceFee, bool social)", "address", "bytes"],
       [this.signers.default.address,
         "DEGEN",
         "DEGEN",
-        strategyItems,
+        this.strategyItems,
         STRATEGY_STATE,
         ethers.constants.AddressZero,
         '0x']
       );
 
+    this.strategyAddress;
+    this.strategy;
+  });
+
+  it("Should be able to create strategy from the liquidity migration contract", async function () {
     const tx = await this.liquidityMigrationContract.createStrategy(
       this.IndexedEnv.degenIndexPool.address,
       this.IndexedEnv.adapter.address,
-      data
+      this.data
     );
     const receipt = await tx.wait();
-    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
-    console.log("Strategy address: ", strategyAddress);
-    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+    await expect(tx).to.emit(this.liquidityMigrationContract, 'Created');
+    this.strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+    this.strategy = IStrategy__factory.connect(this.strategyAddress, this.signers.default);
+  });
+
+  it("Adding Already existing adapter should throw error", async function () {
+    await expect(this.liquidityMigrationContract.addAdapter(
+      this.IndexedEnv.adapter.address,
+    )).to.be.revertedWith("LiquidityMigration#updateAdapter: already exists");
+  });
+
+  it("Adding and removing adapter only by Owner should be successfful", async function () {
+    await expect(this.liquidityMigrationContract.connect(this.signers.otherAccount).addAdapter(
+      this.IndexedEnv.adapter.address,
+    )).to.be.revertedWith("Ownable: caller is not the owner");
+    await this.liquidityMigrationContract.addAdapter(this.underlyingTokens[0]);
+    expect(await this.liquidityMigrationContract.adapters(this.underlyingTokens[0])).to.be.true;
+    await this.liquidityMigrationContract.removeAdapter(this.underlyingTokens[0]);
+    expect(await this.liquidityMigrationContract.adapters(this.underlyingTokens[0])).to.be.false;
+  });
+
+  it("Adding and removing generic router only by Owner should be successfful", async function () {
+    await expect(this.liquidityMigrationContract.updateGeneric(
+      this.ensoEnv.routers[0].contract.address,
+    )).to.be.revertedWith("LiquidityMigration#updateGeneric: already exists");
+    await expect(this.liquidityMigrationContract.connect(this.signers.otherAccount).updateGeneric(
+      this.ensoEnv.routers[0].contract.address,
+    )).to.be.revertedWith("Ownable: caller is not the owner");
+    await this.liquidityMigrationContract.updateGeneric(this.underlyingTokens[0]);
+    expect(await this.liquidityMigrationContract.generic()).to.be.equal(this.underlyingTokens[0]);
+    await this.liquidityMigrationContract.updateGeneric(this.ensoEnv.routers[0].contract.address);
+    expect(await this.liquidityMigrationContract.generic()).to.be.equal(this.ensoEnv.routers[0].contract.address);
+  });
+
+  it("Adding and removing controller only by Owner should be successfful", async function () {
+    await expect(this.liquidityMigrationContract.updateController(
+      this.ensoEnv.enso.controller.address,
+    )).to.be.revertedWith("LiquidityMigration#updateController: already exists");
+    await expect(this.liquidityMigrationContract.connect(this.signers.otherAccount).updateController(
+      this.ensoEnv.enso.controller.address,
+    )).to.be.revertedWith("Ownable: caller is not the owner");
+    await this.liquidityMigrationContract.updateController(this.underlyingTokens[0]);
+    expect(await this.liquidityMigrationContract.controller()).to.be.equal(this.underlyingTokens[0]);
+    await this.liquidityMigrationContract.updateController(this.ensoEnv.enso.controller.address);
+    expect(await this.liquidityMigrationContract.controller()).to.be.equal(this.ensoEnv.enso.controller.address);
   });
 
   it("Token holder should be able to withdraw from pool", async function () {
@@ -146,6 +195,10 @@ describe("Indexed: Unit tests", function () {
     await this.liquidityMigration
       .connect(holder2)
       .stake(this.IndexedEnv.degenIndexPool.address, holder2Balance.div(3), this.IndexedEnv.adapter.address);
+    const stakedBool = await this.liquidityMigration
+    .connect(holder2)
+    .hasStaked(holder2Address, this.IndexedEnv.degenIndexPool.address);
+    expect(stakedBool).to.be.true;
     expect(
       (await this.liquidityMigration.staked(holder2Address, this.IndexedEnv.degenIndexPool.address)).eq(
         holder2Balance.div(3),
@@ -177,7 +230,6 @@ describe("Indexed: Unit tests", function () {
     const migrationCall: Multicall = await this.IndexedEnv.adapter.encodeExecute(this.IndexedEnv.degenIndexPool.address, amount);
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < this.underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
     }
@@ -253,7 +305,6 @@ describe("Indexed: Unit tests", function () {
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.IndexedEnv.degenIndexPool.getCurrentTokens();
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
@@ -273,4 +324,19 @@ describe("Indexed: Unit tests", function () {
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
+
+  // it("Updating functions of Liquidity Migration", async function () {
+  //   const tx = await this.liquidityMigrationContract.updateController(
+  //     this.IndexedEnv.degenIndexPool.address,
+  //     this.IndexedEnv.adapter.address,
+  //     this.data
+  //   );
+  //   const receipt = await tx.wait();
+  //   await expect(tx).to.emit(this.liquidityMigrationContract, 'Created');
+  //   this.strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+  //   this.strategy = IStrategy__factory.connect(this.strategyAddress, this.signers.default);
+  // });
+
+
+
 });
