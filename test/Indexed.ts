@@ -28,6 +28,11 @@ describe("Indexed: Unit tests", function () {
 
     console.log(`Indexed Adapter: ${this.IndexedEnv.adapter.address}`);
 
+    const atx = await this.IndexedEnv.adapter
+      .connect(this.signers.default)
+      .add(FACTORY_REGISTRIES.DEGEN_INDEX);
+    await atx.wait();
+
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.ensoEnv);
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, this.IndexedEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
@@ -38,6 +43,7 @@ describe("Indexed: Unit tests", function () {
     }
 
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
+    this.liquidityMigrationContract = liquitityMigrationDeployed;
 
     // getting the underlying tokens from DEGEN
     this.underlyingTokens = await this.IndexedEnv.adapter.outputTokens(this.IndexedEnv.degenIndexPool.address);
@@ -73,17 +79,24 @@ describe("Indexed: Unit tests", function () {
     // creating a strategy
     const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
-    const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
-      this.signers.default.address,
-      "DEGEN",
-      "DEGEN",
-      strategyItems,
-      STRATEGY_STATE,
-      ethers.constants.AddressZero,
-      '0x',
+    const data = ethers.utils.defaultAbiCoder.encode(
+      ["address", "string", "string", "tuple(address item, uint16 percentage, uint256 category, bytes cache, address[] adapters, address[] path)[]", "tuple(uint32 timelock, uint16 rebalanceThreshold, uint16 slippage, uint16 performanceFee, bool social)", "address", "bytes"],
+      [this.signers.default.address,
+        "DEGEN",
+        "DEGEN",
+        strategyItems,
+        STRATEGY_STATE,
+        ethers.constants.AddressZero,
+        '0x']
+      );
+
+    const tx = await this.liquidityMigrationContract.createStrategy(
+      this.IndexedEnv.degenIndexPool.address,
+      this.IndexedEnv.adapter.address,
+      data
     );
     const receipt = await tx.wait();
-    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
+    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
     console.log("Strategy address: ", strategyAddress);
     this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });

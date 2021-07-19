@@ -68,7 +68,6 @@ describe("ETH_USD_YIELD: Unit tests", function () {
 
     // creating a strategy
     const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
-
     const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
       this.signers.default.address,
       "ETH_USD_YIELD",
