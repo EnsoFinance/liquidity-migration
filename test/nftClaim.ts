@@ -1,3 +1,4 @@
+/*
 import { ethers } from "hardhat";
 import { assert } from "console";
 import { expect } from "chai";
@@ -36,7 +37,7 @@ describe('claimable', () => {
         user = accounts[0];
         attacker = accounts[10];
         strategies = [];
-    
+
         MockLiquidityMigration = await ethers.getContractFactory("MockLiquidityMigration");
         ERC1155 = await ethers.getContractFactory("Root1155");
         MockStrategy = await ethers.getContractFactory("MockStrategy");
@@ -76,7 +77,7 @@ describe('claimable', () => {
             tests();
         });
     }
-    
+
     const stakeAll = async (name:string, starting:number, tests:any) => {
         describe(name, () => {
             before(async () => {
@@ -418,3 +419,4 @@ describe('claimable', () => {
         });
     });
 });
+*/
