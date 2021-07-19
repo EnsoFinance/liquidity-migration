@@ -24,8 +24,4 @@ contract mockFundHolder is Timelocked {
         totalBalance -= amount;
         payable(msg.sender).transfer(amount);
     }
-    
-
-    
-    
 }
