@@ -151,7 +151,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         adapters[_adapter] = false;
     }
 
-    function hasStaked(address _account, address _lp) 
+    function hasStaked(address _account, address _lp)
         public
         view
         returns(bool)

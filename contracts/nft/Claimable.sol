@@ -35,14 +35,18 @@ contract Claimable is Ownable, ERC1155Holder {
         _;
     }
 
-    /* assumption is enum ID will be the same as collection ID, 
+    /* assumption is enum ID will be the same as collection ID,
      * and no further collections will be added whilst active
     */
     constructor(address _migration, address _collection, uint256 _max, address[] memory _index){
+        require(_max == _index.length, "Claimable#claim: incorrect max");
         collection = _collection;
         migration = _migration;
         max = _max;
         for (uint256 i = 0; i < _index.length; i++) {
+            if (i > 0) {
+                require(_index[i] != _index[0] && index[_index[i]] == 0,  "Claimable#constructor: duplicate adapter");
+            }
             index[_index[i]] = i;
         }
     }
@@ -58,19 +62,20 @@ contract Claimable is Ownable, ERC1155Holder {
     {
         require(_lp != address(0), "Claimable#claim: empty address");
         require(_adapter != address(0), "Claimable#claim: empty address");
-        
+
+        require(ILiquidityMigration(migration).adapters(_adapter), "Claimable#claim: not adapter");
         require(IAdapter(_adapter).isWhitelisted(_lp), "Claimable#claim: not associated");
         require(ILiquidityMigration(migration).hasStaked(msg.sender, _lp), "Claimable#claim: not staked");
-        
+
         uint256 _index = index[_adapter];
         require(!claimed[msg.sender][_index], "Claimable#claim: already claimed");
-        
+
         require(IERC1155(collection).balanceOf(address(this), _index) > 0, "Claimable#claim: no NFTs left");
 
         claimed[msg.sender][_index] = true;
         IERC1155(collection).safeTransferFrom(address(this), msg.sender, _index, 1, "");
     }
-    
+
     /**
      * @notice you wanna be a masta good old boi?
      */
@@ -115,7 +120,7 @@ contract Claimable is Ownable, ERC1155Holder {
         for (uint256 start = _start; start <= _end; start++) {
             IRoot1155(collection).
             burn(
-                address(this), 
+                address(this),
                 start,
                 IERC1155(collection).balanceOf(address(this), start)
             );
@@ -141,7 +146,7 @@ contract Claimable is Ownable, ERC1155Holder {
         public
         onlyOwner
     {
-        require(_migration != migration, 'Claimable#UpdateMigration: exists');
+        require(_migration != migration, "Claimable#UpdateMigration: exists");
         migration = _migration;
         emit Migration(migration);
     }
@@ -154,7 +159,7 @@ contract Claimable is Ownable, ERC1155Holder {
         public
         onlyOwner
     {
-        require(_collection != collection, 'Claimable#UpdateCollection: exists');
+        require(_collection != collection, "Claimable#UpdateCollection: exists");
         collection = _collection;
         emit Collection(collection);
     }
@@ -166,7 +171,7 @@ contract Claimable is Ownable, ERC1155Holder {
         return _state;
     }
 
-    function _stateChange(State state_) 
+    function _stateChange(State state_)
         private
     {
         require(_state != state_, "Claimable#changeState: current");
