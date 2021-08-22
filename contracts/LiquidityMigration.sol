@@ -73,6 +73,21 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         emit Staked(_adapter, _lp, _amount, msg.sender);
     }
 
+    function batchStake(
+        address[] memory _lp,
+        uint256[] memory _amount,
+        address[] memory _adapter
+    ) 
+        external
+    {
+        require(_lp.length == _amount.length, "LiquidityMigration#batchStake: not same length");
+        require(_amount.length == _adapter.length, "LiquidityMigration#batchStake: not same length");
+        
+        for (uint256 i = 0; i < _lp.length; i++) {
+            stake(_lp[i], _amount[i], _adapter[i]);
+        }
+    }
+
     function migrate(
         address _lp,
         address _adapter,
@@ -84,22 +99,85 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         onlyRegistered(_adapter)
         onlyWhitelisted(_adapter, _lp)
     {
-        require(IStrategyController(controller).initialized(address(_strategy)), "NewLiquidityMigration#migrate: not enso strategy");
+        _migrate(msg.sender, _lp, _adapter, _strategy, migrationData);
+    }
 
-        uint256 _stake = staked[msg.sender][_lp];
-        require(_stake > 0, "NewLiquidityMigration#migrate: not staked");
+    function migrate(
+        address _user,
+        address _lp,
+        address _adapter,
+        IStrategy _strategy,
+        bytes memory migrationData
+    )
+        public
+        onlyOwner
+        onlyUnlocked
+        onlyRegistered(_adapter)
+        onlyWhitelisted(_adapter, _lp)
+    {
+        _migrate(_user, _lp, _adapter, _strategy, migrationData);
+    }
 
-        delete staked[msg.sender][_lp];
+    function batchMigrate(
+        address[] memory _lp,
+        address[] memory _adapter,
+        IStrategy[] memory _strategy,
+        bytes[] memory migrationData
+    ) 
+        external
+    {
+        require(_lp.length == _adapter.length);
+        require(_adapter.length == _strategy.length);
+        require(_strategy.length == migrationData.length);
+
+        for (uint256 i = 0; i < _lp.length; i++) {
+            migrate(_lp[i], _adapter[i], _strategy[i], migrationData[i]);
+        }
+    }
+
+    function batchMigrate(
+        address[] memory _user,
+        address[] memory _lp,
+        address[] memory _adapter,
+        IStrategy[] memory _strategy,
+        bytes[] memory migrationData
+    ) 
+        external
+    {
+        require(_user.length == _lp.length);
+        require(_lp.length == _adapter.length);
+        require(_adapter.length == _strategy.length);
+        require(_strategy.length == migrationData.length);
+
+        for (uint256 i = 0; i < _lp.length; i++) {
+            migrate(_user[i], _lp[i], _adapter[i], _strategy[i], migrationData[i]);
+        }
+    }
+
+    function _migrate(
+        address _user,
+        address _lp,
+        address _adapter,
+        IStrategy _strategy,
+        bytes memory migrationData
+    ) 
+        internal
+    {
+        require(IStrategyController(controller).initialized(address(_strategy)), "LiquidityMigration#_migrate: not enso strategy");
+
+        uint256 _stake = staked[_user][_lp];
+        require(_stake > 0, "LiquidityMigration#_migrate: not staked");
+
+        delete staked[_user][_lp];
         IERC20(_lp).safeTransfer(generic, _stake);
 
         uint256 _before = _strategy.balanceOf(address(this));
         _strategy.deposit(0, IStrategyRouter(generic), migrationData);
         uint256 _after = _strategy.balanceOf(address(this));
 
-        _strategy.transfer(msg.sender, (_after - _before));
-        emit Migrated(_adapter, _lp, address(_strategy), msg.sender);
+        _strategy.transfer(_user, (_after - _before));
+        emit Migrated(_adapter, _lp, address(_strategy), _user);
     }
-
 
     function createStrategy(
         address _lp,
