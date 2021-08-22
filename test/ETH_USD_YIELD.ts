@@ -173,7 +173,8 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // // Migrate
     await expect(
       this.liquidityMigration
-        .connect(holder2)['migrate(address,address,address,bytes)'](
+        .connect(holder2)
+        ['migrate(address,address,address,bytes)'](
           this.ETHUSDYieldEnv.tokenSet.address,
           this.ETHUSDYieldEnv.adapter.address,
           this.strategy.address,
@@ -243,9 +244,14 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration
-      .connect(holder3)['migrate(address,address,address,bytes)'](
-        this.ETHUSDYieldEnv.tokenSet.address, this.ETHUSDYieldEnv.adapter.address, this.strategy.address, migrationData);
-    const [total] = await this.ensoEnv.platform.oracles.protocols.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
+      .connect(holder3)
+      ['migrate(address,address,address,bytes)'](
+        this.ETHUSDYieldEnv.tokenSet.address,
+        this.ETHUSDYieldEnv.adapter.address,
+        this.strategy.address,
+        migrationData
+      );
+    const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });

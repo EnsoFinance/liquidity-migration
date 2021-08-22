@@ -178,7 +178,8 @@ describe("Indexed: Unit tests", function () {
     // Migrate
     await expect(
       this.liquidityMigration
-        .connect(holder2)['migrate(address,address,address,bytes)'](
+        .connect(holder2)
+        ['migrate(address,address,address,bytes)'](
           this.IndexedEnv.degenIndexPool.address,
           this.IndexedEnv.adapter.address,
           this.strategy.address,
@@ -248,7 +249,8 @@ describe("Indexed: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration
-      .connect(holder3)['migrate(address,address,address,bytes)'](
+      .connect(holder3)
+      ['migrate(address,address,address,bytes)'](
         this.IndexedEnv.degenIndexPool.address,
         this.IndexedEnv.adapter.address,
         this.strategy.address,
