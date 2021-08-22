@@ -1,10 +1,11 @@
+import hardhat = require("hardhat") 
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import bignumber from "bignumber.js";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
+import { IERC20, IERC20__factory, IStrategy__factory, LiquidityMigration } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
@@ -19,6 +20,9 @@ describe("DPI: Unit tests", function () {
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
+
+    // this.abi = (await hardhat.artifacts.readArtifact("LiquidityMigration")).abi
+    // console.log(this.abi)
 
     this.ensoEnv = await new EnsoBuilder(this.signers.admin).mainnet().build();
 
@@ -174,7 +178,8 @@ describe("DPI: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        .migrate(
+        ['migrate(address,address,address,bytes)']
+        (
           this.DPIEnv.tokenSet.address,
           this.DPIEnv.adapter.address,
           this.strategy.address,
@@ -240,7 +245,13 @@ describe("DPI: Unit tests", function () {
     // // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      .migrate(this.DPIEnv.tokenSet.address, this.DPIEnv.adapter.address, this.strategy.address, migrationData);
+      ['migrate(address,address,address,bytes)']
+      (
+        this.DPIEnv.tokenSet.address, 
+        this.DPIEnv.adapter.address, 
+        this.strategy.address, 
+        migrationData
+      );
     const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
@@ -261,5 +272,4 @@ describe("DPI: Unit tests", function () {
     expect(await this.DPIEnv.adapter.connect(this.signers.default).isWhitelisted(FACTORY_REGISTRIES.DPI)).to.be.false;
     expect(await this.DPIEnv.adapter.connect(this.signers.default).isWhitelisted(FACTORY_REGISTRIES.ETH_USD_YIELD)).to.be.false;
   })
-
 });
