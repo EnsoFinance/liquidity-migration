@@ -103,7 +103,13 @@ describe("PieDao: Unit tests", function () {
     // Migrate
     await this.liquidityMigration
       .connect(holder)
-      .migrate(poolContract.address, this.pieDaoEnv.adapter.address, this.strategy.address, migrationData);
+      ['migrate(address,address,address,bytes)']
+      (
+        poolContract.address, 
+        this.pieDaoEnv.adapter.address, 
+        this.strategy.address, 
+        migrationData
+      );
     const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, pool.tokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holderAddress)).to.gt(0);

@@ -179,7 +179,8 @@ describe("Indexed: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        .migrate(
+        ['migrate(address,address,address,bytes)']
+        (
           this.IndexedEnv.degenIndexPool.address,
           this.IndexedEnv.adapter.address,
           this.strategy.address,
@@ -250,7 +251,8 @@ describe("Indexed: Unit tests", function () {
     // // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      .migrate(
+      ['migrate(address,address,address,bytes)']
+      (
         this.IndexedEnv.degenIndexPool.address,
         this.IndexedEnv.adapter.address,
         this.strategy.address,
