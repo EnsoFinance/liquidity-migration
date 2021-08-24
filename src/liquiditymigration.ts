@@ -28,6 +28,15 @@ export class LiquidityMigrationBuilder {
     this.adapters = [] as Adapter[];
   }
 
+  addAdapters(protocol: AcceptedProtocols[], adapter: IAdapter[]) {
+    for (let i = 0; i < protocol.length; i++) {
+      this.adapters.push({
+        protocol: protocol[i],
+        adapter: adapter[i].address
+      })
+    }
+  }
+
   addAdapter(protocol: AcceptedProtocols, adapter: IAdapter) {
     this.adapters.push({
       protocol,
