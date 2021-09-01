@@ -45,7 +45,7 @@ describe("PieDao: Unit tests", function () {
     // TODO: NOTE, this is version 2
     const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
-    const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
+    const tx = await this.ensoEnv.platform.strategyFactory.createStrategy(
       this.signers.default.address,
       "PieDao",
       "PIE",
@@ -102,9 +102,9 @@ describe("PieDao: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     // Migrate
     await this.liquidityMigration
-      .connect(holder)
-      .migrate(poolContract.address, this.pieDaoEnv.adapter.address, this.strategy.address, migrationData);
-    const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, pool.tokens);
+      .connect(holder)['migrate(address,address,address,bytes)'](
+        poolContract.address, this.pieDaoEnv.adapter.address, this.strategy.address, migrationData);
+    const [total] = await this.ensoEnv.platform.oracles.protocols.uniswapOracle.estimateTotal(this.strategy.address, pool.tokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holderAddress)).to.gt(0);
   });

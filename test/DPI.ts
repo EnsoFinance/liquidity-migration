@@ -45,7 +45,8 @@ describe("DPI: Unit tests", function () {
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
-    const [total, estimates] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(
+
+    const [total, estimates] = await this.ensoEnv.platform.oracles.protocols.uniswapOracle.estimateTotal(
       this.DPIEnv.tokenSet.address,
       underlyingTokens,
     );
@@ -69,7 +70,7 @@ describe("DPI: Unit tests", function () {
     // creating a strategy
     const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
-    const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
+    const tx = await this.ensoEnv.platform.strategyFactory.createStrategy(
       this.signers.default.address,
       "DPI",
       "DPI",
@@ -165,7 +166,7 @@ describe("DPI: Unit tests", function () {
     // // Encode multicalls for GenericRouter
     const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
-    
+
     const tx = await this.DPIEnv.adapter
       .connect(this.signers.default)
       .remove(FACTORY_REGISTRIES.DPI);
@@ -173,8 +174,7 @@ describe("DPI: Unit tests", function () {
     // // Migrate
     await expect(
       this.liquidityMigration
-        .connect(holder2)
-        .migrate(
+        .connect(holder2)['migrate(address,address,address,bytes)'](
           this.DPIEnv.tokenSet.address,
           this.DPIEnv.adapter.address,
           this.strategy.address,
@@ -239,9 +239,9 @@ describe("DPI: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration
-      .connect(holder3)
-      .migrate(this.DPIEnv.tokenSet.address, this.DPIEnv.adapter.address, this.strategy.address, migrationData);
-    const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
+      .connect(holder3)['migrate(address,address,address,bytes)'](
+        this.DPIEnv.tokenSet.address, this.DPIEnv.adapter.address, this.strategy.address, migrationData);
+    const [total] = await this.ensoEnv.platform.oracles.protocols.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });

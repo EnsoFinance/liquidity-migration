@@ -65,3 +65,13 @@ Delete the smart contract artifacts, the coverage reports and the Hardhat cache:
 ```sh
 $ yarn clean
 ```
+
+### Kovan Deployment
+
+LiquidityMigration:  0x22ebfB49e90f6616cdaC97Fef3F159bb56d601Ec
+
+TokenSetAdapter:  0xd96B848eBbd0E2DDF192E1d9a66AD70523B157f6
+
+IndexedAdapter:  0x4006c6232dA6dcC13D06b0a77F970808293742b4
+
+PieDaoAdapter:  0x0Af5858Dbdc203428021A6b511bADcb4a07c08A3

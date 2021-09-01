@@ -48,8 +48,8 @@ export class LiquidityMigrationBuilder {
       this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(
         this.adapters.map(a => a.adapter),
         this.ensoEnv.routers[0].contract.address,
-        this.ensoEnv.enso.strategyFactory.address,
-        this.ensoEnv.enso.controller.address,
+        this.ensoEnv.platform.strategyFactory.address,
+        this.ensoEnv.platform.controller.address,
         unlock,
         ethers.constants.MaxUint256,
         this.signer.address

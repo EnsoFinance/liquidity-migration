@@ -44,7 +44,7 @@ describe("Indexed: Unit tests", function () {
 
     // creating the Positions array (that is which token holds how much weigth)
     const positions = [] as Position[];
-    const [total, estimates] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(
+    const [total, estimates] = await this.ensoEnv.platform.oracles.protocols.uniswapOracle.estimateTotal(
       this.IndexedEnv.degenIndexPool.address,
       this.underlyingTokens,
     );
@@ -73,7 +73,7 @@ describe("Indexed: Unit tests", function () {
     // creating a strategy
     const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
 
-    const tx = await this.ensoEnv.enso.strategyFactory.createStrategy(
+    const tx = await this.ensoEnv.platform.strategyFactory.createStrategy(
       this.signers.default.address,
       "DEGEN",
       "DEGEN",
@@ -178,8 +178,7 @@ describe("Indexed: Unit tests", function () {
     // Migrate
     await expect(
       this.liquidityMigration
-        .connect(holder2)
-        .migrate(
+        .connect(holder2)['migrate(address,address,address,bytes)'](
           this.IndexedEnv.degenIndexPool.address,
           this.IndexedEnv.adapter.address,
           this.strategy.address,
@@ -249,14 +248,13 @@ describe("Indexed: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration
-      .connect(holder3)
-      .migrate(
+      .connect(holder3)['migrate(address,address,address,bytes)'](
         this.IndexedEnv.degenIndexPool.address,
         this.IndexedEnv.adapter.address,
         this.strategy.address,
         migrationData
       );
-    const [total] = await this.ensoEnv.enso.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
+    const [total] = await this.ensoEnv.platform.oracles.protocols.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });

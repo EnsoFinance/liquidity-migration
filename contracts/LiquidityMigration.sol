@@ -2,12 +2,13 @@
 pragma solidity 0.8.2;
 
 // Erc20
+import "@enso/contracts/contracts/interfaces/IStrategyProxyFactory.sol";
+import "@enso/contracts/contracts/interfaces/IStrategyController.sol";
+import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
 import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IAdapter.sol";
-import "./enso/IStrategyProxyFactory.sol";
-import "./enso/IStrategyController.sol";
 import "./helpers/Timelocked.sol";
-import "./helpers/StrategyTypes.sol";
+
 
 contract LiquidityMigration is Timelocked, StrategyTypes {
     using SafeERC20 for IERC20;
@@ -77,12 +78,12 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _lp,
         uint256[] memory _amount,
         address[] memory _adapter
-    ) 
+    )
         external
     {
         require(_lp.length == _amount.length, "LiquidityMigration#batchStake: not same length");
         require(_amount.length == _adapter.length, "LiquidityMigration#batchStake: not same length");
-        
+
         for (uint256 i = 0; i < _lp.length; i++) {
             stake(_lp[i], _amount[i], _adapter[i]);
         }
@@ -123,7 +124,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _adapter,
         IStrategy[] memory _strategy,
         bytes[] memory migrationData
-    ) 
+    )
         external
     {
         require(_lp.length == _adapter.length);
@@ -141,7 +142,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _adapter,
         IStrategy[] memory _strategy,
         bytes[] memory migrationData
-    ) 
+    )
         external
     {
         require(_user.length == _lp.length);
@@ -160,7 +161,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _adapter,
         IStrategy _strategy,
         bytes memory migrationData
-    ) 
+    )
         internal
     {
         require(IStrategyController(controller).initialized(address(_strategy)), "LiquidityMigration#_migrate: not enso strategy");
