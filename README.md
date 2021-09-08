@@ -68,7 +68,7 @@ $ yarn clean
 
 ### Kovan Deployment
 
-LiquidityMigration:  0x22ebfB49e90f6616cdaC97Fef3F159bb56d601Ec
+LiquidityMigration:  0xF1C560956CfB1841C3723e3c1bF0D57B68EbADA6
 
 TokenSetAdapter:  0xd96B848eBbd0E2DDF192E1d9a66AD70523B157f6
 
