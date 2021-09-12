@@ -9,6 +9,8 @@ import "@nomiclabs/hardhat-ethers";
 import "@typechain/hardhat";
 import "hardhat-etherscan-abi";
 import "solidity-coverage";
+
+import "./tasks/initMasterUser";
 import "./tasks/accounts";
 import "./tasks/clean";
 
@@ -51,9 +53,9 @@ if (networkIndex > 0) {
 }
 
 function getNetworks(): NetworksUserConfig {
-  let networks: NetworksUserConfig = {
+  const networks: NetworksUserConfig = {
     hardhat: {
-      chainId: chainIds.mainnet,
+      chainId: chainIds.hardhat,
     },
   };
   if (networks.hardhat) {
@@ -64,7 +66,7 @@ function getNetworks(): NetworksUserConfig {
     if (archiveNode)
       networks.hardhat.forking = {
         url: archiveNode,
-        blockNumber: 12675000,
+        blockNumber: 13174165,
       };
   }
   if (mnemonic && infuraApiKey) {
