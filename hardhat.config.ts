@@ -13,6 +13,7 @@ import "solidity-coverage";
 import "./tasks/initMasterUser";
 import "./tasks/accounts";
 import "./tasks/clean";
+import "./tasks/addAdapter";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
