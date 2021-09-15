@@ -10,6 +10,9 @@ import "@typechain/hardhat";
 import "hardhat-etherscan-abi";
 import "solidity-coverage";
 
+import "./tasks/whitelistStrategy";
+import "./tasks/checkAdapter";
+import "./tasks/addOwnerFunds";
 import "./tasks/initMasterUser";
 import "./tasks/accounts";
 import "./tasks/clean";

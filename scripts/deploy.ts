@@ -20,9 +20,9 @@ const deployedContracts: { [x: string]: IContracts } = {
     tokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
   },
   localhost: {
-    genericRouter: "0xf5059a5D33d5853360D16C683c16e67980206f36",
-    strategyProxyFactory: "0x8Ba41269ed69496c07bea886c300016A0BA8FB5E",
-    strategyController: "0xF3c6CF1C13EcC07204BEFce90EE14B5Bf8BbA4c9",
+    genericRouter: "0x86A2EE8FAf9A840F7a2c64CA3d51209F9A02081D",
+    strategyProxyFactory: "0x0860ACac9452853bC9465986312f23b8161A1095",
+    strategyController: "0x41189e7d9bec2b7f2A361972833C3a80B1A27107",
     tokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
   },
   kovan: {
@@ -35,6 +35,7 @@ const deployedContracts: { [x: string]: IContracts } = {
 const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
 
 async function main() {
+  console.log(process.env.HARDHAT_NETWORK);
   const TokenSetAdapterFactory = await hre.ethers.getContractFactory("TokenSetAdapter");
   const tokenSetAdapter = await TokenSetAdapterFactory.deploy(
     deployedContracts[process.env.HARDHAT_NETWORK ?? "mainnet"].tokenSetsBasicIssuanceModule,
