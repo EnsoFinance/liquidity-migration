@@ -29,16 +29,14 @@ contract IndexedAdapter is AbstractAdapter {
         outputs = ISigmaIndexPoolV1(_lp).getCurrentTokens();
     }
 
-    function encodeExecute(address _lp, uint256 _amount)
+    function encodeWithdraw(address _lp, uint256 _amount)
         public
         override
         view
         onlyWhitelisted(_lp)
         returns(Call memory call)
     {
-
         uint256[] memory _min = new uint256[](outputTokens(_lp).length);
-         // TODO: we should calculate min expected
         call = Call(
             payable(_lp),
             abi.encodeWithSelector(
@@ -49,4 +47,14 @@ contract IndexedAdapter is AbstractAdapter {
             0
         );
     }
+
+    // function encodeBuy(address _lp, uint256 _amount) 
+    //     public
+    //     override
+    //     view
+    //     onlyWhitelisted(_lp)
+    //     returns(Call memory call)
+    // {
+        
+    // }
 }

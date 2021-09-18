@@ -42,7 +42,7 @@ contract TokenSetAdapter is AbstractAdapter {
         outputs = ISetToken(_lp).getComponents();
     }
 
-    function encodeExecute(address _lp, uint256 _amount)
+    function encodeWithdraw(address _lp, uint256 _amount)
         public
         override
         view
@@ -60,4 +60,14 @@ contract TokenSetAdapter is AbstractAdapter {
             0
         );
     }
+
+    // function encodeBuy(address _lp, uint256 _amount) 
+    //     public
+    //     override
+    //     view
+    //     onlyWhitelisted(_lp)
+    //     returns(Call memory call)
+    // {
+        
+    // }
 }

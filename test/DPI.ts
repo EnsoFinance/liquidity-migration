@@ -160,7 +160,7 @@ describe("DPI: Unit tests", function () {
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DPIAdapter contract
-    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeExecute(this.DPIEnv.tokenSet.address, amount);
+    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeWithdraw(this.DPIEnv.tokenSet.address, amount);
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
@@ -205,7 +205,7 @@ describe("DPI: Unit tests", function () {
     const holder3 = await this.DPIEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
-    await expect(this.DPIEnv.adapter.encodeExecute(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
+    await expect(this.DPIEnv.adapter.encodeWithdraw(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
   });
 
   it("Should migrate tokens to strategy", async function () {
@@ -231,7 +231,7 @@ describe("DPI: Unit tests", function () {
     const holder3BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
-    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeExecute(this.DPIEnv.tokenSet.address, amount);
+    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeWithdraw(this.DPIEnv.tokenSet.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];

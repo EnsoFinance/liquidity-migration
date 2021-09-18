@@ -155,7 +155,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using Adapter contract
-    const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeExecute(this.ETHUSDYieldEnv.tokenSet.address, amount);
+    const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
@@ -203,7 +203,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     const holder3Address = await holder3.getAddress();
 
     // Setup migration calls using Adapter contract
-    await expect(this.ETHUSDYieldEnv.adapter.encodeExecute(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
+    await expect(this.ETHUSDYieldEnv.adapter.encodeWithdraw(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
   });
 
   it("Should migrate tokens to strategy", async function () {
@@ -230,7 +230,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using Adapter contract
-    const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeExecute(this.ETHUSDYieldEnv.tokenSet.address, amount);
+    const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
