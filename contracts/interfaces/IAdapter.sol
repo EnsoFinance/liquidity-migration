@@ -10,7 +10,7 @@ interface IAdapter {
 
     function outputTokens(address inputToken) external view returns (address[] memory outputs);
 
-    function encodeExecute(address _lp, uint256 _amount) external view returns (Call memory call);
+    function encodeWithdraw(address _lp, uint256 _amount) external view returns (Call memory call);
 
     function isWhitelisted(address _token) external view returns (bool);
 

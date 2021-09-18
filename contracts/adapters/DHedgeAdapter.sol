@@ -32,7 +32,7 @@ contract DHedgeAdapter is AbstractAdapter {
         }
     }
 
-    function encodeExecute(address _lp, uint256 _amount)
+    function encodeWithdraw(address _lp, uint256 _amount)
         public
         override
         view
@@ -48,4 +48,14 @@ contract DHedgeAdapter is AbstractAdapter {
             0
         );
     }
+
+    // function encodeBuy(address _lp, uint256 _amount) 
+    //     public
+    //     override
+    //     view
+    //     onlyWhitelisted(_lp)
+    //     returns(Call memory call)
+    // {
+        
+    // }
 }

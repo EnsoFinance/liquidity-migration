@@ -161,7 +161,7 @@ describe("Indexed: Unit tests", function () {
     const holder2BalanceAfter = await this.degenIndexPoolERC20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
     // Setup migration calls using DEGENAdapter contract
-    const migrationCall: Multicall = await this.IndexedEnv.adapter.encodeExecute(this.IndexedEnv.degenIndexPool.address, amount);
+    const migrationCall: Multicall = await this.IndexedEnv.adapter.encodeWithdraw(this.IndexedEnv.degenIndexPool.address, amount);
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
@@ -205,7 +205,7 @@ describe("Indexed: Unit tests", function () {
 
   it("Migration using a non-whitelisted token should fail", async function () {
     // Setup migration calls using DEGENAdapter contract
-    await expect(this.IndexedEnv.adapter.encodeExecute(this.IndexedEnv.degenIndexPool.address, BigNumber.from(10000))).to.be.revertedWith(
+    await expect(this.IndexedEnv.adapter.encodeWithdraw(this.IndexedEnv.degenIndexPool.address, BigNumber.from(10000))).to.be.revertedWith(
       "Whitelistable#onlyWhitelisted: not whitelisted lp",
     );
   });
@@ -236,7 +236,7 @@ describe("Indexed: Unit tests", function () {
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DEGENAdapter contract
-    const migrationCall: Multicall = await this.IndexedEnv.adapter.encodeExecute(this.IndexedEnv.degenIndexPool.address, amount);
+    const migrationCall: Multicall = await this.IndexedEnv.adapter.encodeWithdraw(this.IndexedEnv.degenIndexPool.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];

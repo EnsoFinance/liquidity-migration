@@ -20,7 +20,7 @@ contract PieDaoAdapter is AbstractAdapter {
         outputs = IPieDaoPool(_lp).getTokens();
     }
 
-    function encodeExecute(address _lp, uint256 _amount)
+    function encodeWithdraw(address _lp, uint256 _amount)
         public
         override
         view
@@ -36,4 +36,25 @@ contract PieDaoAdapter is AbstractAdapter {
             0
         );
     }
+
+    // function encodeBuy(address _lp, uint256 _amountOut) 
+    //     public
+    //     override
+    //     view
+    //     onlyWhitelisted(_lp)
+    //     returns(Call memory call)
+    // {
+    //     // uint256 _min = joinswapExternAmountIn;
+    //     call = Call(
+    //         payable(_lp),
+    //         abi.encodeWithSelector(
+    //             IPieDaoPool(_lp).joinswapPoolAmountOut.selector,
+    //             WETH,
+    //             _amount,
+    //         ),
+    //         0
+    //     );
+
+    //     //joinswapPoolAmountOut
+    // }
 }
