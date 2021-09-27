@@ -239,9 +239,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         internal
     {
         uint256 balanceBefore = IERC20(_lp).balanceOf(address(this));
-        console.log("Balance before: ", balanceBefore);
         IAdapter(_adapter).buy{value: _amount}(_lp, _exchange, _minAmountOut, _deadline);
-        console.log("Balance after: ", IERC20(_lp).balanceOf(address(this)));
         uint256 amountAdded = IERC20(_lp).balanceOf(address(this)) - balanceBefore;
         _stake(_lp, amountAdded, _adapter);
     }
@@ -255,10 +253,11 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         onlyRegistered(_adapter)
         onlyWhitelisted(_adapter, _lp)
     {
-        ( , , , StrategyItem[] memory strategyItems) = abi.decode(
+        ( , , , StrategyItem[] memory strategyItems, , , ) = abi.decode(
             data,
-            (address, string, string, StrategyItem[])
+            (address, string, string, StrategyItem[], StrategyState, address, bytes)
         );
+        console.log("Strategy items: ", strategyItems.length);
         _validateItems(_adapter, _lp, strategyItems);
         address strategy = _createStrategy(data);
         emit Created(_adapter, _lp, strategy, msg.sender);
@@ -309,15 +308,16 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         for (uint i = 0; i < strategyItems.length; i++) {
             // Strategies may have reserve tokens (such as weth) that don't have value
             // So we must be careful not to invalidate a strategy for having them
-            if (strategyItems[i].percentage == 0) {
-                total--;
-            } else {
-                require(
-                    IAdapter(adapter).isUnderlying(lp, strategyItems[i].item),
-                    "LiquidityMigration#createStrategy: incorrect length"
-                );
+            if (!IAdapter(adapter).isUnderlying(lp, strategyItems[i].item)) {
+                if (strategyItems[i].percentage == 0) {
+                    total--;
+                } else {
+                    revert("LiquidityMigration#createStrategy: incorrect length");
+                }
             }
         }
+        console.log("Total: ", total);
+        console.log("Underlying: ", IAdapter(adapter).numberOfUnderlying(lp));
         require(total == IAdapter(adapter).numberOfUnderlying(lp), "LiquidityMigration#createStrategy: does not exist");
     }
 

@@ -1,13 +1,51 @@
 import bignumber from "bignumber.js";
 import { BigNumber, Contract } from "ethers";
 import { ethers } from "hardhat";
-import { Position, StrategyItem, prepareStrategy } from "@enso/contracts";
+import { Position, Multicall, StrategyItem, StrategyState, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { IERC20__factory } from "../typechain";
 
 export enum Networks {
   Mainnet,
   LocalTestnet,
   ExternalTestnet,
+}
+
+const strategyItemTuple = 'tuple(address item, int256 percentage, tuple(address[] adapters, address[] path, bytes cache) data)'
+const strategyStateTuple = 'tuple(uint32 timelock, uint16 rebalanceThreshold, uint16 slippage, uint16 performanceFee, bool social, bool set)'
+
+export function encodeStrategyData(
+    manager: string,
+    name: string,
+    symbol: string,
+    strategyItems: StrategyItem[],
+    strategyState: StrategyState,
+    router: string,
+    data: string
+): string {
+    return ethers.utils.defaultAbiCoder.encode(
+      ['address', 'string', 'string', `${strategyItemTuple}[]`, strategyStateTuple, 'address', 'bytes'],
+      [manager, name, symbol, strategyItems, strategyState, router, data]
+    )
+}
+
+export async function encodeMigrationData(
+    adapter: Contract,
+    router: Contract,
+    lp: string,
+    strategy: string,
+    underlyingTokens: string[],
+    amount: number | BigNumber
+): Promise<string> {
+    const migrationCall: Multicall = await adapter.encodeWithdraw(lp, amount);
+
+    // Setup transfer of tokens from router to strategy
+    const transferCalls = [] as Multicall[];
+    for (let i = 0; i < underlyingTokens.length; i++) {
+      transferCalls.push(encodeSettleTransfer(router, underlyingTokens[i], strategy));
+    }
+    // Encode multicalls for GenericRouter
+    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    return router.encodeCalls(calls);
 }
 
 export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {

@@ -7,7 +7,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { WETH, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
-import { setupStrategyItems, estimateTokens } from "../src/utils"
+import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 
 describe("PieDao: Unit tests", function () {
   before(async function () {
@@ -25,24 +25,6 @@ describe("PieDao: Unit tests", function () {
     await liquidityMigrationBuilder.deploy();
 
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
-
-    // Create strategy
-    const pool = this.pieDaoEnv.pools[0];
-    console.log("Pool: ", await pool.contract.getBPool())
-
-    const tx = await this.enso.platform.strategyFactory.createStrategy(
-      this.signers.default.address,
-      "PieDao",
-      "PIE",
-      await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, await pool.contract.getBPool(), pool.tokens),
-      STRATEGY_STATE,
-      ethers.constants.AddressZero,
-      '0x',
-    );
-    const receipt = await tx.wait();
-    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
-    console.log("Strategy address: ", strategyAddress);
-    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });
 
   it("Token holder should be able to stake LP token", async function () {
@@ -68,6 +50,29 @@ describe("PieDao: Unit tests", function () {
       .stake(contract.address, holderBalance, this.pieDaoEnv.adapter.address);
     expect(await this.liquidityMigration.staked(holderAddress, contract.address)).to.equal(holderBalance);
   });
+
+  it("Create strategy", async function () {
+      // deploy strategy
+      const pool = this.pieDaoEnv.pools[0];
+      const strategyData = encodeStrategyData(
+        this.signers.default.address,
+        "PieDao",
+        "PIE",
+        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, await pool.contract.getBPool(), pool.tokens),
+        STRATEGY_STATE,
+        ethers.constants.AddressZero,
+        '0x'
+      )
+      const tx = await this.liquidityMigration.createStrategy(
+        pool.contract.address,
+        this.pieDaoEnv.adapter.address,
+        strategyData
+      );
+      const receipt = await tx.wait();
+      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+      console.log("Strategy address: ", strategyAddress);
+      this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+  })
 
   it("Should migrate tokens to strategy", async function () {
     const pool = this.pieDaoEnv.pools[0];
