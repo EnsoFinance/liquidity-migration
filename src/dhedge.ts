@@ -22,7 +22,7 @@ export class DHedgeEnvironmentBuilder {
     const signerAddress = await this.signer.getAddress();
 
     // deploying the DPI Adapter
-    const adapter = await DHedgeAdapterFactory.deploy(signerAddress, WETH, SUSD);
+    const adapter = await DHedgeAdapterFactory.deploy(signerAddress, SUSD);
 
     const addresses = DHEDGE_HOLDERS[FACTORY_REGISTRIES.DHEDGE_TOP];
     if (addresses === undefined) {

@@ -11,7 +11,6 @@ import "../interfaces/IUniswapV2Router.sol";
 /// @notice Adapter for redeeming the underlying assets from Token Sets
 
 abstract contract AbstractAdapter is IAdapter, Whitelistable {
-    address public constant OWNER = 0xca702d224D61ae6980c8c7d4D98042E22b40FFdB;
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant SUSHI = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
     address public constant UNI_V2 = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
@@ -25,8 +24,8 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         _;
     }
 
-    constructor() {
-        _setOwner(OWNER);
+    constructor(address owner_) {
+        _setOwner(owner_);
     }
 
     function outputTokens(address _lp)

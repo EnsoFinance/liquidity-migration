@@ -23,7 +23,7 @@ contract DHedgeAdapter is AbstractAdapter {
 
     address public immutable SUSD;
 
-    constructor(address susd_) AbstractAdapter() {
+    constructor(address owner_, address susd_) AbstractAdapter(owner_) {
         SUSD = susd_;
     }
 

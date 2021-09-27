@@ -39,8 +39,9 @@ contract TokenSetAdapter is AbstractAdapter {
     constructor(
         IBasicIssuanceModule basicModule_,
         INAVIssuanceModule navModule_,
-        address generic_
-    ) AbstractAdapter()
+        address generic_,
+        address owner_
+    ) AbstractAdapter(owner_)
     {
         basicModule = basicModule_;
         navModule = navModule_;
