@@ -84,21 +84,21 @@ contract DHedgeAdapter is AbstractAdapter {
         */
     }
 
-    function getAmountOut(
-        address _lp,
-        address _exchange,
-        uint256 _amountIn
-    ) external override view onlyWhitelisted(_lp) returns (uint256) {
-        address[] memory path = new address[](2);
-        path[0] = WETH;
-        path[1] = SUSD;
-        uint256 susdAmount = IUniswapV2Router(_exchange).getAmountsOut(_amountIn, path)[1];
-        uint256 totalSupply = IDHedge(_lp).totalSupply();
-        if (totalSupply > 0) {
-            uint256 fundValue = IDHedge(_lp).totalFundValue();
-            return susdAmount * totalSupply / fundValue;
-        } else {
-            return susdAmount;
-        }
-    }
+    // function getAmountOut(
+    //     address _lp,
+    //     address _exchange,
+    //     uint256 _amountIn
+    // ) external override view onlyWhitelisted(_lp) returns (uint256) {
+    //     address[] memory path = new address[](2);
+    //     path[0] = WETH;
+    //     path[1] = SUSD;
+    //     uint256 susdAmount = IUniswapV2Router(_exchange).getAmountsOut(_amountIn, path)[1];
+    //     uint256 totalSupply = IDHedge(_lp).totalSupply();
+    //     if (totalSupply > 0) {
+    //         uint256 fundValue = IDHedge(_lp).totalFundValue();
+    //         return susdAmount * totalSupply / fundValue;
+    //     } else {
+    //         return susdAmount;
+    //     }
+    // }
 }
