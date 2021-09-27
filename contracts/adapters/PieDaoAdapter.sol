@@ -2,6 +2,7 @@
 pragma solidity 0.8.2;
 
 import "./AbstractAdapter.sol";
+import "../interfaces/IUniswapV2Router.sol";
 
 interface IPieDaoPool {
     function getTokens() external view returns (address[] memory);
@@ -9,7 +10,7 @@ interface IPieDaoPool {
 }
 
 contract PieDaoAdapter is AbstractAdapter {
-    constructor(address owner_) AbstractAdapter(owner_) {}
+    constructor(address owner_, address weth_) AbstractAdapter(owner_, weth_) {}
 
     function outputTokens(address _lp)
         public
@@ -37,24 +38,31 @@ contract PieDaoAdapter is AbstractAdapter {
         );
     }
 
-    // function encodeBuy(address _lp, uint256 _amountOut) 
-    //     public
-    //     override
-    //     view
-    //     onlyWhitelisted(_lp)
-    //     returns(Call memory call)
-    // {
-    //     // uint256 _min = joinswapExternAmountIn;
-    //     call = Call(
-    //         payable(_lp),
-    //         abi.encodeWithSelector(
-    //             IPieDaoPool(_lp).joinswapPoolAmountOut.selector,
-    //             WETH,
-    //             _amount,
-    //         ),
-    //         0
-    //     );
+    function buy(address _lp, address _exchange, uint256 _minAmountOut, uint256 _deadline)
+        public
+        override
+        payable
+        onlyWhitelisted(_lp)
+    {
+        address[] memory path = new address[](2);
+        path[0] = WETH;
+        path[1] = _lp;
+        IUniswapV2Router(_exchange).swapExactETHForTokens{value: msg.value}(
+            _minAmountOut,
+            path,
+            msg.sender,
+            _deadline
+        );
+    }
 
-    //     //joinswapPoolAmountOut
-    // }
+    function getAmountOut(
+        address _lp,
+        address _exchange,
+        uint256 _amountIn
+    ) external override view onlyWhitelisted(_lp) returns (uint256) {
+        address[] memory path = new address[](2);
+        path[0] = WETH;
+        path[1] = _lp;
+        return IUniswapV2Router(_exchange).getAmountsOut(_amountIn, path)[1];
+    }
 }

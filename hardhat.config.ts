@@ -65,7 +65,7 @@ function getNetworks(): NetworksUserConfig {
     if (archiveNode)
       networks.hardhat.forking = {
         url: archiveNode,
-        blockNumber: 12675000,
+        blockNumber: 13275000,
       };
   }
   if (mnemonic && infuraApiKey) {

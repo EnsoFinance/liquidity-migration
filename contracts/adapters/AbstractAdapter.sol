@@ -10,9 +10,10 @@ import "../helpers/Whitelistable.sol";
 
 abstract contract AbstractAdapter is IAdapter, Whitelistable {
 
-    // address public weth;
+    address public immutable WETH;
 
-    constructor(address owner_) {
+    constructor(address owner_, address weth_) {
+        WETH = weth_;
         _setOwner(owner_);
     }
 
@@ -30,12 +31,18 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         view
         returns(Call memory call);
 
-    // function encodeBuy(address _lp, uint256 _amount)
-    //     public
-    //     override
-    //     virtual
-    //     view
-    //     returns(Call memory call);
+    function buy(
+        address _lp,
+        address _exchange,
+        uint256 _minAmountOut,
+        uint256 _deadline
+    ) public override virtual payable;
+
+    function getAmountOut(
+        address _lp,
+        address _exchange,
+        uint256 _amountIn
+    ) external override virtual view returns (uint256);
 
     /**
     * @param _lp to view pool token

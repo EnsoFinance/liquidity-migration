@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { MainnetSigner } from "../types";
 import { Contract, Signer } from "ethers";
 
-import { FACTORY_REGISTRIES, INDEXED_HOLDERS } from "./constants";
+import { FACTORY_REGISTRIES, INDEXED_HOLDERS, WETH } from "./constants";
 import { IndexedAdapter__factory, ISigmaIndexPoolV1__factory, ISigmaIndexPoolV1 } from "../typechain";
 
 export class IndexedEnvironmentBuilder {
@@ -22,7 +22,7 @@ export class IndexedEnvironmentBuilder {
     const signerAddress = await this.signer.getAddress();
 
     // deploying the DPI Adapter
-    const adapter = await IndexedAdapterFactory.deploy(signerAddress);
+    const adapter = await IndexedAdapterFactory.deploy(signerAddress, WETH);
 
     const addresses = INDEXED_HOLDERS[FACTORY_REGISTRIES.DEGEN_INDEX];
     if (addresses === undefined) {
