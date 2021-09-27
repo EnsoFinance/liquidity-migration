@@ -3,7 +3,6 @@ pragma solidity 0.8.2;
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./AbstractAdapter.sol";
-import "../interfaces/IUniswapV2Router.sol";
 
 interface ISigmaIndexPoolV1 {
     function getCurrentTokens() external view returns (address[] memory tokens);
@@ -18,7 +17,7 @@ interface ISigmaIndexPoolV1 {
 contract IndexedAdapter is AbstractAdapter {
     using SafeERC20 for IERC20;
 
-    constructor() AbstractAdapter() {}
+    constructor(address owner_) AbstractAdapter(owner_) {}
 
     function outputTokens(address _lp)
         public
