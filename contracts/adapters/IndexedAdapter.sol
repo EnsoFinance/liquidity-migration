@@ -47,32 +47,4 @@ contract IndexedAdapter is AbstractAdapter {
             0
         );
     }
-
-    function buy(address _lp, address _exchange, uint256 _minAmountOut, uint256 _deadline)
-        public
-        override
-        payable
-        onlyWhitelisted(_lp)
-    {
-        address[] memory path = new address[](2);
-        path[0] = WETH;
-        path[1] = _lp;
-        IUniswapV2Router(_exchange).swapExactETHForTokens{value: msg.value}(
-            _minAmountOut,
-            path,
-            msg.sender,
-            _deadline
-        );
-    }
-
-    function getAmountOut(
-        address _lp,
-        address _exchange,
-        uint256 _amountIn
-    ) external override view onlyWhitelisted(_lp) returns (uint256) {
-        address[] memory path = new address[](2);
-        path[0] = WETH;
-        path[1] = _lp;
-        return IUniswapV2Router(_exchange).getAmountsOut(_amountIn, path)[1];
-    }
 }
