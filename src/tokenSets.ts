@@ -41,7 +41,7 @@ export class TokenSetEnvironmentBuilder {
 
     const generiRouter: string = this.enso?.routers[0]?.contract?.address || ethers.constants.AddressZero
     // deploying the DPI Adapter
-    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, setNAVIssuanceModule.address, WETH, generiRouter, signerAddress);
+    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, setNAVIssuanceModule.address, generiRouter, signerAddress);
 
     const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress];
     if (addresses === undefined) {

@@ -22,7 +22,7 @@ export class IndexedEnvironmentBuilder {
     const signerAddress = await this.signer.getAddress();
 
     // deploying the DPI Adapter
-    const adapter = await IndexedAdapterFactory.deploy(signerAddress, WETH);
+    const adapter = await IndexedAdapterFactory.deploy(signerAddress);
 
     const addresses = INDEXED_HOLDERS[FACTORY_REGISTRIES.DEGEN_INDEX];
     if (addresses === undefined) {

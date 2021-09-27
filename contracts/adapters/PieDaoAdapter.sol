@@ -9,7 +9,7 @@ interface IPieDaoPool {
 }
 
 contract PieDaoAdapter is AbstractAdapter {
-    constructor() AbstractAdapter() {}
+    constructor(address owner_) AbstractAdapter(owner_) {}
 
     function outputTokens(address _lp)
         public
