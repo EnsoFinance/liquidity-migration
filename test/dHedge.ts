@@ -8,7 +8,7 @@ import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
 import { FACTORY_REGISTRIES, WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
-import { setupStrategyItems, estimateTokens } from "../src/utils"
+import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 
@@ -63,21 +63,6 @@ describe("dHedge: Unit tests", function () {
     await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.SYNTH, sBTC)
     await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.SYNTH, sDOT)
     await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.SYNTH, sADA)
-
-    // deploy strategy
-    const tx = await this.enso.platform.strategyFactory.createStrategy(
-      this.signers.default.address,
-      "dHedge Top Index",
-      "DTOP",
-      await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.DHedgeEnv.dHedgeTopIndex.address, this.underlyingTokens),
-      STRATEGY_STATE,
-      ethers.constants.AddressZero,
-      '0x',
-    );
-    const receipt = await tx.wait();
-    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
-    console.log("Strategy address: ", strategyAddress);
-    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });
 
   it("Token holder should be able to withdraw from pool", async function () {
@@ -154,7 +139,7 @@ describe("dHedge: Unit tests", function () {
     const transferCalls = [] as Multicall[];
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < this.underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
+      transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], ethers.constants.AddressZero)); // Strategy doesn't matter right now
     }
     // Encode multicalls for GenericRouter
     const calls: Multicall[] = [migrationCall, ...transferCalls];
@@ -171,7 +156,7 @@ describe("dHedge: Unit tests", function () {
         (
           this.DHedgeEnv.dHedgeTopIndex.address,
           this.DHedgeEnv.adapter.address,
-          this.strategy.address,
+          ethers.constants.AddressZero, // Strategy doesn't matter right now
           migrationData
         ),
     ).to.be.reverted;
@@ -192,19 +177,42 @@ describe("dHedge: Unit tests", function () {
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
 
-  it("Migration using a non-whitelisted token should fail", async function () {
+  it("Encode withdraw using a non-whitelisted token should fail", async function () {
     // Setup migration calls using DHedgeAdapter contract
     await expect(this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.dHedgeTopIndex.address, BigNumber.from(10000))).to.be.revertedWith(
       "Whitelistable#onlyWhitelisted: not whitelisted lp",
     );
   });
 
+  it("Create strategy", async function () {
+      // adding the dHedge Top Token as a whitelisted token
+      let tx = await this.DHedgeEnv.adapter
+        .connect(this.signers.default)
+        .add(FACTORY_REGISTRIES.DHEDGE_TOP);
+      await tx.wait();
+
+      // deploy strategy
+      const strategyData = encodeStrategyData(
+        this.signers.default.address,
+        "dHedge Top Index",
+        "DTOP",
+        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.DHedgeEnv.dHedgeTopIndex.address, this.underlyingTokens),
+        STRATEGY_STATE,
+        ethers.constants.AddressZero,
+        '0x'
+      )
+      tx = await this.liquidityMigration.createStrategy(
+        this.DHedgeEnv.dHedgeTopIndex.address,
+        this.DHedgeEnv.adapter.address,
+        strategyData
+      );
+      const receipt = await tx.wait();
+      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+      console.log("Strategy address: ", strategyAddress);
+      this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+  })
+
   it("Should migrate tokens to strategy", async function () {
-    // adding the dHedge Top Token as a whitelisted token
-    const tx = await this.DHedgeEnv.adapter
-      .connect(this.signers.default)
-      .add(FACTORY_REGISTRIES.DHEDGE_TOP);
-    await tx.wait();
     const routerContract = this.enso.routers[0].contract;
     const holder3 = await this.DHedgeEnv.holders[2];
     const holder3Address = await holder3.getAddress();
@@ -272,8 +280,8 @@ describe("dHedge: Unit tests", function () {
       {value: ethAmount}
     )
 
-    const strategyBalanceAfter = await this.strategy.balanceOf(defaultAddress);
-    expect(strategyBalanceAfter).to.be.gt(BigNumber.from(0));
+    const staked = await this.liquidityMigration.staked(defaultAddress, this.DPIEnv.tokenSet.address)
+    expect(staked).to.be.gt(BigNumber.from(0));
   })
   */
 });

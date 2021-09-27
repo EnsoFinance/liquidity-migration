@@ -8,7 +8,7 @@ import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { FACTORY_REGISTRIES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
-import { setupStrategyItems, estimateTokens } from "../src/utils"
+import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 
@@ -41,20 +41,6 @@ describe("Indexed: Unit tests", function () {
 
     // getting the underlying tokens from DEGEN
     this.underlyingTokens = await this.IndexedEnv.adapter.outputTokens(this.IndexedEnv.degenIndexPool.address);
-
-    const tx = await this.enso.platform.strategyFactory.createStrategy(
-      this.signers.default.address,
-      "DEGEN",
-      "DEGEN",
-      await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.IndexedEnv.degenIndexPool.address, this.underlyingTokens),
-      STRATEGY_STATE,
-      ethers.constants.AddressZero,
-      '0x',
-    );
-    const receipt = await tx.wait();
-    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
-    console.log("Strategy address: ", strategyAddress);
-    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });
 
   it("Token holder should be able to withdraw from pool", async function () {
@@ -135,7 +121,7 @@ describe("Indexed: Unit tests", function () {
     const transferCalls = [] as Multicall[];
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < this.underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
+      transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], ethers.constants.AddressZero));
     }
     // Encode multicalls for GenericRouter
     const calls: Multicall[] = [migrationCall, ...transferCalls];
@@ -152,7 +138,7 @@ describe("Indexed: Unit tests", function () {
         (
           this.IndexedEnv.degenIndexPool.address,
           this.IndexedEnv.adapter.address,
-          this.strategy.address,
+          ethers.constants.AddressZero,
           migrationData
         ),
     ).to.be.reverted;
@@ -179,12 +165,35 @@ describe("Indexed: Unit tests", function () {
     );
   });
 
+  it("Create strategy", async function () {
+      // adding the DEGEN Token as a whitelisted token
+      let tx = await this.IndexedEnv.adapter
+        .connect(this.signers.default)
+        .add(FACTORY_REGISTRIES.DEGEN_INDEX);
+      await tx.wait();
+
+      // deploy strategy
+      const strategyData = encodeStrategyData(
+        this.signers.default.address,
+        "DEGEN",
+        "DEGEN",
+        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.IndexedEnv.degenIndexPool.address, this.underlyingTokens),
+        STRATEGY_STATE,
+        ethers.constants.AddressZero,
+        '0x'
+      )
+      tx = await this.liquidityMigration.createStrategy(
+        this.degenIndexPoolERC20.address,
+        this.IndexedEnv.adapter.address,
+        strategyData
+      );
+      const receipt = await tx.wait();
+      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+      console.log("Strategy address: ", strategyAddress);
+      this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+  })
+
   it("Should migrate tokens to strategy", async function () {
-    // adding the DEGEN Token as a whitelisted token
-    const tx = await this.IndexedEnv.adapter
-      .connect(this.signers.default)
-      .add(FACTORY_REGISTRIES.DEGEN_INDEX);
-    await tx.wait();
     const routerContract = this.enso.routers[0].contract;
     const holder3 = await this.IndexedEnv.holders[2];
     const holder3Address = await holder3.getAddress();
