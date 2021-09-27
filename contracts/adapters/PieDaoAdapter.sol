@@ -2,7 +2,6 @@
 pragma solidity 0.8.2;
 
 import "./AbstractAdapter.sol";
-import "../interfaces/IUniswapV2Router.sol";
 
 interface IPieDaoPool {
     function getTokens() external view returns (address[] memory);
@@ -10,7 +9,7 @@ interface IPieDaoPool {
 }
 
 contract PieDaoAdapter is AbstractAdapter {
-    constructor(address owner_, address weth_) AbstractAdapter(owner_, weth_) {}
+    constructor() AbstractAdapter() {}
 
     function outputTokens(address _lp)
         public
