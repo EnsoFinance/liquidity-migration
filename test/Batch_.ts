@@ -10,17 +10,18 @@ import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
-import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { EnsoBuilder, Position, Multicall, StrategyState, StrategyItem, encodeSettleTransfer, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
-import { WETH, DIVISOR, STRATEGY_STATE } from "../src/constants";
+import { WETH, SUSD, DIVISOR, STRATEGY_STATE } from "../src/constants";
+import { setupStrategyItems } from "../src/utils"
 import { AnyRecord } from "dns";
 import { Address } from "cluster";
 import { any } from "hardhat/internal/core/params/argumentTypes";
 
-describe("Indexed: Unit tests", function () {
+describe("Batch: Unit tests", function () {
     let signers: any,
         adapters: any,
-        ensoEnv: any,
+        enso: any,
         dpiEnv: any,
         dpiUnderlying: any,
         dpiStrategy: any,
@@ -36,28 +37,34 @@ describe("Indexed: Unit tests", function () {
         liquidityMigration: any;
 
     before(async function () {
-        this.signers = {} as Signers;
-        const signers = await ethers.getSigners();
-        this.signers.default = signers[0];
-        this.signers.admin = signers[10];
+        signers = {} as Signers;
+        const allSigners = await ethers.getSigners();
+        signers.default = allSigners[0];
+        signers.admin = allSigners[10];
 
-        this.ensoEnv = await new EnsoBuilder(this.signers.admin).mainnet().build();
+        enso = await new EnsoBuilder(signers.admin).mainnet().build();
+
+        // KNC not on Uniswap, use Chainlink
+        await enso.platform.oracles.protocols.chainlinkOracle.connect(signers.admin).addOracle(SUSD, WETH, '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', true); //sUSD
+        await enso.platform.oracles.protocols.chainlinkOracle.connect(signers.admin).addOracle('0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202', SUSD, '0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc', false); //KNC
+        await enso.platform.strategyFactory.connect(signers.admin).addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.SYNTH, '0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202') //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
+
         await dpi_setup()
         await piedao_setup()
         await indexed_setup()
 
-        const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.ensoEnv);
+        const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(signers.admin, enso);
         liquidityMigrationBuilder.addAdapters(
             [AcceptedProtocols.Indexed, AcceptedProtocols.DefiPulseIndex, AcceptedProtocols.PieDao],
             [indexedEnv.adapter, dpiEnv.adapter, pieEnv.adapter]
         )
 
         const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
-        liquidityMigration = liquidityMigrationBuilder.liquidityMigration; 
+        liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
     })
     describe('stake', () => {
         it('non-functional', () => {
-            
+
         });
         it('functional', () => {
             before(async () => {
@@ -71,7 +78,7 @@ describe("Indexed: Unit tests", function () {
         });
     });
     it('', async function () {
-        
+
     });
 
     const batch_stake = async (adapter: any, amount: any, token: any, from: any) => {
@@ -82,13 +89,17 @@ describe("Indexed: Unit tests", function () {
     }
 
     const dpi_setup = async function () {
-        dpiEnv = await new TokenSetEnvironmentBuilder(signers.default, ensoEnv).connect(TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI],FACTORY_REGISTRIES.DPI,);
+        dpiEnv = await new TokenSetEnvironmentBuilder(signers.default, enso).connect(
+          TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI].BASIC,
+          TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI].NAV,
+          FACTORY_REGISTRIES.DPI
+        );
         dpiUnderlying  = await dpiEnv.tokenSet.getComponents();
         dpiStrategy = IStrategy__factory.connect(
-            await deploy_strategy(
+            await deployStrategy(
                 "DPI",
                 "DPI",
-                await prepare_strategy(dpiEnv.adapter, dpiUnderlying),
+                await setupStrategyItems(enso.platform.oracles.ensoOracle, enso.adapters.uniswap.contract.address, dpiEnv.tokenSet.address, dpiUnderlying),
                 STRATEGY_STATE
             ),
             signers.default
@@ -98,12 +109,13 @@ describe("Indexed: Unit tests", function () {
 
     const piedao_setup = async function () {
         pieEnv = await new PieDaoEnvironmentBuilder(signers.default).connect();
+        //console.log('Pools:', pieEnv.pools)
         pieUnderlying = pieEnv.pools[0].tokens
         pieStrategy = IStrategy__factory.connect(
-            await deploy_strategy(
+            await deployStrategy(
                 "pie",
                 "pie",
-                await prepare_strategy(pieEnv.adapter, pieUnderlying),
+                await setupStrategyItems(enso.platform.oracles.ensoOracle, enso.adapters.uniswap.contract.address, await pieEnv.pools[0].contract.getBPool(), pieUnderlying),
                 STRATEGY_STATE
             ),
             signers.default
@@ -115,10 +127,10 @@ describe("Indexed: Unit tests", function () {
         indexedEnv = await new IndexedEnvironmentBuilder(signers.default).connect();
         indexedUnderlying = await indexedEnv.adapter.outputTokens(indexedEnv.degenIndexPool.address);
         indexedStrategy = IStrategy__factory.connect(
-            await deploy_strategy(
+            await deployStrategy(
                 "indexed",
                 "inde",
-                await prepare_strategy(indexedEnv.adapter, indexedUnderlying),
+                await setupStrategyItems(enso.platform.oracles.ensoOracle, enso.adapters.uniswap.contract.address, indexedEnv.degenIndexPool.address, indexedUnderlying),
                 STRATEGY_STATE
             ),
             signers.default
@@ -126,30 +138,8 @@ describe("Indexed: Unit tests", function () {
         indexedPool = IERC20__factory.connect(indexedEnv.degenIndexPool.address, signers.default);
     }
 
-    const prepare_strategy = async (adapter: any, underlying: any) => {
-        let positions = [] as Position[];
-        let [total, estimates] = await ensoEnv.enso.uniswapOracle.estimateTotal(adapter, underlying,);
-        for (let i = 0; i < underlying.length; i++) {
-            const percentage = new bignumber(estimates[i].toString())
-              .multipliedBy(DIVISOR)
-              .dividedBy(total.toString())
-              .toFixed(0);
-            positions.push({
-              token: underlying[i],
-              percentage: BigNumber.from(percentage),
-            });
-          }
-          if (positions.findIndex(pos => pos.token.toLowerCase() == WETH.toLowerCase()) == -1) {
-            positions.push({
-              token: WETH,
-              percentage: BigNumber.from(0),
-            });
-          }
-        return prepareStrategy(positions, ensoEnv.adapters.uniswap.contract.address);
-    }
-
-    const deploy_strategy = async (name: any, symbol: any, items: any, state: any) => {
-        const tx = await ensoEnv.enso.strategyFactory.createStrategy(
+    const deployStrategy = async (name: string, symbol: string, items: StrategyItem[], state: StrategyState) => {
+        const tx = await enso.platform.strategyFactory.createStrategy(
             signers.default.address,
             name,
             symbol,

@@ -6,7 +6,7 @@ import { BigNumber, Contract, Signer } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { StrategyBuilder, Strategy, Implementation } from "./strategy";
 
-import { FACTORY_REGISTRIES } from "../src/constants";
+import { FACTORY_REGISTRIES, WETH } from "../src/constants";
 import {
   ERC20,
   ERC20__factory,
@@ -35,7 +35,7 @@ export class PieDaoEnvironmentBuilder implements StrategyBuilder {
     console.log("PieDaoRegistry: ", registry.address);
 
     const PieDaoAdapterFactory = (await ethers.getContractFactory("PieDaoAdapter")) as PieDaoAdapter__factory;
-    const adapter = await PieDaoAdapterFactory.deploy(this.signer.address);
+    const adapter = await PieDaoAdapterFactory.deploy(this.signer.address, WETH);
 
     const pieDaoAdmin = await registry.connect(this.signer).owner();
     const admin = await new MainnetSigner(pieDaoAdmin).impersonateAccount();
