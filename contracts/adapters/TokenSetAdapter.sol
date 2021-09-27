@@ -85,21 +85,13 @@ contract TokenSetAdapter is AbstractAdapter {
         onlyWhitelisted(_lp)
     {
         if (_exchange != address(0)) {
-          address[] memory path = new address[](2);
-          path[0] = WETH;
-          path[1] = _lp;
-          IUniswapV2Router(_exchange).swapExactETHForTokens{value: msg.value}(
-              _minAmountOut,
-              path,
-              msg.sender,
-              _deadline
-          );
+          require(isExchange(_exchange), "TokenSetAdapter#buy: should be exchanges");
+          _buyV2(_lp, _exchange, _minAmountOut, _deadline);
         } else {
           require(ISetToken(_lp).isInitializedModule(address(navModule)), "NAVModule not supported");
           require(_deadline > block.timestamp, "Past deadline");
           navModule.issueWithEther{value: msg.value}(_lp, _minAmountOut, msg.sender);
         }
-
     }
 
     function getAmountOut(address _lp, address _exchange, uint256 _amountIn)
@@ -110,10 +102,8 @@ contract TokenSetAdapter is AbstractAdapter {
         returns (uint256)
     {
         if (_exchange != address(0)) {
-            address[] memory path = new address[](2);
-            path[0] = WETH;
-            path[1] = _lp;
-            return IUniswapV2Router(_exchange).getAmountsOut(_amountIn, path)[1];
+            require(isExchange(_exchange), "TokenSetAdapter#buy: should be exchanges");
+            return _getV2(_lp, _exchange, _amountIn);
         } else {
             return navModule.getExpectedSetTokenIssueQuantity(_lp, WETH, _amountIn);
         }

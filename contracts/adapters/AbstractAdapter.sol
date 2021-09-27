@@ -9,11 +9,31 @@ import "../helpers/Whitelistable.sol";
 /// @notice Adapter for redeeming the underlying assets from Token Sets
 
 abstract contract AbstractAdapter is IAdapter, Whitelistable {
-
     address public immutable WETH;
+    address public immutable SUSHI;
+    address public immutable UNI_V2;
+    address public immutable UNI_V3;
 
-    constructor(address owner_, address weth_) {
+    /**
+    * @dev Require exchange registered
+    */
+    modifier onlyExchange(address _exchange) {
+        require(isExchange(_exchange), "AbstractAdapter#buy: should be exchanges");
+        _;
+    }
+
+
+    constructor(
+        address owner_, 
+        address weth_,
+        address sushi_,
+        address uniV2_,
+        address uniV3_
+    ) {
         WETH = weth_;
+        SUSHI = sushi_;
+        UNI_V2 = uniV2_;
+        UNI_V3 = uniV3_;
         _setOwner(owner_);
     }
 
@@ -31,18 +51,88 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         view
         returns(Call memory call);
 
-    function buy(
-        address _lp,
-        address _exchange,
-        uint256 _minAmountOut,
-        uint256 _deadline
-    ) public override virtual payable;
+    function buy(address _lp, address _exchange, uint256 _minAmountOut, uint256 _deadline)
+        public
+        override
+        virtual
+        payable
+        onlyExchange(_exchange)
+        onlyWhitelisted(_lp)
+    {
+        if (_exchange == UNI_V3) {
+            _buyV3(_lp, _exchange, _minAmountOut, _deadline);
+        } else {
+            _buyV2(_lp, _exchange, _minAmountOut, _deadline);
+        }
+    }
 
     function getAmountOut(
         address _lp,
         address _exchange,
         uint256 _amountIn
-    ) external override virtual view returns (uint256);
+    ) 
+        external
+        override
+        view
+        onlyExchange(_exchange)
+        onlyWhitelisted(_lp)
+        returns (uint256)
+    {
+        if (_exchange == UNI_V3) {
+            _getV3(_lp, _amountIn);
+        } else {
+            _getV2(_lp, _exchange, _amountIn);
+        }
+    }
+
+    function _buyV2(
+        address _lp, 
+        address _exchange, 
+        uint256 _minAmountOut, 
+        uint256 _deadline
+    )
+        internal
+    {
+        address[] memory path = new address[](2);
+        path[0] = WETH;
+        path[1] = _lp;
+        IUniswapV2Router(_exchange).swapExactETHForTokens{value: msg.value}(
+            _minAmountOut,
+            path,
+            msg.sender,
+            _deadline
+        );
+    }
+
+    function _buyV3(
+        address _lp, 
+        address _exchange, 
+        uint256 _minAmountOut, 
+        uint256 _deadline
+    )
+        internal
+    {
+        address[] memory path = new address[](2);
+        path[0] = WETH;
+        path[1] = _lp;
+        IUniswapV2Router(_exchange).swapExactETHForTokens{value: msg.value}(
+            _minAmountOut,
+            path,
+            msg.sender,
+            _deadline
+        );
+    }
+
+    function _getV2(address _lp, address _exchange, uint256 _amountIn)
+        internal
+        view
+        returns (uint256)
+    {
+        address[] memory path = new address[](2);
+        path[0] = WETH;
+        path[1] = _lp;
+        return IUniswapV2Router(_exchange).getAmountsOut(_amountIn, path)[1];
+    }
 
     /**
     * @param _lp to view pool token
@@ -63,6 +153,14 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
 
     function numberOfUnderlying(address _lp) external view override returns (uint256) {
         return _count[_lp];
+    }
+    
+    function isExchange(address _exchange)
+        external 
+        view
+        returns (bool)
+    {
+        return(_exchange == SUSHI || _exchange == UNI_V2 _exchange == UNI_V3);
     }
 
     function _addUnderlying(address _lp) internal override {
