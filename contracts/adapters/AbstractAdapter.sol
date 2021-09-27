@@ -4,15 +4,18 @@ pragma solidity 0.8.2;
 import "../interfaces/IAdapter.sol";
 import "../helpers/Whitelistable.sol";
 
+import "../interfaces/IUniswapV2Router.sol";
+
 /// @title Token Sets Vampire Attack Contract
 /// @author Enso.finance (github.com/EnsoFinance)
 /// @notice Adapter for redeeming the underlying assets from Token Sets
 
 abstract contract AbstractAdapter is IAdapter, Whitelistable {
-    address public immutable WETH;
-    address public immutable SUSHI;
-    address public immutable UNI_V2;
-    address public immutable UNI_V3;
+    address public constant OWNER = 0xca702d224D61ae6980c8c7d4D98042E22b40FFdB;
+    address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public constant SUSHI = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+    address public constant UNI_V2 = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    address public constant UNI_V3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
 
     /**
     * @dev Require exchange registered
@@ -22,19 +25,8 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         _;
     }
 
-
-    constructor(
-        address owner_, 
-        address weth_,
-        address sushi_,
-        address uniV2_,
-        address uniV3_
-    ) {
-        WETH = weth_;
-        SUSHI = sushi_;
-        UNI_V2 = uniV2_;
-        UNI_V3 = uniV3_;
-        _setOwner(owner_);
+    constructor() {
+        _setOwner(OWNER);
     }
 
     function outputTokens(address _lp)
@@ -60,7 +52,7 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         onlyWhitelisted(_lp)
     {
         if (_exchange == UNI_V3) {
-            _buyV3(_lp, _exchange, _minAmountOut, _deadline);
+            _buyV3(_lp, _minAmountOut, _deadline);
         } else {
             _buyV2(_lp, _exchange, _minAmountOut, _deadline);
         }
@@ -73,6 +65,7 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
     ) 
         external
         override
+        virtual
         view
         onlyExchange(_exchange)
         onlyWhitelisted(_lp)
@@ -105,8 +98,7 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
     }
 
     function _buyV3(
-        address _lp, 
-        address _exchange, 
+        address _lp,
         uint256 _minAmountOut, 
         uint256 _deadline
     )
@@ -115,7 +107,7 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         address[] memory path = new address[](2);
         path[0] = WETH;
         path[1] = _lp;
-        IUniswapV2Router(_exchange).swapExactETHForTokens{value: msg.value}(
+        IUniswapV2Router(UNI_V3).swapExactETHForTokens{value: msg.value}(
             _minAmountOut,
             path,
             msg.sender,
@@ -132,6 +124,17 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         path[0] = WETH;
         path[1] = _lp;
         return IUniswapV2Router(_exchange).getAmountsOut(_amountIn, path)[1];
+    }
+
+    function _getV3(address _lp, uint256 _amountIn)
+        internal
+        view
+        returns (uint256)
+    {
+        address[] memory path = new address[](2);
+        path[0] = WETH;
+        path[1] = _lp;
+        return IUniswapV2Router(UNI_V3).getAmountsOut(_amountIn, path)[1];
     }
 
     /**
@@ -156,11 +159,11 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
     }
     
     function isExchange(address _exchange)
-        external 
+        public
         view
         returns (bool)
     {
-        return(_exchange == SUSHI || _exchange == UNI_V2 _exchange == UNI_V3);
+        return(_exchange == SUSHI || _exchange == UNI_V2 || _exchange == UNI_V3);
     }
 
     function _addUnderlying(address _lp) internal override {

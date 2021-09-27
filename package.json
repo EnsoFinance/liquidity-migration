@@ -6,7 +6,7 @@
     "node": ">=0.10"
   },
   "dependencies": {
-    "@enso/contracts": "git+ssh://git@github.com:EnsoFinance/contracts-temp.git",
+    "@enso/contracts": "git+ssh://git@github.com-bodhi:EnsoFinance/contracts-temp.git",
     "@typechain/hardhat": "^1.0.1",
     "builder-pattern": "^1.3.0",
     "solc": "0.8.1"

@@ -18,7 +18,7 @@ interface ISigmaIndexPoolV1 {
 contract IndexedAdapter is AbstractAdapter {
     using SafeERC20 for IERC20;
 
-    constructor(address owner_, address weth_) AbstractAdapter(owner_, weth_) {}
+    constructor() AbstractAdapter() {}
 
     function outputTokens(address _lp)
         public

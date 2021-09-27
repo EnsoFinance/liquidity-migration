@@ -3,7 +3,6 @@ pragma solidity 0.8.2;
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./AbstractAdapter.sol";
-import "../interfaces/IUniswapV2Router.sol";
 
 interface ISetToken {
     function getComponents() external view returns (address[] memory);
@@ -40,10 +39,8 @@ contract TokenSetAdapter is AbstractAdapter {
     constructor(
         IBasicIssuanceModule basicModule_,
         INAVIssuanceModule navModule_,
-        address weth_,
-        address generic_,
-        address owner_
-    ) AbstractAdapter(owner_, weth_)
+        address generic_
+    ) AbstractAdapter()
     {
         basicModule = basicModule_;
         navModule = navModule_;
