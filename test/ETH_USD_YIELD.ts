@@ -22,8 +22,6 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     this.enso = await new EnsoBuilder(this.signers.admin).mainnet().build();
 
     this.ETHUSDYieldEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
-      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD].BASIC,
-      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.ETH_USD_YIELD].NAV,
       FACTORY_REGISTRIES.ETH_USD_YIELD,
     );
 

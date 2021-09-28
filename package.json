@@ -77,3 +77,4 @@
     "test": "hardhat test",
     "typechain": "hardhat typechain"
   }
+}

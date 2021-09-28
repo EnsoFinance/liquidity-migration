@@ -3,6 +3,7 @@ pragma solidity 0.8.2;
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./AbstractAdapter.sol";
+import "hardhat/console.sol";
 
 interface ISetToken {
     function getComponents() external view returns (address[] memory);
@@ -13,15 +14,6 @@ interface IBasicIssuanceModule {
     function redeem(address _setToken, uint256 _quantity, address _to) external;
 }
 
-interface INAVIssuanceModule {
-    function issueWithEther(address _setToken, uint256 _minSetTokenReceiveQuantity, address _to) external payable;
-
-    function getExpectedSetTokenIssueQuantity(address _setToken, address _reserveAsset, uint256 _reserveAssetQuantity)
-        external
-        view
-        returns (uint256);
-}
-
 /// @title Token Sets Vampire Attack Contract
 /// @author Enso.finance (github.com/EnsoFinance)
 /// @notice Adapter for redeeming the underlying assets from Token Sets
@@ -29,23 +21,23 @@ interface INAVIssuanceModule {
 contract TokenSetAdapter is AbstractAdapter {
     using SafeERC20 for IERC20;
 
-    uint256 private constant SLIPPAGE = 999;
-    uint256 private constant DIVISOR = 1000;
-
     address public generic;
     IBasicIssuanceModule public basicModule;
-    INAVIssuanceModule public navModule;
+    IBasicIssuanceModule public debtModule;
+    mapping (address => bool) private _leveraged;
 
     constructor(
         IBasicIssuanceModule basicModule_,
-        INAVIssuanceModule navModule_,
+        IBasicIssuanceModule debtModule_,
         address generic_,
         address owner_
     ) AbstractAdapter(owner_)
     {
         basicModule = basicModule_;
-        navModule = navModule_;
+        debtModule = debtModule_;
         generic = generic_;
+        _leveraged[0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD] = true; // ETH2X
+        _leveraged[0x0B498ff89709d3838a063f1dFA463091F9801c2b] = true; // BTC2X
     }
 
     function outputTokens(address _lp)
@@ -64,53 +56,28 @@ contract TokenSetAdapter is AbstractAdapter {
         onlyWhitelisted(_lp)
         returns(Call memory call)
     {
-        call = Call(
-            payable(address(basicModule)),
-            abi.encodeWithSelector(
-                basicModule.redeem.selector,
-                _lp,
-                _amount,
-                generic
-            ),
-            0
-        );
-    }
-
-    function buy(address _lp, address _exchange, uint256 _minAmountOut, uint256 _deadline)
-        public
-        override
-        payable
-        onlyWhitelisted(_lp)
-    {
-        if (_exchange != address(0)) {
-            require(isExchange(_exchange), "TokenSetAdapter#buy: should be exchanges");
-            if (_exchange == UNI_V3) {
-                _buyV3(_lp, _minAmountOut, _deadline);
-            } else {
-                _buyV2(_lp, _exchange, _minAmountOut, _deadline);
-            }
+        if (_leveraged[_lp]) {
+            call = Call(
+                payable(address(debtModule)),
+                abi.encodeWithSelector(
+                    debtModule.redeem.selector,
+                    _lp,
+                    _amount,
+                    generic
+                ),
+                0
+            );
         } else {
-            require(ISetToken(_lp).isInitializedModule(address(navModule)), "NAVModule not supported");
-            require(_deadline > block.timestamp, "Past deadline");
-            navModule.issueWithEther{value: msg.value}(_lp, _minAmountOut, msg.sender);
-        }
-    }
-
-    function getAmountOut(address _lp, address _exchange, uint256 _amountIn)
-        external
-        override
-        onlyWhitelisted(_lp)
-        returns (uint256)
-    {
-        if (_exchange != address(0)) {
-            require(isExchange(_exchange), "TokenSetAdapter#buy: should be exchanges");
-            if (_exchange == UNI_V3) {
-                return _getV3(_lp, _amountIn);
-            } else {
-                return _getV2(_lp, _exchange, _amountIn);
-            }
-        } else {
-            return navModule.getExpectedSetTokenIssueQuantity(_lp, WETH, _amountIn);
+            call = Call(
+                payable(address(basicModule)),
+                abi.encodeWithSelector(
+                    basicModule.redeem.selector,
+                    _lp,
+                    _amount,
+                    generic
+                ),
+                0
+            );
         }
     }
 }

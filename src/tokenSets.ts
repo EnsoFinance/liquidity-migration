@@ -3,14 +3,12 @@ import { MainnetSigner } from "../types";
 import { Contract, Signer } from "ethers";
 import { EnsoEnvironment } from "@enso/contracts";
 
-import { TOKENSET_HOLDERS, WETH } from "./constants";
+import { TOKENSET_HOLDERS, TOKENSET_ISSUANCE_MODULES, WETH } from "./constants";
 import {
   SetToken__factory,
   SetToken,
   IBasicIssuanceModule__factory,
   IBasicIssuanceModule,
-  INAVIssuanceModule__factory,
-  INAVIssuanceModule,
   TokenSetAdapter__factory,
 } from "../typechain";
 
@@ -22,16 +20,16 @@ export class TokenSetEnvironmentBuilder {
     this.signer = signer;
     this.enso = enso;
   }
-  async connect(tokenSetsBasicIssuanceModule: string, tokenSetsNAVIssuanceModule: string, tokenSetPoolAddress: string): Promise<TokenSetEnvironment> {
+  async connect(tokenSetPoolAddress: string): Promise<TokenSetEnvironment> {
     const setBasicIssuanceModule = (await IBasicIssuanceModule__factory.connect(
-      tokenSetsBasicIssuanceModule,
+      TOKENSET_ISSUANCE_MODULES.BASIC,
       this.signer,
     )) as IBasicIssuanceModule;
 
-    const setNAVIssuanceModule = (await INAVIssuanceModule__factory.connect(
-      tokenSetsNAVIssuanceModule,
+    const setDebtIssuanceModule = (await IBasicIssuanceModule__factory.connect(
+        TOKENSET_ISSUANCE_MODULES.DEBT,
       this.signer,
-    )) as INAVIssuanceModule;
+    )) as IBasicIssuanceModule;
 
     const tokenSet = (await SetToken__factory.connect(tokenSetPoolAddress, this.signer)) as SetToken;
 
@@ -41,7 +39,7 @@ export class TokenSetEnvironmentBuilder {
 
     const generiRouter: string = this.enso?.routers[0]?.contract?.address || ethers.constants.AddressZero
     // deploying the DPI Adapter
-    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, setNAVIssuanceModule.address, generiRouter, signerAddress);
+    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, setDebtIssuanceModule.address, generiRouter, signerAddress);
 
     const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress];
     if (addresses === undefined) {
@@ -54,28 +52,28 @@ export class TokenSetEnvironmentBuilder {
       signers.push(signer);
     }
 
-    return new TokenSetEnvironment(this.signer, setBasicIssuanceModule, setNAVIssuanceModule, tokenSet, adapter, signers);
+    return new TokenSetEnvironment(this.signer, setBasicIssuanceModule, setDebtIssuanceModule, tokenSet, adapter, signers);
   }
 }
 
 export class TokenSetEnvironment {
   signer: Signer;
   setBasicIssuanceModule: Contract;
-  setNAVIssuanceModule: Contract;
+  setDebtIssuanceModule: Contract;
   tokenSet: Contract;
   adapter: Contract;
   holders: Signer[];
   constructor(
     signer: Signer,
     setBasicIssuanceModule: Contract,
-    setNAVIssuanceModule: Contract,
+    setDebtIssuanceModule: Contract,
     tokenSet: Contract,
     adapter: Contract,
     holders: Signer[],
   ) {
     this.signer = signer;
     this.setBasicIssuanceModule = setBasicIssuanceModule;
-    this.setNAVIssuanceModule = setNAVIssuanceModule;
+    this.setDebtIssuanceModule = setDebtIssuanceModule;
     this.tokenSet = tokenSet;
     this.adapter = adapter;
     this.holders = holders;
