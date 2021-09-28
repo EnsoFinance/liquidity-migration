@@ -6,6 +6,7 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
+// import "hardhat-gas-reporter"
 import "@typechain/hardhat";
 import "hardhat-etherscan-abi";
 import "solidity-coverage";
@@ -64,7 +65,7 @@ function getNetworks(): NetworksUserConfig {
     if (archiveNode)
       networks.hardhat.forking = {
         url: archiveNode,
-        blockNumber: 12675000,
+        blockNumber: 13275000,
       };
   }
   if (mnemonic && infuraApiKey) {
@@ -96,6 +97,10 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: etherscanApiKey,
   },
+  // gasReporter: {
+  //   currency: 'USD',
+  //   gasPrice: 45
+  // },
   paths: {
     artifacts: "./artifacts",
     cache: "./cache",

@@ -6,7 +6,7 @@ import { BigNumber, Contract, Signer } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { StrategyBuilder, Strategy, Implementation } from "./strategy";
 
-import { FACTORY_REGISTRIES } from "../src/constants";
+import { FACTORY_REGISTRIES, WETH } from "../src/constants";
 import {
   ERC20,
   ERC20__factory,

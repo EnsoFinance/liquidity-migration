@@ -1,14 +1,12 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.2;
 
-// Erc20
+import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/IAdapter.sol";
 import "@enso/contracts/contracts/interfaces/IStrategyProxyFactory.sol";
 import "@enso/contracts/contracts/interfaces/IStrategyController.sol";
 import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
-import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IAdapter.sol";
 import "./helpers/Timelocked.sol";
-
 
 contract LiquidityMigration is Timelocked, StrategyTypes {
     using SafeERC20 for IERC20;
@@ -65,13 +63,22 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _adapter
     )
         public
-        onlyRegistered(_adapter)
-        onlyWhitelisted(_adapter, _lp)
     {
         IERC20(_lp).safeTransferFrom(msg.sender, address(this), _amount);
+        _stake(_lp, _amount, _adapter);
+    }
 
-        staked[msg.sender][_lp] += _amount;
-        emit Staked(_adapter, _lp, _amount, msg.sender);
+    function buyAndStake(
+        address _lp,
+        address _adapter,
+        address _exchange,
+        uint256 _minAmountOut,
+        uint256 _deadline
+    )
+        external
+        payable
+    {
+        _buyAndStake(_lp, msg.value, _adapter, _exchange, _minAmountOut, _deadline);
     }
 
     function batchStake(
@@ -87,6 +94,30 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         for (uint256 i = 0; i < _lp.length; i++) {
             stake(_lp[i], _amount[i], _adapter[i]);
         }
+    }
+
+    function batchBuyAndStake(
+        address[] memory _lp,
+        uint256[] memory _amount,
+        address[] memory _adapter,
+        address[] memory _exchange,
+        uint256[] memory _minAmountOut,
+        uint256 _deadline
+    )
+        external
+        payable
+    {
+        require(_amount.length == _lp.length, "LiquidityMigration#batchBuyAndStake: not same length");
+        require(_adapter.length == _lp.length, "LiquidityMigration#batchBuyAndStake: not same length");
+        require(_exchange.length == _lp.length, "LiquidityMigration#batchBuyAndStake: not same length");
+        require(_minAmountOut.length == _lp.length, "LiquidityMigration#batchBuyAndStake: not same length");
+
+        uint256 total = 0;
+        for (uint256 i = 0; i < _lp.length; i++) {
+            total = total + _amount[i];
+            _buyAndStake(_lp[i], _amount[i], _adapter[i], _exchange[i], _minAmountOut[i], _deadline);
+        }
+        require(msg.value == total, "LiquidityMigration#batchBuyAndStake: incorrect amounts");
     }
 
     function migrate(
@@ -164,20 +195,52 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     )
         internal
     {
-        require(IStrategyController(controller).initialized(address(_strategy)), "LiquidityMigration#_migrate: not enso strategy");
+        require(
+            IStrategyController(controller).initialized(address(_strategy)),
+            "LiquidityMigration#_migrate: not enso strategy"
+        );
 
-        uint256 _stake = staked[_user][_lp];
-        require(_stake > 0, "LiquidityMigration#_migrate: not staked");
+        uint256 _stakeAmount = staked[_user][_lp];
+        require(_stakeAmount > 0, "LiquidityMigration#_migrate: not staked");
 
         delete staked[_user][_lp];
-        IERC20(_lp).safeTransfer(generic, _stake);
+        IERC20(_lp).safeTransfer(generic, _stakeAmount);
 
         uint256 _before = _strategy.balanceOf(address(this));
-        _strategy.deposit(0, IStrategyRouter(generic), migrationData);
+        IStrategyController(controller).deposit(_strategy, IStrategyRouter(generic), 0, migrationData);
         uint256 _after = _strategy.balanceOf(address(this));
 
         _strategy.transfer(_user, (_after - _before));
         emit Migrated(_adapter, _lp, address(_strategy), _user);
+    }
+
+    function _stake(
+        address _lp,
+        uint256 _amount,
+        address _adapter
+    )
+        internal
+        onlyRegistered(_adapter)
+        onlyWhitelisted(_adapter, _lp)
+    {
+        staked[msg.sender][_lp] += _amount;
+        emit Staked(_adapter, _lp, _amount, msg.sender);
+    }
+
+    function _buyAndStake(
+        address _lp,
+        uint256 _amount,
+        address _adapter,
+        address _exchange,
+        uint256 _minAmountOut,
+        uint256 _deadline
+    )
+        internal
+    {
+        uint256 balanceBefore = IERC20(_lp).balanceOf(address(this));
+        IAdapter(_adapter).buy{value: _amount}(_lp, _exchange, _minAmountOut, _deadline);
+        uint256 amountAdded = IERC20(_lp).balanceOf(address(this)) - balanceBefore;
+        _stake(_lp, amountAdded, _adapter);
     }
 
     function createStrategy(
@@ -189,9 +252,9 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         onlyRegistered(_adapter)
         onlyWhitelisted(_adapter, _lp)
     {
-        ( , , , StrategyItem[] memory strategyItems) = abi.decode(
+        ( , , , StrategyItem[] memory strategyItems, , , ) = abi.decode(
             data,
-            (address, string, string, StrategyItem[])
+            (address, string, string, StrategyItem[], StrategyState, address, bytes)
         );
         _validateItems(_adapter, _lp, strategyItems);
         address strategy = _createStrategy(data);
@@ -243,10 +306,12 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         for (uint i = 0; i < strategyItems.length; i++) {
             // Strategies may have reserve tokens (such as weth) that don't have value
             // So we must be careful not to invalidate a strategy for having them
-            if (strategyItems[i].percentage == 0) {
-                total--;
-            } else {
-                require(IAdapter(adapter).isUnderlying(lp, strategyItems[i].item), "LiquidityMigration#createStrategy: incorrect length");
+            if (!IAdapter(adapter).isUnderlying(lp, strategyItems[i].item)) {
+                if (strategyItems[i].percentage == 0) {
+                    total--;
+                } else {
+                    revert("LiquidityMigration#createStrategy: incorrect length");
+                }
             }
         }
         require(total == IAdapter(adapter).numberOfUnderlying(lp), "LiquidityMigration#createStrategy: does not exist");

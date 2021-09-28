@@ -74,14 +74,5 @@ describe("Timelocked Test", function () {
         await this.mockFundHolder.connect(this.signers.otherAccount).withdraw(ethers.utils.parseEther("1.0"));
         const updatedHolderBalance = await this.mockFundHolder.addressBalance(this.signers.otherAccount.getAddress());
         expect(updatedHolderBalance.eq(BigNumber.from(0))).to.be.true;
-    
-
-
     });
-        
-        
-        
-
-
-
 });

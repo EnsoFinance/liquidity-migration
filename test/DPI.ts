@@ -1,16 +1,18 @@
+import hardhat = require("hardhat")
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import bignumber from "bignumber.js";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
+import { IERC20, IERC20__factory, IStrategy__factory, LiquidityMigration } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
-import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
+import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
+import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
-import { WETH, DIVISOR, STRATEGY_STATE } from "../src/constants";
+
 
 describe("DPI: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -20,16 +22,24 @@ describe("DPI: Unit tests", function () {
     this.signers.default = signers[0];
     this.signers.admin = signers[10];
 
-    this.ensoEnv = await new EnsoBuilder(this.signers.admin).mainnet().build();
+    // this.abi = (await hardhat.artifacts.readArtifact("LiquidityMigration")).abi
+    // console.log(this.abi)
 
-    this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.ensoEnv).connect(
-      TOKENSET_ISSUANCE_MODULES[FACTORY_REGISTRIES.DPI],
+    this.enso = await new EnsoBuilder(this.signers.admin).mainnet().build();
+
+    // KNC not on Uniswap, use Chainlink
+    await this.enso.platform.oracles.protocols.chainlinkOracle.connect(this.signers.admin).addOracle(SUSD, WETH, '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', true); //sUSD
+    await this.enso.platform.oracles.protocols.chainlinkOracle.connect(this.signers.admin).addOracle('0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202', SUSD, '0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc', false); //KNC
+    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.SYNTH, '0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202') //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
+
+
+    this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
       FACTORY_REGISTRIES.DPI,
     );
 
     console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
 
-    const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.ensoEnv);
+    const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.enso);
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.DPIEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
     if (liquitityMigrationDeployed != undefined) {
@@ -39,50 +49,6 @@ describe("DPI: Unit tests", function () {
     }
 
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
-
-    // getting the underlying tokens from DPI
-    const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
-
-    // creating the Positions array (that is which token holds how much weigth)
-    const positions = [] as Position[];
-
-    const [total, estimates] = await this.ensoEnv.platform.oracles.protocols.uniswapOracle.estimateTotal(
-      this.DPIEnv.tokenSet.address,
-      underlyingTokens,
-    );
-    for (let i = 0; i < underlyingTokens.length; i++) {
-      const percentage = new bignumber(estimates[i].toString())
-        .multipliedBy(DIVISOR)
-        .dividedBy(total.toString())
-        .toFixed(0);
-      positions.push({
-        token: underlyingTokens[i],
-        percentage: BigNumber.from(percentage),
-      });
-    }
-    if (positions.findIndex(pos => pos.token.toLowerCase() == WETH.toLowerCase()) == -1) {
-      positions.push({
-        token: WETH,
-        percentage: BigNumber.from(0),
-      });
-    }
-
-    // creating a strategy
-    const strategyItems = prepareStrategy(positions, this.ensoEnv.adapters.uniswap.contract.address);
-
-    const tx = await this.ensoEnv.platform.strategyFactory.createStrategy(
-      this.signers.default.address,
-      "DPI",
-      "DPI",
-      strategyItems,
-      STRATEGY_STATE,
-      ethers.constants.AddressZero,
-      '0x',
-    );
-    const receipt = await tx.wait();
-    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
-    console.log("Strategy address: ", strategyAddress);
-    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
   });
 
   it("Token holder should be able to withdraw from pool", async function () {
@@ -139,7 +105,7 @@ describe("DPI: Unit tests", function () {
   });
 
   it("Should not be able to migrate tokens if the DPI token is not whitelisted in the DPI Adapter", async function () {
-    const routerContract = this.ensoEnv.routers[0].contract;
+    const routerContract = this.enso.routers[0].contract;
     const holder2 = await this.DPIEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
@@ -156,12 +122,12 @@ describe("DPI: Unit tests", function () {
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DPIAdapter contract
-    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeExecute(this.DPIEnv.tokenSet.address, amount);
+    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeWithdraw(this.DPIEnv.tokenSet.address, amount);
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
     for (let i = 0; i < underlyingTokens.length; i++) {
-      transferCalls.push(await encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
+      transferCalls.push(await encodeSettleTransfer(routerContract, underlyingTokens[i], ethers.constants.AddressZero));
     }
     // // Encode multicalls for GenericRouter
     const calls: Multicall[] = [migrationCall, ...transferCalls];
@@ -174,10 +140,11 @@ describe("DPI: Unit tests", function () {
     // // Migrate
     await expect(
       this.liquidityMigration
-        .connect(holder2)['migrate(address,address,address,bytes)'](
+        .connect(holder2)
+        ['migrate(address,address,address,bytes)'](
           this.DPIEnv.tokenSet.address,
           this.DPIEnv.adapter.address,
-          this.strategy.address,
+          ethers.constants.AddressZero,
           migrationData
         ),
     ).to.be.reverted;
@@ -196,20 +163,45 @@ describe("DPI: Unit tests", function () {
   });
 
   it("Migration using a non-whitelisted token should fail", async function () {
-    const routerContract = this.ensoEnv.routers[0].contract;
+    const routerContract = this.enso.routers[0].contract;
     const holder3 = await this.DPIEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
-    await expect(this.DPIEnv.adapter.encodeExecute(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
+    await expect(this.DPIEnv.adapter.encodeWithdraw(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
   });
 
+  it("Create strategy", async function () {
+      // adding the DPI Token as a whitelisted token
+      let tx = await this.DPIEnv.adapter
+        .connect(this.signers.default)
+        .add(FACTORY_REGISTRIES.DPI);
+      await tx.wait();
+
+      // getting the underlying tokens from DPI
+      const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
+      // deploy strategy
+      const strategyData = encodeStrategyData(
+        this.signers.default.address,
+        "DPI",
+        "DPI",
+        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.DPIEnv.tokenSet.address, underlyingTokens),
+        STRATEGY_STATE,
+        ethers.constants.AddressZero,
+        '0x'
+      )
+      tx = await this.liquidityMigration.createStrategy(
+        this.DPIEnv.tokenSet.address,
+        this.DPIEnv.adapter.address,
+        strategyData
+      );
+      const receipt = await tx.wait();
+      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+      console.log("Strategy address: ", strategyAddress);
+      this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+  })
+
   it("Should migrate tokens to strategy", async function () {
-    // adding the DPI Token as a whitelisted token
-    const tx = await this.DPIEnv.adapter
-      .connect(this.signers.default)
-      .add(FACTORY_REGISTRIES.DPI);
-    await tx.wait();
-    const routerContract = this.ensoEnv.routers[0].contract;
+    const routerContract = this.enso.routers[0].contract;
     const holder3 = await this.DPIEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
@@ -226,7 +218,7 @@ describe("DPI: Unit tests", function () {
     const holder3BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
-    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeExecute(this.DPIEnv.tokenSet.address, amount);
+    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeWithdraw(this.DPIEnv.tokenSet.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
@@ -239,12 +231,42 @@ describe("DPI: Unit tests", function () {
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration
-      .connect(holder3)['migrate(address,address,address,bytes)'](
-        this.DPIEnv.tokenSet.address, this.DPIEnv.adapter.address, this.strategy.address, migrationData);
-    const [total] = await this.ensoEnv.platform.oracles.protocols.uniswapOracle.estimateTotal(this.strategy.address, underlyingTokens);
+      .connect(holder3)
+      ['migrate(address,address,address,bytes)'](
+        this.DPIEnv.tokenSet.address,
+        this.DPIEnv.adapter.address,
+        this.strategy.address,
+        migrationData
+      );
+    const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, underlyingTokens);
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
+
+  it("Should buy and stake", async function () {
+    const defaultAddress = await this.signers.default.getAddress();
+
+    expect(await this.DPIEnv.tokenSet.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
+    expect(await this.strategy.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
+    expect(await this.liquidityMigration.staked(defaultAddress, this.DPIEnv.tokenSet.address)).to.be.eq(BigNumber.from(0));
+
+    const ethAmount = ethers.constants.WeiPerEther
+    const expectedAmount = await this.DPIEnv.adapter.callStatic.getAmountOut(this.DPIEnv.tokenSet.address, UNISWAP_V3_ROUTER, ethAmount)
+    console.log("Expected: ", expectedAmount.toString())
+
+    await this.liquidityMigration.connect(this.signers.default).buyAndStake(
+      this.DPIEnv.tokenSet.address,
+      this.DPIEnv.adapter.address,
+      UNISWAP_V3_ROUTER,
+      expectedAmount.mul(995).div(1000), //0.5% slippage
+      ethers.constants.MaxUint256,
+      {value: ethAmount}
+    )
+
+    const staked = await this.liquidityMigration.staked(defaultAddress, this.DPIEnv.tokenSet.address)
+    console.log("Staked: ", staked.toString())
+    expect(staked).to.be.gt(BigNumber.from(0));
+  })
 
   it("BatchAdd and BatchRemove for Whitelistable", async function () {
     const tx = await this.DPIEnv.adapter
@@ -261,5 +283,4 @@ describe("DPI: Unit tests", function () {
     expect(await this.DPIEnv.adapter.connect(this.signers.default).isWhitelisted(FACTORY_REGISTRIES.DPI)).to.be.false;
     expect(await this.DPIEnv.adapter.connect(this.signers.default).isWhitelisted(FACTORY_REGISTRIES.ETH_USD_YIELD)).to.be.false;
   })
-
 });
