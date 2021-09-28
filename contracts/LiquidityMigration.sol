@@ -256,7 +256,6 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
             data,
             (address, string, string, StrategyItem[], StrategyState, address, bytes)
         );
-        console.log("Strategy items: ", strategyItems.length);
         _validateItems(_adapter, _lp, strategyItems);
         address strategy = _createStrategy(data);
         emit Created(_adapter, _lp, strategy, msg.sender);
@@ -315,8 +314,6 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
                 }
             }
         }
-        console.log("Total: ", total);
-        console.log("Underlying: ", IAdapter(adapter).numberOfUnderlying(lp));
         require(total == IAdapter(adapter).numberOfUnderlying(lp), "LiquidityMigration#createStrategy: does not exist");
     }
 

@@ -6,7 +6,7 @@ import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
-import { FACTORY_REGISTRIES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
@@ -208,16 +208,16 @@ describe("PowerPool: Unit tests", function () {
     // Setup migration calls using DEGENAdapter contract
     const migrationCall: Multicall = await this.PowerEnv.adapter.encodeWithdraw(this.PowerEnv.powerIndexPool.address, amount);
 
-    // // Setup transfer of tokens from router to strategy
+    // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < this.underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
     }
-    // // Encode multicalls for GenericRouter
+    // Encode multicalls for GenericRouter
     const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
-    // // Migrate
+    // Migrate
     await this.liquidityMigration
       .connect(holder3)
       ['migrate(address,address,address,bytes)']
@@ -232,28 +232,15 @@ describe("PowerPool: Unit tests", function () {
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
 
-//   it("Should buy and stake", async function () {
-//     const defaultAddress = await this.signers.default.getAddress();
+  it("Should fail to buy and stake: token not on exchange", async function () {
+    await expect(this.liquidityMigration.connect(this.signers.default).buyAndStake(
+      this.powerIndexPoolERC20.address,
+      this.PowerEnv.adapter.address,
+      UNISWAP_V3_ROUTER,
+      0,
+      ethers.constants.MaxUint256,
+      {value: ethers.constants.WeiPerEther}
+    )).to.be.reverted
 
-//     expect(await this.powerIndexPoolERC20.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
-//     expect(await this.strategy.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
-//     expect(await this.liquidityMigration.staked(defaultAddress, this.powerIndexPoolERC20.address)).to.be.eq(BigNumber.from(0));
-
-//     const ethAmount = ethers.constants.WeiPerEther
-//     const expectedAmount = await this.PowerEnv.adapter.getAmountOut(this.powerIndexPoolERC20.address, UNISWAP_ROUTER, ethAmount)
-//     console.log("Expected: ", expectedAmount.toString())
-
-//     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
-//       this.powerIndexPoolERC20.address,
-//       this.PowerEnv.adapter.address,
-//       UNISWAP_ROUTER,
-//       expectedAmount.mul(995).div(1000), //0.5% slippage
-//       ethers.constants.MaxUint256,
-//       {value: ethAmount}
-//     )
-
-//     const staked = await this.liquidityMigration.staked(defaultAddress, this.powerIndexPoolERC20.address)
-//     console.log("Staked: ", staked.toString())
-//     expect(staked).to.be.gt(BigNumber.from(0));
-//   })
+  })
 });

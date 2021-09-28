@@ -113,21 +113,21 @@ describe("ETH_USD_YIELD: Unit tests", function () {
 
     // Setup migration calls using Adapter contract
     const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
-    // // Setup transfer of tokens from router to strategy
+    // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], ethers.constants.AddressZero));
     }
-    // // Encode multicalls for GenericRouter
+    // Encode multicalls for GenericRouter
     const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
       .remove(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
-    // // Migrate
+    // Migrate
     await expect(
       this.liquidityMigration
         .connect(holder2)
@@ -143,7 +143,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the ETH_USD_YIELD Token as a whitelisted token
     await expect(
-      this.ETHUSDYieldEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.ETH_USD_YIELD),
+      this.ETHUSDYieldEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.ETH_USD_YIELD)
     ).to.be.reverted;
   });
 
@@ -214,17 +214,17 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // Setup migration calls using Adapter contract
     const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
 
-    // // Setup transfer of tokens from router to strategy
+    // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
     for (let i = 0; i < underlyingTokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
-    // // Encode multicalls for GenericRouter
+    // Encode multicalls for GenericRouter
     const calls: Multicall[] = [migrationCall, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
-    // // Migrate
+    // Migrate
     await this.liquidityMigration
       .connect(holder3)
       ['migrate(address,address,address,bytes)'](
@@ -238,41 +238,15 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
 
-  it("Should buy and stake", async function () {
-    const defaultAddress = await this.signers.default.getAddress();
-
-    expect(await this.ETHUSDYieldEnv.tokenSet.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
-    expect(await this.strategy.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
-    expect(await this.liquidityMigration.staked(defaultAddress, this.ETHUSDYieldEnv.tokenSet.address)).to.be.eq(BigNumber.from(0));
-
-    const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.ETHUSDYieldEnv.adapter.getAmountOut(this.ETHUSDYieldEnv.tokenSet.address, UNISWAP_V3_ROUTER, ethAmount)
-    console.log("Expected: ", expectedAmount.toString())
-    /*
-    await this.liquidityMigration.connect(this.signers.default).buyAndStake(
+  it("Should fail to buy and stake: token not on exchange", async function () {
+    await expect(this.liquidityMigration.connect(this.signers.default).buyAndStake(
       this.ETHUSDYieldEnv.tokenSet.address,
       this.ETHUSDYieldEnv.adapter.address,
-      '0xE592427A0AEce92De3Edee1F18E0157C05861564',
-      expectedAmount.mul(995).div(1000), //0.5% slippage
+      UNISWAP_V3_ROUTER,
+      0,
       ethers.constants.MaxUint256,
-      {value: ethAmount}
-    )
-    */
-    const router = IUniswapV3Router__factory.connect(UNISWAP_V3_ROUTER, this.signers.default);
-    console.log(this.ETHUSDYieldEnv.tokenSet.address)
-    await router.exactInputSingle({
-      tokenIn: WETH,
-      tokenOut: this.ETHUSDYieldEnv.tokenSet.address,
-      fee: 3000,
-      recipient: defaultAddress,
-      deadline: ethers.constants.MaxUint256,
-      amountIn: ethAmount,
-      amountOutMinimum: 0,
-      sqrtPriceLimitX96: 0
-    }, {value: ethAmount})
-    const staked = await this.liquidityMigration.staked(defaultAddress, this.ETHUSDYieldEnv.tokenSet.address)
-    console.log("Staked: ", staked.toString())
-    expect(staked).to.be.gt(BigNumber.from(0));
+      {value: ethers.constants.WeiPerEther}
+    )).to.be.reverted
   })
 
 });

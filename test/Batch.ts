@@ -12,7 +12,7 @@ import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
 import { EnsoBuilder, Position, Multicall, StrategyState, StrategyItem, encodeSettleTransfer, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
-import { WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
+import { WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, encodeMigrationData } from "../src/utils"
 import { AnyRecord } from "dns";
 import { Address } from "cluster";
@@ -133,9 +133,9 @@ describe("Batch: Unit tests", function () {
     })
 
     it('Buy tokens', async function () {
-      await indexedEnv.adapter.connect(signers.default).buy(indexedPool.address, UNISWAP_ROUTER, 0, ethers.constants.MaxUint256, {value: ethers.constants.WeiPerEther})
-      await dpiEnv.adapter.connect(signers.default).buy(dpiPool.address, UNISWAP_ROUTER, 0, ethers.constants.MaxUint256, {value: ethers.constants.WeiPerEther})
-      await pieEnv.adapter.connect(signers.default).buy(piePool.address, UNISWAP_ROUTER, 0, ethers.constants.MaxUint256, {value: ethers.constants.WeiPerEther})
+      await indexedEnv.adapter.connect(signers.default).buy(indexedPool.address, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, {value: ethers.constants.WeiPerEther})
+      await dpiEnv.adapter.connect(signers.default).buy(dpiPool.address, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, {value: ethers.constants.WeiPerEther})
+      await pieEnv.adapter.connect(signers.default).buy(piePool.address, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, {value: ethers.constants.WeiPerEther})
       const user = await signers.default.getAddress();
       expect(await indexedPool.balanceOf(user)).to.be.gt(BigNumber.from(0));
       expect(await dpiPool.balanceOf(user)).to.be.gt(BigNumber.from(0));
@@ -151,7 +151,7 @@ describe("Batch: Unit tests", function () {
       await indexedPool.connect(signers.default).approve(liquidityMigration.address, indexedBalance)
       await dpiPool.connect(signers.default).approve(liquidityMigration.address, dpiBalance)
       await piePool.connect(signers.default).approve(liquidityMigration.address, pieBalance)
-      
+
       await liquidityMigration.connect(signers.default).batchStake(
         [indexedPool.address, dpiPool.address, piePool.address],
         [indexedBalance, dpiBalance, pieBalance],
@@ -169,7 +169,7 @@ describe("Batch: Unit tests", function () {
         [indexedPool.address, dpiPool.address, piePool.address],
         [amount, amount, amount],
         [indexedEnv.adapter.address, dpiEnv.adapter.address, pieEnv.adapter.address],
-        [UNISWAP_ROUTER, UNISWAP_ROUTER, UNISWAP_ROUTER],
+        [UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER],
         [0, 0, 0],
         ethers.constants.MaxUint256,
         {value: value}
