@@ -3,7 +3,7 @@ import { MainnetSigner } from "../types";
 import { Contract, Signer } from "ethers";
 
 import { FACTORY_REGISTRIES, INDEXED_HOLDERS, WETH } from "./constants";
-import { BalancerAdapter__factory, ISigmaIndexPoolV1__factory, ISigmaIndexPoolV1 } from "../typechain";
+import { BalancerAdapter__factory, IBalancerPool__factory, IBalancerPool } from "../typechain";
 
 export class IndexedEnvironmentBuilder {
   signer: Signer;
@@ -12,10 +12,10 @@ export class IndexedEnvironmentBuilder {
     this.signer = signer;
   }
   async connect(): Promise<IndexedEnvironment> {
-    const degenIndexPool = (await ISigmaIndexPoolV1__factory.connect(
+    const degenIndexPool = (await IBalancerPool__factory.connect(
       FACTORY_REGISTRIES.DEGEN_INDEX,
       this.signer,
-    )) as ISigmaIndexPoolV1;
+    )) as IBalancerPool;
 
     const BalancerAdapterFactory = (await ethers.getContractFactory("BalancerAdapter")) as BalancerAdapter__factory;
 

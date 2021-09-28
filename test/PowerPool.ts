@@ -11,7 +11,7 @@ import { setupStrategyItems, estimateTokens } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 
-describe("Indexed: Unit tests", function () {
+describe("PowerPool: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
   before(async function () {
     this.signers = {} as Signers;
@@ -28,7 +28,7 @@ describe("Indexed: Unit tests", function () {
     console.log(`Powerpool Adapter: ${this.PowerEnv.adapter.address}`);
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.enso);
-    
+
 
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, this.PowerEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
@@ -73,7 +73,6 @@ describe("Indexed: Unit tests", function () {
     }
 
     const previoustokenBalance = holderBalances[0].balance;
-    console.l
     expect(previoustokenBalance.gt(BigNumber.from(0))).to.be.true;
     // creating the minAmountsOut array
     const minAmount = [];
@@ -113,7 +112,7 @@ describe("Indexed: Unit tests", function () {
     expect(holder2AfterBalance.gt(BigNumber.from(0))).to.be.true;
   });
 
-  it("Should not be able to migrate tokens if the Degen token is not whitelisted in the Indexed Adapter", async function () {
+  it("Should not be able to migrate tokens if the Degen token is not whitelisted in the PowerPool Adapter", async function () {
     const routerContract = this.enso.routers[0].contract;
     const holder2 = await this.PowerEnv.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -161,7 +160,7 @@ describe("Indexed: Unit tests", function () {
   });
 
   it("Adding to whitelist from non-manager account should fail", async function () {
-    // adding the Indexed Token as a whitelisted token
+    // adding the PowerPool Token as a whitelisted token
     await expect(
       this.PowerEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.POWER),
     ).to.be.reverted;

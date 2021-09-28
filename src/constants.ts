@@ -71,8 +71,8 @@ export const INDEXED_HOLDERS: Holders = {
 export const POWERPOOL_HOLDERS: Holders = {
     "0x26607aC599266b21d13c7aCF7942c7701a8b699c": [
       "0x406987006b033e796e7e717c1c52ef980f6933ed",
-      "0xe4989e7b39a21089b128908e1603fdc9939dbb78",
-      "0x9224bbb4e0fbe2f2f8fab55debc41eb21fdfb804",
+      "0x3142Ee34925B38a581Ff6152C4B41B1E0Bc5160F",
+      "0x87fC1313880d579039aC48dB8B25428ed5F33C4a"
     ], // Power Index
 };
 
