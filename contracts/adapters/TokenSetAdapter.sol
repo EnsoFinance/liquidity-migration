@@ -83,25 +83,32 @@ contract TokenSetAdapter is AbstractAdapter {
         onlyWhitelisted(_lp)
     {
         if (_exchange != address(0)) {
-          require(isExchange(_exchange), "TokenSetAdapter#buy: should be exchanges");
-          _buyV2(_lp, _exchange, _minAmountOut, _deadline);
+            require(isExchange(_exchange), "TokenSetAdapter#buy: should be exchanges");
+            if (_exchange == UNI_V3) {
+                _buyV3(_lp, _minAmountOut, _deadline);
+            } else {
+                _buyV2(_lp, _exchange, _minAmountOut, _deadline);
+            }
         } else {
-          require(ISetToken(_lp).isInitializedModule(address(navModule)), "NAVModule not supported");
-          require(_deadline > block.timestamp, "Past deadline");
-          navModule.issueWithEther{value: msg.value}(_lp, _minAmountOut, msg.sender);
+            require(ISetToken(_lp).isInitializedModule(address(navModule)), "NAVModule not supported");
+            require(_deadline > block.timestamp, "Past deadline");
+            navModule.issueWithEther{value: msg.value}(_lp, _minAmountOut, msg.sender);
         }
     }
 
     function getAmountOut(address _lp, address _exchange, uint256 _amountIn)
         external
         override
-        view
         onlyWhitelisted(_lp)
         returns (uint256)
     {
         if (_exchange != address(0)) {
             require(isExchange(_exchange), "TokenSetAdapter#buy: should be exchanges");
-            return _getV2(_lp, _exchange, _amountIn);
+            if (_exchange == UNI_V3) {
+                return _getV3(_lp, _amountIn);
+            } else {
+                return _getV2(_lp, _exchange, _amountIn);
+            }
         } else {
             return navModule.getExpectedSetTokenIssueQuantity(_lp, WETH, _amountIn);
         }

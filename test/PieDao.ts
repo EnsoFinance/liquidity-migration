@@ -6,7 +6,7 @@ import { ERC20__factory, IStrategy__factory } from "../typechain";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
-import { WETH, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
+import { WETH, DIVISOR, STRATEGY_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 
 describe("PieDao: Unit tests", function () {
@@ -121,13 +121,13 @@ describe("PieDao: Unit tests", function () {
     expect(await this.liquidityMigration.staked(defaultAddress, this.pieDaoEnv.pools[0].contract.address)).to.be.eq(BigNumber.from(0));
 
     const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.pieDaoEnv.adapter.getAmountOut(this.pieDaoEnv.pools[0].contract.address, UNISWAP_ROUTER, ethAmount)
+    const expectedAmount = await this.pieDaoEnv.adapter.callStatic.getAmountOut(this.pieDaoEnv.pools[0].contract.address, UNISWAP_V2_ROUTER, ethAmount)
     console.log("Expected: ", expectedAmount.toString())
 
     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
       this.pieDaoEnv.pools[0].contract.address,
       this.pieDaoEnv.adapter.address,
-      UNISWAP_ROUTER,
+      UNISWAP_V2_ROUTER,
       expectedAmount.mul(995).div(1000), //0.5% slippage
       ethers.constants.MaxUint256,
       {value: ethAmount}

@@ -7,7 +7,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
-import { FACTORY_REGISTRIES, WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
@@ -268,13 +268,13 @@ describe("dHedge: Unit tests", function () {
     expect(strategyBalance).to.be.eq(BigNumber.from(0));
 
     const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.DHedgeEnv.adapter.getAmountOut(this.DHedgeEnv.dHedgeTopIndex.address, UNISWAP_ROUTER, ethAmount)
+    const expectedAmount = await this.DHedgeEnv.adapter.callStatic.getAmountOut(this.DHedgeEnv.dHedgeTopIndex.address, UNISWAP_V2_ROUTER, ethAmount)
     console.log("Expected: ", expectedAmount.toString())
 
     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
       this.DHedgeEnv.dHedgeTopIndex.address,
       this.DHedgeEnv.adapter.address,
-      UNISWAP_ROUTER,
+      UNISWAP_V2_ROUTER,
       expectedAmount.mul(995).div(1000), //0.5% slippage
       ethers.constants.MaxUint256,
       {value: ethAmount}
