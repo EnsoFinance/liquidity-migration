@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { MainnetSigner } from "../types";
 import { Contract, Signer } from "ethers";
 import { FACTORY_REGISTRIES, POWERPOOL_HOLDERS, WETH } from "./constants";
-import { BalancerAdapter__factory, ISigmaIndexPoolV1__factory, ISigmaIndexPoolV1 } from "../typechain";
+import { BalancerAdapter__factory, IBalancerPool__factory, IBalancerPool } from "../typechain";
 
 export class PowerpoolEnvironmentBuilder {
   signer: Signer;
@@ -11,10 +11,10 @@ export class PowerpoolEnvironmentBuilder {
     this.signer = signer;
   }
   async connect(): Promise<PowerpoolEnvironment> {
-    const powerIndexPool = (await ISigmaIndexPoolV1__factory.connect(
+    const powerIndexPool = (await IBalancerPool__factory.connect(
       FACTORY_REGISTRIES.POWER,
       this.signer,
-    )) as ISigmaIndexPoolV1;
+    )) as IBalancerPool;
 
     const BalancerAdapterFactory = (await ethers.getContractFactory("BalancerAdapter")) as BalancerAdapter__factory;
 

@@ -4,11 +4,10 @@ pragma solidity 0.8.2;
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./AbstractAdapter.sol";
 
-interface ISigmaIndexPoolV1 {
+interface IBalancerPool {
     function getCurrentTokens() external view returns (address[] memory tokens);
     function exitPool(uint256 poolAmountIn, uint256[] calldata minAmountsOut) external;
 }
-
 
 /// @title Balancer(Indexed + Powerpool) Vampire Attack Contract
 /// @author Enso.finance (github.com/EnsoFinance)
@@ -25,7 +24,7 @@ contract BalancerAdapter is AbstractAdapter {
         override
         returns (address[] memory outputs)
     {
-        outputs = ISigmaIndexPoolV1(_lp).getCurrentTokens();
+        outputs = IBalancerPool(_lp).getCurrentTokens();
     }
 
     function encodeWithdraw(address _lp, uint256 _amount)
@@ -39,7 +38,7 @@ contract BalancerAdapter is AbstractAdapter {
         call = Call(
             payable(_lp),
             abi.encodeWithSelector(
-                ISigmaIndexPoolV1(_lp).exitPool.selector,
+                IBalancerPool(_lp).exitPool.selector,
                 _amount,
                 _min
             ),
