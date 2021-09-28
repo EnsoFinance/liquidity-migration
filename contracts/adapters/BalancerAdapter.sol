@@ -10,11 +10,11 @@ interface ISigmaIndexPoolV1 {
 }
 
 
-/// @title Indexed Vampire Attack Contract
+/// @title Balancer(Indexed + Powerpool) Vampire Attack Contract
 /// @author Enso.finance (github.com/EnsoFinance)
 /// @notice Adapter for redeeming the underlying assets from Indexed Protocol
 
-contract IndexedAdapter is AbstractAdapter {
+contract BalancerAdapter is AbstractAdapter {
     using SafeERC20 for IERC20;
 
     constructor(address owner_) AbstractAdapter(owner_) {}
