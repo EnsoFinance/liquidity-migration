@@ -48,11 +48,11 @@ async function main() {
     console.log("TokenSetAdapter: ", tokenSetAdapter.address)
     protocol_addresses.push(tokenSetAdapter.address)
 
-    const IndexedAdapterFactory = await hre.ethers.getContractFactory("IndexedAdapter")
-    const indexedAdapter = await IndexedAdapterFactory.deploy(owner)
-    await indexedAdapter.deployed()
-    console.log("IndexedAdapter: ", indexedAdapter.address)
-    protocol_addresses.push(indexedAdapter.address)
+    const BalancerAdapterFactory = await hre.ethers.getContractFactory("BalancerAdapter")
+    const BalancerAdapter = await BalancerAdapterFactory.deploy(owner)
+    await BalancerAdapter.deployed()
+    console.log("BalancerAdapter: ", BalancerAdapter.address)
+    protocol_addresses.push(BalancerAdapter.address)
 
     const PieDaoAdapterFactory = await hre.ethers.getContractFactory("PieDaoAdapter")
     const pieDaoAdapter = await PieDaoAdapterFactory.deploy(owner);
@@ -64,7 +64,7 @@ async function main() {
 
     const LiquidityMigrationFactory = await hre.ethers.getContractFactory("LiquidityMigration")
     const liquidityMigration = await LiquidityMigrationFactory.deploy(
-      [tokenSetAdapter.address, indexedAdapter.address, pieDaoAdapter.address],
+      [tokenSetAdapter.address, BalancerAdapter.address, pieDaoAdapter.address],
       deployedContracts['localhost'].genericRouter,
       deployedContracts['localhost'].strategyProxyFactory,
       deployedContracts['localhost'].strategyController,
