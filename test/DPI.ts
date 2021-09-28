@@ -8,7 +8,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20, IERC20__factory, IStrategy__factory, LiquidityMigration } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
@@ -255,13 +255,13 @@ describe("DPI: Unit tests", function () {
     expect(await this.liquidityMigration.staked(defaultAddress, this.DPIEnv.tokenSet.address)).to.be.eq(BigNumber.from(0));
 
     const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.DPIEnv.adapter.getAmountOut(this.DPIEnv.tokenSet.address, UNISWAP_ROUTER, ethAmount)
+    const expectedAmount = await this.DPIEnv.adapter.callStatic.getAmountOut(this.DPIEnv.tokenSet.address, UNISWAP_V3_ROUTER, ethAmount)
     console.log("Expected: ", expectedAmount.toString())
 
     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
       this.DPIEnv.tokenSet.address,
       this.DPIEnv.adapter.address,
-      UNISWAP_ROUTER,
+      UNISWAP_V3_ROUTER,
       expectedAmount.mul(995).div(1000), //0.5% slippage
       ethers.constants.MaxUint256,
       {value: ethAmount}

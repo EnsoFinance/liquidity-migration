@@ -3,7 +3,6 @@ pragma solidity 0.8.2;
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./AbstractAdapter.sol";
-import "hardhat/console.sol";
 
 interface IDHedge {
     function getFundComposition() external view returns(bytes32[] memory, uint256[] memory, uint256[] memory);

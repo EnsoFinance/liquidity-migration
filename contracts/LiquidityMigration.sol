@@ -8,7 +8,6 @@ import "@enso/contracts/contracts/interfaces/IStrategyProxyFactory.sol";
 import "@enso/contracts/contracts/interfaces/IStrategyController.sol";
 import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
 import "./helpers/Timelocked.sol";
-import "hardhat/console.sol";
 
 contract LiquidityMigration is Timelocked, StrategyTypes {
     using SafeERC20 for IERC20;
