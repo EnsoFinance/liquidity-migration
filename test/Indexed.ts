@@ -7,7 +7,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { FACTORY_REGISTRIES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
@@ -239,13 +239,13 @@ describe("Indexed: Unit tests", function () {
     expect(await this.liquidityMigration.staked(defaultAddress, this.degenIndexPoolERC20.address)).to.be.eq(BigNumber.from(0));
 
     const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.IndexedEnv.adapter.getAmountOut(this.degenIndexPoolERC20.address, UNISWAP_ROUTER, ethAmount)
+    const expectedAmount = await this.IndexedEnv.adapter.callStatic.getAmountOut(this.degenIndexPoolERC20.address, UNISWAP_V2_ROUTER, ethAmount)
     console.log("Expected: ", expectedAmount.toString())
 
     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
       this.degenIndexPoolERC20.address,
       this.IndexedEnv.adapter.address,
-      UNISWAP_ROUTER,
+      UNISWAP_V2_ROUTER,
       expectedAmount.mul(995).div(1000), //0.5% slippage
       ethers.constants.MaxUint256,
       {value: ethAmount}

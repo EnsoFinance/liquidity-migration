@@ -8,7 +8,6 @@ import "@enso/contracts/contracts/interfaces/IStrategyProxyFactory.sol";
 import "@enso/contracts/contracts/interfaces/IStrategyController.sol";
 import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
 import "./helpers/Timelocked.sol";
-import "hardhat/console.sol";
 
 contract LiquidityMigration is Timelocked, StrategyTypes {
     using SafeERC20 for IERC20;
@@ -240,9 +239,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         internal
     {
         uint256 balanceBefore = IERC20(_lp).balanceOf(address(this));
-        console.log("Balance before: ", balanceBefore);
         IAdapter(_adapter).buy{value: _amount}(_lp, _exchange, _minAmountOut, _deadline);
-        console.log("Balance after: ", IERC20(_lp).balanceOf(address(this)));
         uint256 amountAdded = IERC20(_lp).balanceOf(address(this)) - balanceBefore;
         _stake(_lp, amountAdded, _adapter);
     }

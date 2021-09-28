@@ -14,7 +14,7 @@ interface IAdapter {
 
     function buy(address _lp, address _exchange, uint256 _minAmountOut, uint256 _deadline) external payable;
 
-    function getAmountOut(address _lp, address _exchange, uint256 _amountIn) external view returns (uint256);
+    function getAmountOut(address _lp, address _exchange, uint256 _amountIn) external returns (uint256);
 
     function isWhitelisted(address _token) external view returns (bool);
 

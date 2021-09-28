@@ -5,6 +5,8 @@ import "../interfaces/IAdapter.sol";
 import "../helpers/Whitelistable.sol";
 
 import "../interfaces/IUniswapV2Router.sol";
+import "../interfaces/IUniswapV3Router.sol";
+import "../interfaces/IQuoter.sol";
 
 /// @title Token Sets Vampire Attack Contract
 /// @author Enso.finance (github.com/EnsoFinance)
@@ -13,8 +15,9 @@ import "../interfaces/IUniswapV2Router.sol";
 abstract contract AbstractAdapter is IAdapter, Whitelistable {
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant SUSHI = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
-    address public constant UNI_V2 = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    address public constant UNI_V2 = 0xf164fC0Ec4E93095b804a4795bBe1e041497b92a;
     address public constant UNI_V3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
+    address public constant QUOTER = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
 
     /**
     * @dev Require exchange registered
@@ -61,26 +64,25 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         address _lp,
         address _exchange,
         uint256 _amountIn
-    ) 
+    )
         external
         override
         virtual
-        view
         onlyExchange(_exchange)
         onlyWhitelisted(_lp)
         returns (uint256)
     {
         if (_exchange == UNI_V3) {
-            _getV3(_lp, _amountIn);
+            return _getV3(_lp, _amountIn);
         } else {
-            _getV2(_lp, _exchange, _amountIn);
+            return _getV2(_lp, _exchange, _amountIn);
         }
     }
 
     function _buyV2(
-        address _lp, 
-        address _exchange, 
-        uint256 _minAmountOut, 
+        address _lp,
+        address _exchange,
+        uint256 _minAmountOut,
         uint256 _deadline
     )
         internal
@@ -98,20 +100,21 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
 
     function _buyV3(
         address _lp,
-        uint256 _minAmountOut, 
+        uint256 _minAmountOut,
         uint256 _deadline
     )
         internal
     {
-        address[] memory path = new address[](2);
-        path[0] = WETH;
-        path[1] = _lp;
-        IUniswapV2Router(UNI_V3).swapExactETHForTokens{value: msg.value}(
-            _minAmountOut,
-            path,
-            msg.sender,
-            _deadline
-        );
+        IUniswapV3Router(UNI_V3).exactInputSingle{value: msg.value}(IUniswapV3Router.ExactInputSingleParams(
+          WETH,
+          _lp,
+          3000,
+          msg.sender,
+          _deadline,
+          msg.value,
+          _minAmountOut,
+          0
+        ));
     }
 
     function _getV2(address _lp, address _exchange, uint256 _amountIn)
@@ -127,13 +130,16 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
 
     function _getV3(address _lp, uint256 _amountIn)
         internal
-        view
         returns (uint256)
     {
-        address[] memory path = new address[](2);
-        path[0] = WETH;
-        path[1] = _lp;
-        return IUniswapV2Router(UNI_V3).getAmountsOut(_amountIn, path)[1];
+
+        return IQuoter(QUOTER).quoteExactInputSingle(
+            WETH,
+            _lp,
+            3000,
+            _amountIn,
+            0
+        );
     }
 
     /**
@@ -156,10 +162,10 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
     function numberOfUnderlying(address _lp) external view override returns (uint256) {
         return _count[_lp];
     }
-    
+
     function isExchange(address _exchange)
         public
-        view
+        pure
         returns (bool)
     {
         return(_exchange == SUSHI || _exchange == UNI_V2 || _exchange == UNI_V3);

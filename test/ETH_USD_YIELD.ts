@@ -4,10 +4,10 @@ import bignumber from "bignumber.js";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
+import { IERC20, IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 
@@ -231,7 +231,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
-  /*
+
   it("Should buy and stake", async function () {
     const defaultAddress = await this.signers.default.getAddress();
 
@@ -240,21 +240,33 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     expect(await this.liquidityMigration.staked(defaultAddress, this.ETHUSDYieldEnv.tokenSet.address)).to.be.eq(BigNumber.from(0));
 
     const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.ETHUSDYieldEnv.adapter.getAmountOut(this.ETHUSDYieldEnv.tokenSet.address, UNISWAP_ROUTER, ethAmount)
+    const expectedAmount = await this.ETHUSDYieldEnv.adapter.getAmountOut(this.ETHUSDYieldEnv.tokenSet.address, UNISWAP_V3_ROUTER, ethAmount)
     console.log("Expected: ", expectedAmount.toString())
-
+    /*
     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
       this.ETHUSDYieldEnv.tokenSet.address,
       this.ETHUSDYieldEnv.adapter.address,
-      UNISWAP_ROUTER,
+      '0xE592427A0AEce92De3Edee1F18E0157C05861564',
       expectedAmount.mul(995).div(1000), //0.5% slippage
       ethers.constants.MaxUint256,
       {value: ethAmount}
     )
-
+    */
+    const router = IUniswapV3Router__factory.connect(UNISWAP_V3_ROUTER, this.signers.default);
+    console.log(this.ETHUSDYieldEnv.tokenSet.address)
+    await router.exactInputSingle({
+      tokenIn: WETH,
+      tokenOut: this.ETHUSDYieldEnv.tokenSet.address,
+      fee: 3000,
+      recipient: defaultAddress,
+      deadline: ethers.constants.MaxUint256,
+      amountIn: ethAmount,
+      amountOutMinimum: 0,
+      sqrtPriceLimitX96: 0
+    }, {value: ethAmount})
     const staked = await this.liquidityMigration.staked(defaultAddress, this.ETHUSDYieldEnv.tokenSet.address)
     console.log("Staked: ", staked.toString())
     expect(staked).to.be.gt(BigNumber.from(0));
   })
-  */
+
 });
