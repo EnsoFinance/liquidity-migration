@@ -37,6 +37,13 @@ const LP_TOKEN_WHALES = [
     symbol: "USDAPY",
   },
   {
+    victim: "tokenSets",
+    walletAddress: "0x6b9dfc960299166df15ab8a85f054c69e2be2353",
+    lpTokenAddress: "0x72e364F2ABdC788b7E918bc238B21f109Cd634D7",
+    lpTokenName: "MetaverseIndex",
+    symbol: "MVI",
+  },
+  {
     victim: "indexCoop",
     walletAddress: "0x4ec7cdf61405758f5ced5e454c0b4b0f4f043df0",
     lpTokenAddress: "0x0954906da0Bf32d5479e25f46056d22f08464cab",
@@ -47,6 +54,13 @@ const LP_TOKEN_WHALES = [
     victim: "pieDao",
     walletAddress: "0xa11aed329616cc59e002a825f8a85f9baf4cdbfc",
     lpTokenAddress: "0x33e18a092a93ff21ad04746c7da12e35d34dc7c4",
+    lpTokenName: "Metaverse NFT Index",
+    symbol: "PLAY",
+  },
+  {
+    victim: "pieDao",
+    walletAddress: "0xfad4a1f91026e62774a918202572b9be2fdcdb4e",
+    lpTokenAddress: "0x9a48bd0ec040ea4f1d3147c025cd4076a2e71e3e",
     lpTokenName: "Metaverse NFT Index",
     symbol: "PLAY",
   },
