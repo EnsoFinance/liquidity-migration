@@ -96,8 +96,7 @@ const getMonorepoDeployments = () => {
     const file = fs.readFileSync(monoRepoDeploymentsFile, "utf8");
     if (file) {
       const monorepoContracts = JSON.parse(file);
-      console.log("Gotem: ", monorepoContracts);
-      deployedContracts[network] = monorepoContracts[network];
+      deployedContracts[network] = { ...deployedContracts[network], ...monorepoContracts[network] };
     }
   } catch (e) {
     console.error(e);
