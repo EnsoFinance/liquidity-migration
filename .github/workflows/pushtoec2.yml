@@ -17,7 +17,7 @@ jobs:
         uses: easingthemes/ssh-deploy@v2.1.5
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          SOURCE: "./contracts"
+          SOURCE: "./"
           REMOTE_HOST: "18.220.184.80"
           REMOTE_USER: "ubuntu"
           TARGET: "/home/ubuntu/liquidity-migration"
