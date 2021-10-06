@@ -27,4 +27,4 @@ jobs:
           host: "18.220.184.80"
           username: "ubuntu"
           key: ${{ secrets.EC2_SSH_KEY }}
-          script: bash /home/ubuntu/liquidity-migration/contracts/scripts/deploy2MainnetFork.sh
+          script: bash /home/ubuntu/liquidity-migration/scripts/deploy2MainnetFork.sh
