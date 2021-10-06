@@ -20,7 +20,7 @@ contract PieDaoAdapter is AbstractAdapter {
         outputs = IPieDaoPool(_lp).getTokens();
     }
 
-    function encodeExecute(address _lp, uint256 _amount)
+    function encodeWithdraw(address _lp, uint256 _amount)
         public
         override
         view

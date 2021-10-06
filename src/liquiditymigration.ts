@@ -9,6 +9,8 @@ export enum AcceptedProtocols {
   Indexed,
   DefiPulseIndex,
   PieDao,
+  DHedge,
+  Powerpool
 }
 
 export type Adapter = {
@@ -20,12 +22,21 @@ export class LiquidityMigrationBuilder {
   signer: SignerWithAddress;
   adapters: Adapter[];
   liquidityMigration?: Contract;
-  ensoEnv: EnsoEnvironment;
+  enso: EnsoEnvironment;
 
   constructor(signer: SignerWithAddress, enso: EnsoEnvironment) {
     this.signer = signer;
-    this.ensoEnv = enso;
+    this.enso = enso;
     this.adapters = [] as Adapter[];
+  }
+
+  addAdapters(protocol: AcceptedProtocols[], adapter: IAdapter[]) {
+    for (let i = 0; i < protocol.length; i++) {
+      this.adapters.push({
+        protocol: protocol[i],
+        adapter: adapter[i].address
+      })
+    }
   }
 
   addAdapter(protocol: AcceptedProtocols, adapter: IAdapter) {
@@ -44,12 +55,12 @@ export class LiquidityMigrationBuilder {
 
     const unlock = await getBlockTime(5);
 
-    if (this.ensoEnv.routers[0].contract) {
+    if (this.enso.routers[0].contract) {
       this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(
         this.adapters.map(a => a.adapter),
-        this.ensoEnv.routers[0].contract.address,
-        this.ensoEnv.platform.strategyFactory.address,
-        this.ensoEnv.platform.controller.address,
+        this.enso.routers[0].contract.address,
+        this.enso.platform.strategyFactory.address,
+        this.enso.platform.controller.address,
         unlock,
         ethers.constants.MaxUint256,
         this.signer.address

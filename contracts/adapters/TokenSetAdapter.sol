@@ -3,13 +3,14 @@ pragma solidity 0.8.2;
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./AbstractAdapter.sol";
-// import "../helpers/Whitelistable.sol";
+import "hardhat/console.sol";
 
 interface ISetToken {
     function getComponents() external view returns (address[] memory);
+    function isInitializedModule(address _module) external view returns (bool);
 }
 
-interface ISetModule {
+interface IBasicIssuanceModule {
     function redeem(address _setToken, uint256 _quantity, address _to) external;
 }
 
@@ -21,16 +22,22 @@ contract TokenSetAdapter is AbstractAdapter {
     using SafeERC20 for IERC20;
 
     address public generic;
-    ISetModule public setModule;
+    IBasicIssuanceModule public basicModule;
+    IBasicIssuanceModule public debtModule;
+    mapping (address => bool) private _leveraged;
 
     constructor(
-        ISetModule setModule_,
+        IBasicIssuanceModule basicModule_,
+        IBasicIssuanceModule debtModule_,
         address generic_,
         address owner_
     ) AbstractAdapter(owner_)
     {
-        setModule = setModule_;
+        basicModule = basicModule_;
+        debtModule = debtModule_;
         generic = generic_;
+        _leveraged[0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD] = true; // ETH2X
+        _leveraged[0x0B498ff89709d3838a063f1dFA463091F9801c2b] = true; // BTC2X
     }
 
     function outputTokens(address _lp)
@@ -42,22 +49,35 @@ contract TokenSetAdapter is AbstractAdapter {
         outputs = ISetToken(_lp).getComponents();
     }
 
-    function encodeExecute(address _lp, uint256 _amount)
+    function encodeWithdraw(address _lp, uint256 _amount)
         public
         override
         view
         onlyWhitelisted(_lp)
         returns(Call memory call)
     {
-        call = Call(
-            payable(address(setModule)),
-            abi.encodeWithSelector(
-                setModule.redeem.selector,
-                _lp,
-                _amount,
-                generic
-            ),
-            0
-        );
+        if (_leveraged[_lp]) {
+            call = Call(
+                payable(address(debtModule)),
+                abi.encodeWithSelector(
+                    debtModule.redeem.selector,
+                    _lp,
+                    _amount,
+                    generic
+                ),
+                0
+            );
+        } else {
+            call = Call(
+                payable(address(basicModule)),
+                abi.encodeWithSelector(
+                    basicModule.redeem.selector,
+                    _lp,
+                    _amount,
+                    generic
+                ),
+                0
+            );
+        }
     }
 }
