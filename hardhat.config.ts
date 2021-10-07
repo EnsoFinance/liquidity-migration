@@ -6,12 +6,19 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
-// import "hardhat-gas-reporter"
+// import "hardhat-gas-reporter";
 import "@typechain/hardhat";
 import "hardhat-etherscan-abi";
 import "solidity-coverage";
+
+import "./tasks/whitelistStrategy";
+import "./tasks/checkAdapter";
+import "./tasks/addOwnerFunds";
+import "./tasks/initMasterUser";
+import "./tasks/whitelistAllStrategies";
 import "./tasks/accounts";
 import "./tasks/clean";
+import "./tasks/addAdapter";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -52,9 +59,9 @@ if (networkIndex > 0) {
 }
 
 function getNetworks(): NetworksUserConfig {
-  let networks: NetworksUserConfig = {
+  const networks: NetworksUserConfig = {
     hardhat: {
-      chainId: chainIds.mainnet,
+      chainId: chainIds.hardhat,
     },
   };
   if (networks.hardhat) {
