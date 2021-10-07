@@ -25,7 +25,7 @@ task(ADD_ADAPTER, "Add Adapters")
       method: "hardhat_impersonateAccount",
       params: [owner],
     });
-    const secondSigner = await hre.ethers.getSigner(owner);
-    const { addAdapter } = await new hre.ethers.Contract(migrationAddress, ABI_FRAGMENT, secondSigner);
+    const signer = await hre.ethers.getSigner(owner);
+    const { addAdapter } = await new hre.ethers.Contract(migrationAddress, ABI_FRAGMENT, signer);
     await addAdapter(adapterAddress);
   });

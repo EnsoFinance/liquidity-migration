@@ -1,8 +1,16 @@
 {
-  "kovan" : {
-    "LiquidityMigration" :  "0xF1C560956CfB1841C3723e3c1bF0D57B68EbADA6",
-    "TokenSetAdapter" :  "0xd96B848eBbd0E2DDF192E1d9a66AD70523B157f6",
-    "IndexedAdapter" :  "0x4006c6232dA6dcC13D06b0a77F970808293742b4",
-    "PieDaoAdapter" :  "0x0Af5858Dbdc203428021A6b511bADcb4a07c08A3"
+  "kovan": {
+    "LiquidityMigration": "0xF1C560956CfB1841C3723e3c1bF0D57B68EbADA6",
+    "TokenSetAdapter": "0xd96B848eBbd0E2DDF192E1d9a66AD70523B157f6",
+    "IndexedAdapter": "0x4006c6232dA6dcC13D06b0a77F970808293742b4",
+    "PieDaoAdapter": "0x0Af5858Dbdc203428021A6b511bADcb4a07c08A3"
+  },
+  "localhost": {
+    "TokenSetAdapter": "0xaC47e91215fb80462139756f43438402998E4A3a",
+    "BalancerAdapter": "0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7",
+    "PieDaoAdapter": "0x63fea6E447F120B8Faf85B53cdaD8348e645D80E",
+    "LiquidityMigration": "0xdFdE6B33f13de2CA1A75A6F7169f50541B14f75b",
+    "ERC1155": "0xaC9fCBA56E42d5960f813B9D0387F3D3bC003338",
+    "Claimable": "0x38A70c040CA5F5439ad52d0e821063b0EC0B52b6"
   }
 }

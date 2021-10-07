@@ -6,6 +6,7 @@
 import hre from "hardhat";
 import { getBlockTime } from "../src/utils";
 import * as fs from "fs";
+import deployments from "../deployments.json";
 
 const monoRepoDeployments = process.env.MONOREPO_DEPLOYMENTS_FILE;
 const network = process.env.HARDHAT_NETWORK ?? "";
@@ -60,19 +61,19 @@ async function main() {
       owner,
     );
     await tokenSetAdapter.deployed();
-    console.log("TokenSetAdapter: ", tokenSetAdapter.address);
+    log("TokenSetAdapter", tokenSetAdapter.address);
     protocol_addresses.push(tokenSetAdapter.address);
 
     const BalancerAdapterFactory = await hre.ethers.getContractFactory("BalancerAdapter");
     const BalancerAdapter = await BalancerAdapterFactory.deploy(owner);
     await BalancerAdapter.deployed();
-    console.log("BalancerAdapter: ", BalancerAdapter.address);
+    log("BalancerAdapter", BalancerAdapter.address);
     protocol_addresses.push(BalancerAdapter.address);
 
     const PieDaoAdapterFactory = await hre.ethers.getContractFactory("PieDaoAdapter");
     const pieDaoAdapter = await PieDaoAdapterFactory.deploy(owner);
     await pieDaoAdapter.deployed();
-    console.log("PieDaoAdapter: ", pieDaoAdapter.address);
+    log("PieDaoAdapter", pieDaoAdapter.address);
     protocol_addresses.push(pieDaoAdapter.address);
 
     const unlock = await getBlockTime(60);
@@ -88,19 +89,20 @@ async function main() {
       owner,
     );
     await liquidityMigration.deployed();
-    console.log("LiquidityMigration: ", liquidityMigration.address);
+    log("LiquidityMigration", liquidityMigration.address);
 
     const ERC1155Factory = await hre.ethers.getContractFactory("Root1155");
     const erc1155 = await ERC1155Factory.deploy(initialURI);
-    console.log("ERC1155: ", erc1155.address);
+    log("ERC1155", erc1155.address);
     const Claimable = await hre.ethers.getContractFactory("Claimable");
     const claimable = await Claimable.deploy(liquidityMigration.address, erc1155.address, max, protocol_addresses);
     for (let i = 0; i < max; i++) {
       await erc1155.create(claimable.address, supply, initialURI, "0x");
     }
-    console.log("Claimable:", claimable.address);
+    log("Claimable", claimable.address);
     await claimable.stateChange(state[1]);
     console.log("State updated: Migrate all the competitors *evil laugh*");
+    write2File();
   } else {
     console.log("Network undefined");
   }
@@ -120,6 +122,17 @@ const getMonorepoDeployments = () => {
       console.error(e);
     }
   }
+};
+
+const contracts: any = {};
+const log = (contractTitle: string, address: string) => {
+  contracts[contractTitle] = address;
+  console.log(contractTitle + ": " + address);
+};
+
+const write2File = () => {
+  const data = JSON.stringify({ ...deployments, [network]: contracts }, null, 2);
+  fs.writeFileSync("./deployments.json", data);
 };
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -15,6 +15,7 @@ import "./tasks/whitelistStrategy";
 import "./tasks/checkAdapter";
 import "./tasks/addOwnerFunds";
 import "./tasks/initMasterUser";
+import "./tasks/whitelistAllStrategies";
 import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/addAdapter";

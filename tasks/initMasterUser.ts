@@ -7,7 +7,7 @@ const ERC20_ABI_FRAGMENT = [
   "function balanceOf(address owner) view returns (uint256)",
 ];
 
-const LP_TOKEN_WHALES = [
+export const LP_TOKEN_WHALES = [
   {
     victim: "defiPulseIndex",
     walletAddress: "0x1c631824b0551fd0540a1f198c893b379d5cf3c3",
@@ -34,6 +34,7 @@ const LP_TOKEN_WHALES = [
     walletAddress: "0x4a8b9e2c2940fdd39aceb384654dc59acb58c337",
     lpTokenAddress: "0x23687D9d40F9Ecc86E7666DDdB820e700F954526",
     lpTokenName: "ethYieldFarm",
+    adapter: "TokenSetAdapter",
     symbol: "USDAPY",
   },
   {
@@ -42,6 +43,7 @@ const LP_TOKEN_WHALES = [
     lpTokenAddress: "0x72e364F2ABdC788b7E918bc238B21f109Cd634D7",
     lpTokenName: "MetaverseIndex",
     symbol: "MVI",
+    adapter: "TokenSetAdapter",
   },
   {
     victim: "indexCoop",
@@ -56,6 +58,7 @@ const LP_TOKEN_WHALES = [
     lpTokenAddress: "0x33e18a092a93ff21ad04746c7da12e35d34dc7c4",
     lpTokenName: "Metaverse NFT Index",
     symbol: "PLAY",
+    adapter: "PieDaoAdapter",
   },
   {
     victim: "pieDao",
@@ -63,6 +66,7 @@ const LP_TOKEN_WHALES = [
     lpTokenAddress: "0x9a48bd0ec040ea4f1d3147c025cd4076a2e71e3e",
     lpTokenName: "Metaverse NFT Index",
     symbol: "PLAY",
+    adapter: "PieDaoAdapter",
   },
 ];
 
