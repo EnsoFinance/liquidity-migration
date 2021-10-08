@@ -47,7 +47,7 @@ task(ADD_ADAPTER, "Add Adapters")
     const signer = await hre.ethers.getSigner(owner);
     const { addAdapter, adapters } = await new hre.ethers.Contract(migrationAddress, MIGRATION_ABI_FRAGMENT, signer);
     const isAlreadyAdapter = await adapters(adapterAddress);
-    console.log(`is ${!isAlreadyAdapter && "not "} already an adapter`);
+    console.log(`${adapterAddress} ${!isAlreadyAdapter ? "was not" : "was"} already added`);
     if (!isAlreadyAdapter) {
       await addAdapter(adapterAddress);
     }

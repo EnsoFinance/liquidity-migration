@@ -27,7 +27,7 @@ task(ADD_ALL_ADAPTERS, "Add all adapters", async (_taskArgs, hre) => {
           signer,
         );
         const isAlreadyAdapter = await adapters(deployedAdapter);
-        console.log(`is ${!isAlreadyAdapter && "not "} already an adapter`);
+        console.log(`${deployedAdapter} ${!isAlreadyAdapter ? "was not" : "was"} already added`);
         if (!isAlreadyAdapter) {
           await addAdapter(deployedAdapter);
           uniqueAdapters.push(adapter);
