@@ -18,13 +18,13 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           SOURCE: "./"
-          REMOTE_HOST: "18.220.184.80"
+          REMOTE_HOST: "3.144.40.241"
           REMOTE_USER: "ubuntu"
           TARGET: "/home/ubuntu/liquidity-migration"
       - name: executing remote ssh commands
         uses: appleboy/ssh-action@master
         with:
-          host: "18.220.184.80"
+          host: "3.144.40.241"
           username: "ubuntu"
           key: ${{ secrets.EC2_SSH_KEY }}
           script: bash /home/ubuntu/liquidity-migration/scripts/deploy2MainnetFork.sh
