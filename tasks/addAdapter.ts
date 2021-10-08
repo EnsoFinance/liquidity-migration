@@ -15,6 +15,25 @@ export const MIGRATION_ABI_FRAGMENT = [
     stateMutability: "nonpayable",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "adapters",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
 task(ADD_ADAPTER, "Add Adapters")
@@ -26,6 +45,9 @@ task(ADD_ADAPTER, "Add Adapters")
       params: [owner],
     });
     const signer = await hre.ethers.getSigner(owner);
-    const { addAdapter } = await new hre.ethers.Contract(migrationAddress, MIGRATION_ABI_FRAGMENT, signer);
-    await addAdapter(adapterAddress);
+    const { addAdapter, adapters } = await new hre.ethers.Contract(migrationAddress, MIGRATION_ABI_FRAGMENT, signer);
+    const isAlreadyAdapter = await adapters(adapterAddress);
+    if (!isAlreadyAdapter) {
+      await addAdapter(adapterAddress);
+    }
   });
