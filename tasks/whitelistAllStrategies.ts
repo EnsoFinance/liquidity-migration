@@ -4,7 +4,6 @@ import deployments from "../deployments.json";
 import { WHITELIST_ALL_STRATEGIES } from "./task-names";
 import { LP_TOKEN_WHALES } from "./initMasterUser";
 import { ADAPTER_ABI_FRAGMENT, owner } from "./whitelistStrategy";
-import { MIGRATION_ABI_FRAGMENT } from "./addAdapter";
 const network = "localhost";
 
 task(WHITELIST_ALL_STRATEGIES, "Whitelist all whale strategies", async (_taskArgs, hre) => {
@@ -22,6 +21,7 @@ task(WHITELIST_ALL_STRATEGIES, "Whitelist all whale strategies", async (_taskArg
           const signer = await hre.ethers.getSigner(owner);
           const { add } = await new hre.ethers.Contract(deployedAdapter, ADAPTER_ABI_FRAGMENT, signer);
           await add(lpTokenAddress);
+          console.log("Added strategy ", lpTokenAddress, " to adapter ", deployedAdapter);
         }
       }
     } catch (e) {
