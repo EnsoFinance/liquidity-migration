@@ -1,7 +1,7 @@
 import { task } from "hardhat/config";
 import { ADD_ADAPTER } from "./task-names";
 export const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
-const ABI_FRAGMENT = [
+export const MIGRATION_ABI_FRAGMENT = [
   {
     inputs: [
       {
@@ -26,6 +26,6 @@ task(ADD_ADAPTER, "Add Adapters")
       params: [owner],
     });
     const signer = await hre.ethers.getSigner(owner);
-    const { addAdapter } = await new hre.ethers.Contract(migrationAddress, ABI_FRAGMENT, signer);
+    const { addAdapter } = await new hre.ethers.Contract(migrationAddress, MIGRATION_ABI_FRAGMENT, signer);
     await addAdapter(adapterAddress);
   });
