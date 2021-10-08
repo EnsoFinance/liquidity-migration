@@ -36,7 +36,7 @@ export async function encodeMigrationData(
     underlyingTokens: string[],
     amount: number | BigNumber
 ): Promise<string> {
-    const migrationCall: Multicall = await adapter.encodeWithdraw(lp, amount);
+    const migrationCalls: Multicall[] = await adapter.encodeWithdraw(lp, amount);
 
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
@@ -44,7 +44,7 @@ export async function encodeMigrationData(
       transferCalls.push(encodeSettleTransfer(router, underlyingTokens[i], strategy));
     }
     // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     return router.encodeCalls(calls);
 }
 

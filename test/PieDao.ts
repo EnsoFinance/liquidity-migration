@@ -84,14 +84,14 @@ describe("PieDao: Unit tests", function () {
     const amount = await this.liquidityMigration.staked(holderAddress, poolContract.address);
 
     // Setup migration calls using PieDaoAdapter contract
-    const migrationCall: Multicall = await this.pieDaoEnv.adapter.encodeWithdraw(poolContract.address, amount);
+    const migrationCalls: Multicall[] = await this.pieDaoEnv.adapter.encodeWithdraw(poolContract.address, amount);
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     for (let i = 0; i < pool.tokens.length; i++) {
       transferCalls.push(encodeSettleTransfer(routerContract, pool.tokens[i], this.strategy.address));
     }
     // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     // Migrate
     await this.liquidityMigration

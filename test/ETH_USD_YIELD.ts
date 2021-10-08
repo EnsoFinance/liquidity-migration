@@ -110,7 +110,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using Adapter contract
-    const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
+    const migrationCalls: Multicall[] = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
@@ -119,7 +119,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], ethers.constants.AddressZero));
     }
     // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
@@ -210,7 +210,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using Adapter contract
-    const migrationCall: Multicall = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
+    const migrationCalls: Multicall[] = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
 
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
@@ -220,7 +220,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
     // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     // Migrate
     await this.liquidityMigration

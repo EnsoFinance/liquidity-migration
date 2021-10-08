@@ -122,7 +122,7 @@ describe("DPI: Unit tests", function () {
     // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DPIAdapter contract
-    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeWithdraw(this.DPIEnv.tokenSet.address, amount);
+    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeWithdraw(this.DPIEnv.tokenSet.address, amount);
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     const underlyingTokens = await this.DPIEnv.tokenSet.getComponents();
@@ -130,7 +130,7 @@ describe("DPI: Unit tests", function () {
       transferCalls.push(await encodeSettleTransfer(routerContract, underlyingTokens[i], ethers.constants.AddressZero));
     }
     // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
 
     const tx = await this.DPIEnv.adapter
@@ -218,7 +218,7 @@ describe("DPI: Unit tests", function () {
     const holder3BalanceAfter = await this.DPIEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
-    const migrationCall: Multicall = await this.DPIEnv.adapter.encodeWithdraw(this.DPIEnv.tokenSet.address, amount);
+    const migrationCalls: Multicall[] = await this.DPIEnv.adapter.encodeWithdraw(this.DPIEnv.tokenSet.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
@@ -227,7 +227,7 @@ describe("DPI: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
     // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration

@@ -131,7 +131,7 @@ describe("PowerPool: Unit tests", function () {
     const holder2BalanceAfter = await this.powerIndexPoolERC20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
     // Setup migration calls using DEGENAdapter contract
-    const migrationCall: Multicall = await this.PowerEnv.adapter.encodeWithdraw(this.PowerEnv.powerIndexPool.address, amount);
+    const migrationCalls: Multicall[] = await this.PowerEnv.adapter.encodeWithdraw(this.PowerEnv.powerIndexPool.address, amount);
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
@@ -139,7 +139,7 @@ describe("PowerPool: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
     }
     // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.PowerEnv.adapter
       .connect(this.signers.default)
@@ -206,7 +206,7 @@ describe("PowerPool: Unit tests", function () {
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Setup migration calls using DEGENAdapter contract
-    const migrationCall: Multicall = await this.PowerEnv.adapter.encodeWithdraw(this.PowerEnv.powerIndexPool.address, amount);
+    const migrationCalls: Multicall[] = await this.PowerEnv.adapter.encodeWithdraw(this.PowerEnv.powerIndexPool.address, amount);
 
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
@@ -215,7 +215,7 @@ describe("PowerPool: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
     }
     // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     // Migrate
     await this.liquidityMigration

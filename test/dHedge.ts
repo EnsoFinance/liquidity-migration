@@ -134,7 +134,7 @@ describe("dHedge: Unit tests", function () {
     const holder2BalanceAfter = await this.dHedgeTopIndexERC20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
     // Setup migration calls using DHedgeAdapter contract
-    const migrationCall: Multicall = await this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.dHedgeTopIndex.address, amount);
+    const migrationCalls: Multicall[] = await this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.dHedgeTopIndex.address, amount);
     // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
     // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
@@ -142,7 +142,7 @@ describe("dHedge: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], ethers.constants.AddressZero)); // Strategy doesn't matter right now
     }
     // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.DHedgeEnv.adapter
       .connect(this.signers.default)
@@ -232,7 +232,7 @@ describe("dHedge: Unit tests", function () {
     const holder3BalanceAfter = await this.dHedgeTopIndexERC20.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
     // Setup migration calls using DHedgeAdapter contract
-    const migrationCall: Multicall = await this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.dHedgeTopIndex.address, amount);
+    const migrationCalls: Multicall[] = await this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.dHedgeTopIndex.address, amount);
 
     // // Setup transfer of tokens from router to strategy
     const transferCalls = [] as Multicall[];
@@ -241,7 +241,7 @@ describe("dHedge: Unit tests", function () {
       transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
     }
     // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
+    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
     const migrationData = await routerContract.encodeCalls(calls);
     // // Migrate
     await this.liquidityMigration

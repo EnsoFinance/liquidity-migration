@@ -120,6 +120,19 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         require(msg.value == total, "LiquidityMigration#batchBuyAndStake: incorrect amounts");
     }
 
+    function safeMigrate(
+        address _lp,
+        address _adapter,
+        IStrategy _strategy
+    )
+        public
+        onlyUnlocked
+        onlyRegistered(_adapter)
+        onlyWhitelisted(_adapter, _lp)
+    {
+        _safeMigrate(msg.sender, _lp, _adapter, _strategy);
+    }
+
     function migrate(
         address _lp,
         address _adapter,
@@ -184,6 +197,35 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         for (uint256 i = 0; i < _lp.length; i++) {
             migrate(_user[i], _lp[i], _adapter[i], _strategy[i], migrationData[i]);
         }
+    }
+
+    function _safeMigrate(
+        address _user,
+        address _lp,
+        address _adapter,
+        IStrategy _strategy
+    )
+        internal
+    {
+        require(
+            IStrategyController(controller).initialized(address(_strategy)),
+            "LiquidityMigration#_migrate: not enso strategy"
+        );
+
+        uint256 _stakeAmount = staked[_user][_lp];
+        require(_stakeAmount > 0, "LiquidityMigration#_migrate: not staked");
+
+        delete staked[_user][_lp];
+        IERC20(_lp).safeTransfer(generic, _stakeAmount);
+
+        uint256 _before = _strategy.balanceOf(address(this));
+        bytes memory migrationData =
+            abi.encode(IAdapter(_adapter).encodeMigration(generic, address(_strategy), _lp, _stakeAmount));
+        IStrategyController(controller).deposit(_strategy, IStrategyRouter(generic), 0, migrationData);
+        uint256 _after = _strategy.balanceOf(address(this));
+
+        _strategy.transfer(_user, (_after - _before));
+        emit Migrated(_adapter, _lp, address(_strategy), _user);
     }
 
     function _migrate(
