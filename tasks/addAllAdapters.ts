@@ -23,12 +23,15 @@ task(ADD_ALL_ADAPTERS, "Add all adapters", async (_taskArgs, hre) => {
             params: [owner],
           });
           const signer = await hre.ethers.getSigner(owner);
-          const { addAdapter } = await new hre.ethers.Contract(
+          const { addAdapter, adapters } = await new hre.ethers.Contract(
             liquidityMigrationAddress,
             MIGRATION_ABI_FRAGMENT,
             signer,
           );
-          await addAdapter(deployedAdapter);
+          const isAlreadyAdapter = await adapters(deployedAdapter);
+          if (!isAlreadyAdapter) {
+            await addAdapter(deployedAdapter);
+          }
         }
       }
     } catch (e) {
