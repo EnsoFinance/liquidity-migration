@@ -5,3 +5,4 @@ export const CHECK_ADAPTER: string = "checkAdapter";
 export const ADD_OWNER_FUNDS: string = "addOwnerFunds";
 export const WHITELIST_STRATEGY: string = "whitelistStrategy";
 export const WHITELIST_ALL_STRATEGIES: string = "whitelistAllStrategies";
+export const ADD_ALL_ADAPTERS: string = "addAllAdapters";

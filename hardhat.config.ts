@@ -19,6 +19,7 @@ import "./tasks/whitelistAllStrategies";
 import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/addAdapter";
+import "./tasks/addAllAdapters";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
