@@ -115,17 +115,6 @@ describe("Indexed: Unit tests", function () {
 
     const holder2BalanceAfter = await this.degenIndexPoolERC20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
-    // Setup migration calls using DEGENAdapter contract
-    const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeWithdraw(this.IndexedEnv.degenIndexPool.address, amount);
-    // Setup transfer of tokens from router to strategy
-    const transferCalls = [] as Multicall[];
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
-    for (let i = 0; i < this.underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], ethers.constants.AddressZero));
-    }
-    // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
-    const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.IndexedEnv.adapter
       .connect(this.signers.default)
       .remove(FACTORY_REGISTRIES.DEGEN_INDEX);
@@ -134,11 +123,10 @@ describe("Indexed: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address,bytes)'](
+        ['migrate(address,address,address)'](
           this.IndexedEnv.degenIndexPool.address,
           this.IndexedEnv.adapter.address,
-          ethers.constants.AddressZero,
-          migrationData
+          ethers.constants.AddressZero
         ),
     ).to.be.reverted;
   });
@@ -212,32 +200,9 @@ describe("Indexed: Unit tests", function () {
     const holder3BalanceAfter = await this.degenIndexPoolERC20.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
-    // Setup migration calls using DEGENAdapter contract
-    const migrationCalls: Multicall[] = await this.IndexedEnv.adapter.encodeWithdraw(this.IndexedEnv.degenIndexPool.address, amount);
-
-    // // Setup transfer of tokens from router to strategy
-    const transferCalls = [] as Multicall[];
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
-    for (let i = 0; i < this.underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], this.strategy.address));
-    }
-    // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
-    const migrationData = await routerContract.encodeCalls(calls);
-    // // Migrate
-    /*
     const tx = await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address,bytes)'](
-        this.IndexedEnv.degenIndexPool.address,
-        this.IndexedEnv.adapter.address,
-        this.strategy.address,
-        migrationData
-      );
-    */
-    const tx = await this.liquidityMigration
-      .connect(holder3)
-      .safeMigrate(
+      ['migrate(address,address,address)'](
         this.IndexedEnv.degenIndexPool.address,
         this.IndexedEnv.adapter.address,
         this.strategy.address

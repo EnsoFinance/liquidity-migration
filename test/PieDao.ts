@@ -82,25 +82,13 @@ describe("PieDao: Unit tests", function () {
     const holder = pool.holders[0];
     const holderAddress = await holder.getAddress();
     const amount = await this.liquidityMigration.staked(holderAddress, poolContract.address);
-
-    // Setup migration calls using PieDaoAdapter contract
-    const migrationCalls: Multicall[] = await this.pieDaoEnv.adapter.encodeWithdraw(poolContract.address, amount);
-    // Setup transfer of tokens from router to strategy
-    const transferCalls = [] as Multicall[];
-    for (let i = 0; i < pool.tokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, pool.tokens[i], this.strategy.address));
-    }
-    // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
-    const migrationData = await routerContract.encodeCalls(calls);
     // Migrate
     await this.liquidityMigration
       .connect(holder)
-      ['migrate(address,address,address,bytes)'](
+      ['migrate(address,address,address)'](
         poolContract.address,
         this.pieDaoEnv.adapter.address,
-        this.strategy.address,
-        migrationData
+        this.strategy.address
       );
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, pool.tokens);
     expect(total).to.gt(0);

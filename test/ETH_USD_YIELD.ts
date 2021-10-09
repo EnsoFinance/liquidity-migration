@@ -106,21 +106,6 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     const amount = await this.liquidityMigration.staked(holder2Address, this.ETHUSDYieldEnv.tokenSet.address);
     expect(amount).to.be.gt(BigNumber.from(0));
 
-    // const holder2BalanceAfter = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder2Address);
-    // expect(holder2BalanceAfter).to.be.equal(BigNumber.from(0));
-
-    // Setup migration calls using Adapter contract
-    const migrationCalls: Multicall[] = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
-    // Setup transfer of tokens from router to strategy
-    const transferCalls = [] as Multicall[];
-    const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
-    for (let i = 0; i < underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], ethers.constants.AddressZero));
-    }
-    // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
-    const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.ETHUSDYieldEnv.adapter
       .connect(this.signers.default)
       .remove(FACTORY_REGISTRIES.ETH_USD_YIELD);
@@ -129,11 +114,10 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address,bytes)'](
+        ['migrate(address,address,address)'](
           this.ETHUSDYieldEnv.tokenSet.address,
           this.ETHUSDYieldEnv.adapter.address,
-          ethers.constants.AddressZero,
-          migrationData
+          ethers.constants.AddressZero
         ),
     ).to.be.reverted;
   });
@@ -208,30 +192,15 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     expect(amount).to.be.gt(BigNumber.from(0));
     const holder3BalanceAfter = await this.ETHUSDYieldEnv.tokenSet.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
-
-    // Setup migration calls using Adapter contract
-    const migrationCalls: Multicall[] = await this.ETHUSDYieldEnv.adapter.encodeWithdraw(this.ETHUSDYieldEnv.tokenSet.address, amount);
-
-    // Setup transfer of tokens from router to strategy
-    const transferCalls = [] as Multicall[];
-    const underlyingTokens = await this.ETHUSDYieldEnv.tokenSet.getComponents();
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
-    for (let i = 0; i < underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
-    }
-    // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [...migrationCalls, ...transferCalls];
-    const migrationData = await routerContract.encodeCalls(calls);
     // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address,bytes)'](
+      ['migrate(address,address,address)'](
         this.ETHUSDYieldEnv.tokenSet.address,
         this.ETHUSDYieldEnv.adapter.address,
-        this.strategy.address,
-        migrationData
+        this.strategy.address
       );
-    const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, underlyingTokens);
+    const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, await this.ETHUSDYieldEnv.tokenSet.getComponents());
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
