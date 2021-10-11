@@ -180,35 +180,10 @@ describe("Batch: Unit tests", function () {
 
     it('Should batch migrate', async function () {
       const user = await signers.default.getAddress();
-      const indexedMigrationData = await encodeMigrationData(
-        indexedEnv.adapter,
-        enso.routers[0].contract,
-        indexedPool.address,
-        indexedStrategy.address,
-        await indexedEnv.adapter.outputTokens(indexedPool.address),
-        await liquidityMigration.staked(user, indexedPool.address)
-      )
-      const dpiMigrationData = await encodeMigrationData(
-        dpiEnv.adapter,
-        enso.routers[0].contract,
-        dpiPool.address,
-        dpiStrategy.address,
-        await dpiEnv.adapter.outputTokens(dpiPool.address),
-        await liquidityMigration.staked(user, dpiPool.address)
-      )
-      const pieMigrationData = await encodeMigrationData(
-        pieEnv.adapter,
-        enso.routers[0].contract,
-        piePool.address,
-        pieStrategy.address,
-        await pieEnv.adapter.outputTokens(piePool.address),
-        await liquidityMigration.staked(user, piePool.address)
-      )
-      await liquidityMigration.connect(signers.default)['batchMigrate(address[],address[],address[],bytes[])'](
+      await liquidityMigration.connect(signers.default)['batchMigrate(address[],address[],address[])'](
         [indexedPool.address, dpiPool.address, piePool.address],
         [indexedEnv.adapter.address, dpiEnv.adapter.address, pieEnv.adapter.address],
-        [indexedStrategy.address, dpiStrategy.address, pieStrategy.address],
-        [indexedMigrationData, dpiMigrationData, pieMigrationData]
+        [indexedStrategy.address, dpiStrategy.address, pieStrategy.address]
       )
     })
     it('Should batch migrate', async function () {
@@ -237,12 +212,11 @@ describe("Batch: Unit tests", function () {
         await pieEnv.adapter.outputTokens(piePool.address),
         await liquidityMigration.staked(user, piePool.address)
       )
-      await liquidityMigration.connect(signers.admin)['batchMigrate(address[],address[],address[],address[],bytes[])'](
+      await liquidityMigration.connect(signers.admin)['batchMigrate(address[],address[],address[],address[])'](
         [user, user, user],
         [indexedPool.address, dpiPool.address, piePool.address],
         [indexedEnv.adapter.address, dpiEnv.adapter.address, pieEnv.adapter.address],
-        [indexedStrategy.address, dpiStrategy.address, pieStrategy.address],
-        [indexedMigrationData, dpiMigrationData, pieMigrationData]
+        [indexedStrategy.address, dpiStrategy.address, pieStrategy.address]
       )
     })
 })

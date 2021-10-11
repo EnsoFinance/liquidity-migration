@@ -30,13 +30,37 @@ contract DHedgeAdapter is AbstractAdapter {
         public
         view
         override
-        returns (address[] memory outputs)
+        returns (address[] memory)
     {
         (bytes32[] memory assets, , ) = IDHedge(_lp).getFundComposition();
-        outputs = new address[](assets.length);
+        address[] memory outputs = new address[](assets.length);
         for (uint256 i = 0; i < assets.length; i++) {
             outputs[i] = IDHedge(_lp).getAssetProxy(assets[i]);
         }
+        return outputs;
+    }
+
+    function encodeMigration(address _genericRouter, address _strategy, address _lp, uint256 _amount)
+        public
+        override
+        view
+        onlyWhitelisted(_lp)
+        returns (Call[] memory calls)
+    {
+        address[] memory tokens = outputTokens(_lp);
+        calls = new Call[](tokens.length + 1);
+        calls[0] = encodeWithdraw(_lp, _amount)[0];
+        for (uint256 i = 0; i < tokens.length; i++) {
+            calls[i + 1] = Call(
+                _genericRouter,
+                abi.encodeWithSelector(
+                    IGenericRouter(_genericRouter).settleTransfer.selector,
+                    tokens[i],
+                    _strategy
+                )
+            );
+        }
+        return calls;
     }
 
     function encodeWithdraw(address _lp, uint256 _amount)
@@ -44,15 +68,15 @@ contract DHedgeAdapter is AbstractAdapter {
         override
         view
         onlyWhitelisted(_lp)
-        returns(Call memory call)
+        returns (Call[] memory calls)
     {
-        call = Call(
+        calls = new Call[](1);
+        calls[0] = Call(
             payable(_lp),
             abi.encodeWithSelector(
                 IDHedge(_lp).withdraw.selector,
                 _amount
-            ),
-            0
+            )
         );
     }
 

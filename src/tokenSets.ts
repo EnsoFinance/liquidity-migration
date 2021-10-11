@@ -38,8 +38,9 @@ export class TokenSetEnvironmentBuilder {
     const signerAddress = await this.signer.getAddress();
 
     const generiRouter: string = this.enso?.routers[0]?.contract?.address || ethers.constants.AddressZero
+    const leverageAdapter: string = this.enso?.adapters?.leverage?.contract?.address || ethers.constants.AddressZero
     // deploying the DPI Adapter
-    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, setDebtIssuanceModule.address, generiRouter, signerAddress);
+    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, leverageAdapter, generiRouter, signerAddress);
 
     const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress];
     if (addresses === undefined) {

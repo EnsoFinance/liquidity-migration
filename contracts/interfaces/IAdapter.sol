@@ -3,14 +3,16 @@ pragma solidity 0.8.2;
 
 interface IAdapter {
     struct Call {
-        address payable target;
+        address target;
         bytes callData;
-        uint256 value;
     }
 
     function outputTokens(address inputToken) external view returns (address[] memory outputs);
 
-    function encodeWithdraw(address _lp, uint256 _amount) external view returns (Call memory call);
+    function encodeMigration(address _genericRouter, address _strategy, address _lp, uint256 _amount)
+        external view returns (Call[] memory calls);
+
+    function encodeWithdraw(address _lp, uint256 _amount) external view returns (Call[] memory calls);
 
     function buy(address _lp, address _exchange, uint256 _minAmountOut, uint256 _deadline) external payable;
 

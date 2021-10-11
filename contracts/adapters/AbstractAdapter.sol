@@ -8,6 +8,18 @@ import "../interfaces/IUniswapV2Router.sol";
 import "../interfaces/IUniswapV3Router.sol";
 import "../interfaces/IQuoter.sol";
 
+interface IGenericRouter {
+    function settleTransfer(address token, address to) external;
+
+    function settleSwap(
+        address adapter,
+        address tokenIn,
+        address tokenOut,
+        address from,
+        address to
+    ) external;
+}
+
 /// @title Token Sets Vampire Attack Contract
 /// @author Enso.finance (github.com/EnsoFinance)
 /// @notice Adapter for redeeming the underlying assets from Token Sets
@@ -38,12 +50,19 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         virtual
         returns (address[] memory outputs);
 
+    function encodeMigration(address _genericRouter, address _strategy, address _lp, uint256 _amount)
+        public
+        override
+        virtual
+        view
+        returns (Call[] memory calls);
+
     function encodeWithdraw(address _lp, uint256 _amount)
         public
         override
         virtual
         view
-        returns(Call memory call);
+        returns (Call[] memory calls);
 
     function buy(address _lp, address _exchange, uint256 _minAmountOut, uint256 _deadline)
         public

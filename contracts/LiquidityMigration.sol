@@ -123,23 +123,21 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     function migrate(
         address _lp,
         address _adapter,
-        IStrategy _strategy,
-        bytes memory migrationData
+        IStrategy _strategy
     )
         public
         onlyUnlocked
         onlyRegistered(_adapter)
         onlyWhitelisted(_adapter, _lp)
     {
-        _migrate(msg.sender, _lp, _adapter, _strategy, migrationData);
+        _migrate(msg.sender, _lp, _adapter, _strategy);
     }
 
     function migrate(
         address _user,
         address _lp,
         address _adapter,
-        IStrategy _strategy,
-        bytes memory migrationData
+        IStrategy _strategy
     )
         public
         onlyOwner
@@ -147,23 +145,21 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         onlyRegistered(_adapter)
         onlyWhitelisted(_adapter, _lp)
     {
-        _migrate(_user, _lp, _adapter, _strategy, migrationData);
+        _migrate(_user, _lp, _adapter, _strategy);
     }
 
     function batchMigrate(
         address[] memory _lp,
         address[] memory _adapter,
-        IStrategy[] memory _strategy,
-        bytes[] memory migrationData
+        IStrategy[] memory _strategy
     )
         external
     {
         require(_lp.length == _adapter.length);
         require(_adapter.length == _strategy.length);
-        require(_strategy.length == migrationData.length);
 
         for (uint256 i = 0; i < _lp.length; i++) {
-            migrate(_lp[i], _adapter[i], _strategy[i], migrationData[i]);
+            migrate(_lp[i], _adapter[i], _strategy[i]);
         }
     }
 
@@ -171,18 +167,16 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _user,
         address[] memory _lp,
         address[] memory _adapter,
-        IStrategy[] memory _strategy,
-        bytes[] memory migrationData
+        IStrategy[] memory _strategy
     )
         external
     {
         require(_user.length == _lp.length);
         require(_lp.length == _adapter.length);
         require(_adapter.length == _strategy.length);
-        require(_strategy.length == migrationData.length);
 
         for (uint256 i = 0; i < _lp.length; i++) {
-            migrate(_user[i], _lp[i], _adapter[i], _strategy[i], migrationData[i]);
+            migrate(_user[i], _lp[i], _adapter[i], _strategy[i]);
         }
     }
 
@@ -190,8 +184,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _user,
         address _lp,
         address _adapter,
-        IStrategy _strategy,
-        bytes memory migrationData
+        IStrategy _strategy
     )
         internal
     {
@@ -207,6 +200,8 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         IERC20(_lp).safeTransfer(generic, _stakeAmount);
 
         uint256 _before = _strategy.balanceOf(address(this));
+        bytes memory migrationData =
+            abi.encode(IAdapter(_adapter).encodeMigration(generic, address(_strategy), _lp, _stakeAmount));
         IStrategyController(controller).deposit(_strategy, IStrategyRouter(generic), 0, migrationData);
         uint256 _after = _strategy.balanceOf(address(this));
 

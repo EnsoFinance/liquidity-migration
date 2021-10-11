@@ -133,17 +133,6 @@ describe("dHedge: Unit tests", function () {
 
     const holder2BalanceAfter = await this.dHedgeTopIndexERC20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
-    // Setup migration calls using DHedgeAdapter contract
-    const migrationCall: Multicall = await this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.dHedgeTopIndex.address, amount);
-    // Setup transfer of tokens from router to strategy
-    const transferCalls = [] as Multicall[];
-    // TODO: Dipesh to discuss the follwoing with Peter why do we need the transferCalls array
-    for (let i = 0; i < this.underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, this.underlyingTokens[i], ethers.constants.AddressZero)); // Strategy doesn't matter right now
-    }
-    // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
-    const migrationData = await routerContract.encodeCalls(calls);
     const tx = await this.DHedgeEnv.adapter
       .connect(this.signers.default)
       .remove(FACTORY_REGISTRIES.DHEDGE_TOP);
@@ -152,12 +141,11 @@ describe("dHedge: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address,bytes)']
+        ['migrate(address,address,address)']
         (
           this.DHedgeEnv.dHedgeTopIndex.address,
           this.DHedgeEnv.adapter.address,
-          ethers.constants.AddressZero, // Strategy doesn't matter right now
-          migrationData
+          ethers.constants.AddressZero // Strategy doesn't matter right now
         ),
     ).to.be.reverted;
   });
@@ -231,29 +219,16 @@ describe("dHedge: Unit tests", function () {
     expect(amount).to.be.gt(BigNumber.from(0));
     const holder3BalanceAfter = await this.dHedgeTopIndexERC20.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
-    // Setup migration calls using DHedgeAdapter contract
-    const migrationCall: Multicall = await this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.dHedgeTopIndex.address, amount);
-
-    // // Setup transfer of tokens from router to strategy
-    const transferCalls = [] as Multicall[];
-    const underlyingTokens = await this.DHedgeEnv.adapter.outputTokens(FACTORY_REGISTRIES.DHEDGE_TOP);
-    for (let i = 0; i < underlyingTokens.length; i++) {
-      transferCalls.push(encodeSettleTransfer(routerContract, underlyingTokens[i], this.strategy.address));
-    }
-    // // Encode multicalls for GenericRouter
-    const calls: Multicall[] = [migrationCall, ...transferCalls];
-    const migrationData = await routerContract.encodeCalls(calls);
-    // // Migrate
+    // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address,bytes)']
+      ['migrate(address,address,address)']
       (
         this.DHedgeEnv.dHedgeTopIndex.address,
         this.DHedgeEnv.adapter.address,
-        this.strategy.address,
-        migrationData
+        this.strategy.address
       );
-    const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, underlyingTokens);
+    const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, await this.DHedgeEnv.adapter.outputTokens(FACTORY_REGISTRIES.DHEDGE_TOP));
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
