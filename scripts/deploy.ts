@@ -9,7 +9,7 @@ import * as fs from "fs";
 import deployments from "../deployments.json";
 
 const monoRepoDeployments = process.env.MONOREPO_DEPLOYMENTS_FILE;
-const network = process.env.HARDHAT_NETWORK ?? "";
+const network = process.env.HARDHAT_NETWORK ?? "localhost";
 
 const deployedContracts: any = {
   mainnet: {

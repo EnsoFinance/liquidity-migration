@@ -5,4 +5,5 @@ yarn
 yarn hardhat addOwnerFunds --network localhost
 yarn deploy localhost
 yarn hardhat initMasterUser --network localhost
+yarn hardhat addAllAdapters --network localhost
 yarn hardhat whitelistAllStrategies --network localhost
