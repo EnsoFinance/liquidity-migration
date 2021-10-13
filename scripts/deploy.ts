@@ -31,15 +31,16 @@ const deployedContracts: any = {
     SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
   },
   hardhat: {
-    GenericRouter: "0xE0a9382c01d6EDfA0c933714b3626435EeF10811",
-    StrategyProxyFactory: "0xaF80BB1794B887de4a6816Ab0219692a21e8430e",
-    StrategyController: "0x077a70998D5086E6c6D53D9Fb7BCfd8F7fb73AC2",
-    TokenSetsBasicIssuanceModule: "0x8a070235a4B9b477655Bf4Eb65a1dB81051B3cC1",
-    TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
+    GenericRouter: "",
+    StrategyProxyFactory: "",
+    StrategyController: "",
     Leverage2XAdapter: "",
+    TokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
+    TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
     SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
   },
 };
+
 deployedContracts.localhost = deployedContracts.mainnet;
 deployedContracts.localhost.Leverage2XAdapter = "0x57ab1ec28d129707052df4df418d58a2d46d5f51"; // dummy data
 
