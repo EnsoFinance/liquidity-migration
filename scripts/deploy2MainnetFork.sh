@@ -7,3 +7,5 @@ yarn deploy localhost
 yarn hardhat initMasterUser --network localhost
 yarn hardhat addAllAdapters --network localhost
 yarn hardhat whitelistAllStrategies --network localhost
+git commit -am "update deployments.json file"
+git push
