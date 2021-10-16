@@ -139,7 +139,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _adapter,
         IStrategy _strategy
     )
-        public
+        external
         onlyOwner
         onlyUnlocked
         onlyRegistered(_adapter)
@@ -257,7 +257,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     }
 
     function updateController(address _controller)
-        public
+        external
         onlyOwner
     {
         require(controller != _controller, "LiquidityMigration#updateController: already exists");
@@ -265,7 +265,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     }
 
     function updateGeneric(address _generic)
-        public
+        external
         onlyOwner
     {
         require(generic != _generic, "LiquidityMigration#updateGeneric: already exists");
@@ -273,7 +273,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     }
 
     function addAdapter(address _adapter)
-        public
+        external
         onlyOwner
     {
         require(!adapters[_adapter], "LiquidityMigration#updateAdapter: already exists");
@@ -281,7 +281,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     }
 
     function removeAdapter(address _adapter)
-        public
+        external
         onlyOwner
     {
         require(adapters[_adapter], "LiquidityMigration#updateAdapter: does not exist");
@@ -289,7 +289,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     }
 
     function hasStaked(address _account, address _lp)
-        public
+        external
         view
         returns(bool)
     {
