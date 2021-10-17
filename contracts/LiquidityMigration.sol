@@ -125,10 +125,8 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _adapter,
         IStrategy _strategy
     )
-        public
+        external
         onlyUnlocked
-        onlyRegistered(_adapter)
-        onlyWhitelisted(_adapter, _lp)
     {
         _migrate(msg.sender, _lp, _adapter, _strategy);
     }
@@ -142,8 +140,6 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         external
         onlyOwner
         onlyUnlocked
-        onlyRegistered(_adapter)
-        onlyWhitelisted(_adapter, _lp)
     {
         _migrate(_user, _lp, _adapter, _strategy);
     }
@@ -154,12 +150,13 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         IStrategy[] memory _strategy
     )
         external
+        onlyUnlocked
     {
         require(_lp.length == _adapter.length);
         require(_adapter.length == _strategy.length);
 
         for (uint256 i = 0; i < _lp.length; i++) {
-            migrate(_lp[i], _adapter[i], _strategy[i]);
+            _migrate(msg.sender, _lp[i], _adapter[i], _strategy[i]);
         }
     }
 
@@ -170,13 +167,15 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         IStrategy[] memory _strategy
     )
         external
+        onlyOwner
+        onlyUnlocked
     {
         require(_user.length == _lp.length);
         require(_lp.length == _adapter.length);
         require(_adapter.length == _strategy.length);
 
         for (uint256 i = 0; i < _lp.length; i++) {
-            migrate(_user[i], _lp[i], _adapter[i], _strategy[i]);
+            _migrate(_user[i], _lp[i], _adapter[i], _strategy[i]);
         }
     }
 
@@ -187,6 +186,8 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         IStrategy _strategy
     )
         internal
+        onlyRegistered(_adapter)
+        onlyWhitelisted(_adapter, _lp)
     {
         require(
             IStrategyController(controller).initialized(address(_strategy)),
