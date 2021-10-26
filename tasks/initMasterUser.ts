@@ -9,6 +9,11 @@ const ERC20_ABI_FRAGMENT = [
 
 export const LP_TOKEN_WHALES = [
   {
+    walletAddress: "0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503",
+    lpTokenAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    symbol: "USDC",
+  },
+  {
     victim: "defiPulseIndex",
     walletAddress: "0x1c631824b0551fd0540a1f198c893b379d5cf3c3",
     lpTokenAddress: "0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b",
