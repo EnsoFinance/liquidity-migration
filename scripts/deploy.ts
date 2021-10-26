@@ -19,7 +19,7 @@ const deployedContracts: any = {
     Leverage2XAdapter: "",
     TokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
     TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
-    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51"
+    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
   },
   kovan: {
     GenericRouter: "0xE0a9382c01d6EDfA0c933714b3626435EeF10811",
@@ -28,7 +28,7 @@ const deployedContracts: any = {
     Leverage2XAdapter: "",
     TokenSetsBasicIssuanceModule: "0x8a070235a4B9b477655Bf4Eb65a1dB81051B3cC1",
     TokenSetsDebtIssuanceModule: "0xe34031E7F4D8Ba4eFab190ce5f4D8451eD1B6A82",
-    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51"
+    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
   },
   hardhat: {
     GenericRouter: "",
@@ -37,18 +37,12 @@ const deployedContracts: any = {
     Leverage2XAdapter: "",
     TokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
     TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
-    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51"
-  },
-  localhost: {
-    GenericRouter: "",
-    StrategyProxyFactory: "",
-    StrategyController: "",
-    Leverage2XAdapter: "",
-    TokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
-    TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
-    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51"
+    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
   },
 };
+
+deployedContracts.localhost = deployedContracts.mainnet;
+deployedContracts.localhost.Leverage2XAdapter = "0x57ab1ec28d129707052df4df418d58a2d46d5f51"; // dummy data
 
 const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
 const initialURI = "https://token-cdn-domain/{id}.json";
@@ -61,13 +55,13 @@ enum PROTOCOLS {
   INDEXED,
   INDEXCOOP,
   DHEDGE,
-  POWERPOOL
+  POWERPOOL,
 }
 
 enum STATE {
   PENDING,
   ACTIVE,
-  CLOSED
+  CLOSED,
 }
 
 async function main() {
@@ -109,10 +103,7 @@ async function main() {
     log("IndexCoopAdapter", indexCoopAdapter.address);
     protocol_addresses[PROTOCOLS.INDEXCOOP] = indexCoopAdapter.address;
 
-    const dHedgeAdapter = await DHedgeAdapterFactory.deploy(
-      owner,
-      deployedContracts[network].SUSD
-    );
+    const dHedgeAdapter = await DHedgeAdapterFactory.deploy(owner, deployedContracts[network].SUSD);
     await dHedgeAdapter.deployed();
     log("DHedgeAdapter", dHedgeAdapter.address);
     protocol_addresses[PROTOCOLS.DHEDGE] = dHedgeAdapter.address;
@@ -155,13 +146,11 @@ async function main() {
 }
 
 const getMonorepoDeployments = () => {
-  console.log("monoRepoDeployments: ", monoRepoDeployments);
   if (monoRepoDeployments) {
     try {
       const file = fs.readFileSync(monoRepoDeployments, "utf8");
       if (file) {
         const monorepoContracts = JSON.parse(file);
-        console.log(monorepoContracts);
         deployedContracts[network] = { ...deployedContracts[network], ...monorepoContracts[network] };
       }
     } catch (e) {
