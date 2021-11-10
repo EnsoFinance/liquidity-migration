@@ -133,7 +133,7 @@ async function main() {
     log("ERC1155", erc1155.address);
     const Claimable = await hre.ethers.getContractFactory("Claimable");
     const claimable = await Claimable.deploy(liquidityMigration.address, erc1155.address, max, protocol_addresses);
-    for (let i = 0; i < max; i++) {
+    for (let i = 0; i <= max; i++) {
       await erc1155.create(claimable.address, supply, initialURI, "0x");
     }
     log("Claimable", claimable.address);
