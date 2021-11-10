@@ -74,6 +74,7 @@ contract Claimable is Ownable, ERC1155Holder {
 
         claimed[msg.sender][_index] = true;
         IERC1155(collection).safeTransferFrom(address(this), msg.sender, _index, 1, "");
+        emit Claimed(msg.sender, _index);
     }
 
     /**
