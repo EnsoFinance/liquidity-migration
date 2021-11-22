@@ -20,15 +20,16 @@ export class PowerpoolEnvironmentBuilder {
 
     const signerAddress = await this.signer.getAddress();
 
-    // deploying the DPI Adapter
     const adapter = await BalancerAdapterFactory.deploy(signerAddress);
 
     const addresses = POWERPOOL_HOLDERS[FACTORY_REGISTRIES.POWER];
+
     if (addresses === undefined) {
       throw Error(`Failed to find token holder for contract: ${FACTORY_REGISTRIES.POWER} `);
     }
 
     const signers = [];
+    
     for (let i = 0; i < addresses.length; i++) {
       const signer = await new MainnetSigner(addresses[i]).impersonateAccount();
       signers.push(signer);

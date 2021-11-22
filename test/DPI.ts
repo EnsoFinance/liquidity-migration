@@ -34,7 +34,7 @@ describe("DPI: Unit tests", function () {
 
 
     this.DPIEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
-      FACTORY_REGISTRIES.DPI,
+      FACTORY_REGISTRIES.DPI.toLowerCase(),
     );
 
     console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
