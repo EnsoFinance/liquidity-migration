@@ -10,10 +10,9 @@ import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { EnsoBuilder } from "@enso/contracts";
+import fs from "fs";
 
-const bytes32Symbol = [{ name: "symbol_", type: "bytes32" }];
-
-const symbol = [
+const BYTES32_SYMBOL_ABI = [
   {
     constant: true,
     inputs: [],
@@ -23,24 +22,36 @@ const symbol = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    constant: true,
+    inputs: [],
+    name: "name",
+    outputs: [{ name: "", type: "bytes32" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
-type ERC20 = {
+class Erc20 {
   address: string;
-  symbol: string;
-};
+  tokenSymbol: string;
+  name: string;
+
+  constructor(addr: string, sym: string, name: string) {
+    this.address = addr;
+    this.tokenSymbol = sym;
+    this.name = name;
+  }
+}
 
 class UnderlyingTokens {
   signer: SignerWithAddress;
-
-  contracts: ERC20Mock__factory[];
 
   tokens: string[];
 
   constructor(signer: SignerWithAddress) {
     this.signer = signer;
-
-    this.contracts = [];
 
     this.tokens = [];
   }
@@ -54,18 +65,43 @@ class UnderlyingTokens {
     this.tokens = Array.from(new Set([...this.tokens, token]));
   }
 
-  async print() {
+  async getTokenDetails(): Promise<Erc20[]> {
+    if (this.tokens.length === 0) throw Error("No tokens to get details of");
+
+    const detailedTokens: Erc20[] = [] as Erc20[];
+
     for (let i = 0; i < this.tokens.length; i++) {
       let erc20;
 
+      let tokenSymbol: string;
+
+      let name: string;
+
       try {
         erc20 = await new ERC20Mock__factory(this.signer).attach(this.tokens[i]);
-        console.log("Address: ", erc20.address, "\n Symbol: ", await erc20.symbol());
+
+        [tokenSymbol, name] = await Promise.all([await erc20.symbol(), await erc20.name()]);
       } catch {
-        erc20 = new Contract(this.tokens[i], symbol, this.signer);
-        console.log("Address: ", erc20.address, "\n Symbol: ", await erc20.symbol());
+        erc20 = new Contract(this.tokens[i], BYTES32_SYMBOL_ABI, this.signer);
+
+        [tokenSymbol, name] = await Promise.all([await erc20.symbol(), await erc20.name()]);
       }
+
+      if (tokenSymbol === "" || name === "") throw Error("Failed to get symbol/name for: " + this.tokens[i]);
+
+      detailedTokens.push(new Erc20(this.tokens[i], tokenSymbol, name));
     }
+    return detailedTokens;
+  }
+
+  async write2File() {
+    const tokens = await this.getTokenDetails();
+
+    const data = JSON.stringify(tokens, null, 2);
+
+    fs.writeFileSync("./underlying_tokens.json", data);
+
+    console.log(data);
   }
 }
 
@@ -75,15 +111,19 @@ async function main() {
 
   const tokens = new UnderlyingTokens(signer);
 
-  const enso = await new EnsoBuilder(signer).mainnet().build();
+  let enso, dhedge, indexed, powerpool, piedao;
 
-  const dhedge = await new DHedgeEnvironmentBuilder(signer).connect();
+  [enso, dhedge, indexed, powerpool, piedao] = await Promise.all([
+    await new EnsoBuilder(signer).mainnet().build(),
 
-  const indexed = await new IndexedEnvironmentBuilder(signer).connect();
+    await new DHedgeEnvironmentBuilder(signer).connect(),
 
-  const powerpool = await new PowerpoolEnvironmentBuilder(signer).connect();
+    await new IndexedEnvironmentBuilder(signer).connect(),
 
-  const piedao = await new PieDaoEnvironmentBuilder(signer).connect();
+    await new PowerpoolEnvironmentBuilder(signer).connect(),
+
+    await new PieDaoEnvironmentBuilder(signer).connect(),
+  ]);
 
   try {
     for (const { victim, lpTokenAddress, lpTokenName } of LP_TOKEN_WHALES) {
@@ -138,9 +178,8 @@ async function main() {
           throw Error("Failed to parse victim");
       }
     }
-    await tokens.print();
+    await tokens.write2File();
   } catch (e) {
-    await tokens.print();
     console.log(e);
   }
 }
