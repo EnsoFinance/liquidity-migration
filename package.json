@@ -34,7 +34,7 @@
     "ethereum-waffle": "^3.2.0",
     "ethers": "^5.0.24",
     "fs-extra": "^9.0.1",
-    "hardhat": "^2.0.10",
+    "hardhat": "2.6.3",
     "hardhat-etherscan-abi": "^0.1.1",
     "hardhat-gas-reporter": "^1.0.4",
     "husky": "^4.3.0",
