@@ -6,7 +6,7 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
-// import "hardhat-gas-reporter";
+import "hardhat-gas-reporter";
 import "@typechain/hardhat";
 import "hardhat-etherscan-abi";
 import "solidity-coverage";
@@ -105,10 +105,11 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: etherscanApiKey,
   },
-  // gasReporter: {
-  //   currency: 'USD',
-  //   gasPrice: 45
-  // },
+  gasReporter: {
+    enabled: (process.env.REPORT_GAS) ? true : false,
+    currency: 'USD',
+    gasPrice: 45
+  },
   paths: {
     artifacts: "./artifacts",
     cache: "./cache",
@@ -156,7 +157,7 @@ const config: HardhatUserConfig = {
     ],
   },
   mocha: {
-    timeout: 40000,
+    timeout: 100000,
   },
   typechain: {
     outDir: "typechain",

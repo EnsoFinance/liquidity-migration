@@ -21,39 +21,54 @@ export class TokenSetEnvironmentBuilder {
     this.enso = enso;
   }
   async connect(tokenSetPoolAddress: string): Promise<TokenSetEnvironment> {
-    const setBasicIssuanceModule = (await IBasicIssuanceModule__factory.connect(
+    const setBasicIssuanceModule = IBasicIssuanceModule__factory.connect(
       TOKENSET_ISSUANCE_MODULES.BASIC,
       this.signer,
-    )) as IBasicIssuanceModule;
+    ) as IBasicIssuanceModule;
 
-    const setDebtIssuanceModule = (await IBasicIssuanceModule__factory.connect(
-        TOKENSET_ISSUANCE_MODULES.DEBT,
+    const setDebtIssuanceModule = IBasicIssuanceModule__factory.connect(
+      TOKENSET_ISSUANCE_MODULES.DEBT,
       this.signer,
-    )) as IBasicIssuanceModule;
+    ) as IBasicIssuanceModule;
 
-    const tokenSet = (await SetToken__factory.connect(tokenSetPoolAddress, this.signer)) as SetToken;
+    const tokenSet = SetToken__factory.connect(tokenSetPoolAddress, this.signer) as SetToken;
 
     const tokenSetAdapterFactory = (await ethers.getContractFactory("TokenSetAdapter")) as TokenSetAdapter__factory;
 
     const signerAddress = await this.signer.getAddress();
 
-    const generiRouter: string = this.enso?.routers[0]?.contract?.address || ethers.constants.AddressZero
-    const leverageAdapter: string = this.enso?.adapters?.leverage?.contract?.address || ethers.constants.AddressZero
-    // deploying the DPI Adapter
-    const adapter = await tokenSetAdapterFactory.deploy(setBasicIssuanceModule.address, leverageAdapter, generiRouter, signerAddress);
+    const generiRouter: string = this.enso?.routers[0]?.contract?.address || ethers.constants.AddressZero;
 
-    const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress];
+    const leverageAdapter: string = this.enso?.adapters?.leverage?.contract?.address || ethers.constants.AddressZero;
+
+    const adapter = await tokenSetAdapterFactory.deploy(
+      setBasicIssuanceModule.address,
+      leverageAdapter,
+      generiRouter,
+      signerAddress,
+    );
+
+    const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress.toLowerCase()];
+
     if (addresses === undefined) {
       throw Error(`Failed to find token holder for contract: ${tokenSetPoolAddress} `);
     }
 
     const signers = [];
+
     for (let i = 0; i < addresses.length; i++) {
       const signer = await new MainnetSigner(addresses[i]).impersonateAccount();
       signers.push(signer);
     }
 
-    return new TokenSetEnvironment(this.signer, setBasicIssuanceModule, setDebtIssuanceModule, tokenSet, adapter, signers);
+    return new TokenSetEnvironment(
+      this.signer,
+      setBasicIssuanceModule,
+      setDebtIssuanceModule,
+      tokenSet,
+      adapter,
+      signers,
+    );
   }
 }
 

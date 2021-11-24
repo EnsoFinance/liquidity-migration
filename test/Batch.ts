@@ -38,7 +38,7 @@ describe("Batch: Unit tests", function () {
 
     const dpi_setup = async function () {
         dpiEnv = await new TokenSetEnvironmentBuilder(signers.admin, enso).connect(
-          FACTORY_REGISTRIES.DPI
+          FACTORY_REGISTRIES.DPI.toLowerCase()
         );
         dpiUnderlying  = await dpiEnv.tokenSet.getComponents();
         dpiStrategy = IStrategy__factory.connect(
