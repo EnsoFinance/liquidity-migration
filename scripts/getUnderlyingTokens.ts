@@ -79,11 +79,9 @@ class UnderlyingTokens {
 
       try {
         erc20 = await new ERC20Mock__factory(this.signer).attach(this.tokens[i]);
-
         [tokenSymbol, name] = await Promise.all([await erc20.symbol(), await erc20.name()]);
       } catch {
         erc20 = new Contract(this.tokens[i], BYTES32_SYMBOL_ABI, this.signer);
-
         [tokenSymbol, name] = await Promise.all([await erc20.symbol(), await erc20.name()]);
       }
 
@@ -100,8 +98,6 @@ class UnderlyingTokens {
     const data = JSON.stringify(tokens, null, 2);
 
     fs.writeFileSync("./underlying_tokens.json", data);
-
-    console.log(data);
   }
 }
 
@@ -115,13 +111,9 @@ async function main() {
 
   [enso, dhedge, indexed, powerpool, piedao] = await Promise.all([
     await new EnsoBuilder(signer).mainnet().build(),
-
     await new DHedgeEnvironmentBuilder(signer).connect(),
-
     await new IndexedEnvironmentBuilder(signer).connect(),
-
     await new PowerpoolEnvironmentBuilder(signer).connect(),
-
     await new PieDaoEnvironmentBuilder(signer).connect(),
   ]);
 

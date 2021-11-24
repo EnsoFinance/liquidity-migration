@@ -48,7 +48,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
         holder: await this.ETHUSDYieldEnv.holders[i].getAddress(),
         balance: await this.ETHUSDYieldEnv.tokenSet.balanceOf(await this.ETHUSDYieldEnv.holders[i].getAddress()),
       };
-      expect(await this.ETHUSDYieldEnv.tokenSet.balanceOf(await this.ETHUSDYieldEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
+      expect(await this.ETHUSDYieldEnv.tokenSet.balanceOf(await this.ETHUSDYieldEnv.holders[i].getAddress())).to.be.gt(BigNumber.from(0));
     }
 
     // getting the underlying tokens
@@ -201,8 +201,8 @@ describe("ETH_USD_YIELD: Unit tests", function () {
         this.strategy.address
       );
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, await this.ETHUSDYieldEnv.tokenSet.getComponents());
-    expect(total).to.gt(0);
-    expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
+    expect(total).to.be.gt(0);
+    expect(await this.strategy.balanceOf(holder3Address)).to.be.gt(0);
   });
 
   it("Should fail to buy and stake: token not on exchange", async function () {

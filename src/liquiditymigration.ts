@@ -10,7 +10,9 @@ export enum AcceptedProtocols {
   DefiPulseIndex,
   PieDao,
   DHedge,
-  Powerpool
+  Powerpool,
+  TokenSets,
+  IndexCoop,
 }
 
 export type Adapter = {
