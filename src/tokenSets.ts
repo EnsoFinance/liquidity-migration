@@ -20,7 +20,7 @@ export class TokenSetEnvironmentBuilder {
     this.signer = signer;
     this.enso = enso;
   }
-  async connect(tokenSetPoolAddress: string): Promise<TokenSetEnvironment> {
+  async connect(tokenSetPoolAddress: string, holders?: string[]): Promise<TokenSetEnvironment> {
     const setBasicIssuanceModule = IBasicIssuanceModule__factory.connect(
       TOKENSET_ISSUANCE_MODULES.BASIC,
       this.signer,
@@ -48,7 +48,7 @@ export class TokenSetEnvironmentBuilder {
       signerAddress,
     );
 
-    const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress.toLowerCase()];
+    const addresses = holders?? TOKENSET_HOLDERS[tokenSetPoolAddress.toLowerCase()];
 
     if (addresses === undefined) {
       throw Error(`Failed to find token holder for contract: ${tokenSetPoolAddress} `);
@@ -76,21 +76,21 @@ export class TokenSetEnvironment {
   signer: Signer;
   setBasicIssuanceModule: Contract;
   setDebtIssuanceModule: Contract;
-  tokenSet: Contract;
+  pool: Contract;
   adapter: Contract;
   holders: Signer[];
   constructor(
     signer: Signer,
     setBasicIssuanceModule: Contract,
     setDebtIssuanceModule: Contract,
-    tokenSet: Contract,
+    pool: Contract,
     adapter: Contract,
     holders: Signer[],
   ) {
     this.signer = signer;
     this.setBasicIssuanceModule = setBasicIssuanceModule;
     this.setDebtIssuanceModule = setDebtIssuanceModule;
-    this.tokenSet = tokenSet;
+    this.pool = pool;
     this.adapter = adapter;
     this.holders = holders;
   }

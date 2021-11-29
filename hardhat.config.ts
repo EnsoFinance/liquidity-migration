@@ -108,7 +108,7 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: (process.env.REPORT_GAS) ? true : false,
     currency: 'USD',
-    gasPrice: 45
+    gasPrice: 100
   },
   paths: {
     artifacts: "./artifacts",

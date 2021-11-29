@@ -1,16 +1,14 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import bignumber from "bignumber.js";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
-import { FACTORY_REGISTRIES, WETH, SUSD, DIVISOR, STRATEGY_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, WETH, SUSD, STRATEGY_STATE} from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
-import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
-import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
+import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 
 describe("dHedge: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -25,7 +23,7 @@ describe("dHedge: Unit tests", function () {
     const chainlinkOracle = this.enso.platform.oracles.protocols.chainlinkOracle
 
     this.DHedgeEnv = await new DHedgeEnvironmentBuilder(this.signers.default).connect();
-    this.dHedgeTopIndexERC20 = IERC20__factory.connect(this.DHedgeEnv.dHedgeTopIndex.address, this.signers.default);
+    this.erc20 = IERC20__factory.connect(this.DHedgeEnv.pool.address, this.signers.default);
 
     console.log(`dHedge Adapter: ${this.DHedgeEnv.adapter.address}`);
 
@@ -41,7 +39,7 @@ describe("dHedge: Unit tests", function () {
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from dHedge Top
-    this.underlyingTokens = await this.DHedgeEnv.adapter.outputTokens(this.DHedgeEnv.dHedgeTopIndex.address);
+    this.underlyingTokens = await this.DHedgeEnv.adapter.outputTokens(this.DHedgeEnv.pool.address);
 
     const sETH = '0x5e74c9036fb86bd7ecdcb084a0673efc32ea31cb'
     const sAAVE = '0xd2df355c19471c8bd7d8a3aa27ff4e26a21b4076'
@@ -72,9 +70,9 @@ describe("dHedge: Unit tests", function () {
     for (let i = 0; i < this.DHedgeEnv.holders.length; i++) {
       holderBalances[i] = {
         holder: await this.DHedgeEnv.holders[i].getAddress(),
-        balance: await this.dHedgeTopIndexERC20.balanceOf(await this.DHedgeEnv.holders[i].getAddress()),
+        balance: await this.erc20.balanceOf(await this.DHedgeEnv.holders[i].getAddress()),
       };
-      expect(await this.dHedgeTopIndexERC20.balanceOf(await this.DHedgeEnv.holders[i].getAddress())).to.gt(
+      expect(await this.erc20.balanceOf(await this.DHedgeEnv.holders[i].getAddress())).to.gt(
         BigNumber.from(0),
       );
     }
@@ -82,11 +80,11 @@ describe("dHedge: Unit tests", function () {
     const previoustokenBalance = holderBalances[0].balance;
     expect(previoustokenBalance.gt(BigNumber.from(0))).to.be.true;
     // creating the minAmountsOut array
-    const tx = await this.DHedgeEnv.dHedgeTopIndex
+    const tx = await this.DHedgeEnv.pool
       .connect(this.DHedgeEnv.holders[0])
       .withdraw(previoustokenBalance);
     await tx.wait();
-    const posttokenBalance = await this.dHedgeTopIndexERC20.balanceOf(
+    const posttokenBalance = await this.erc20.balanceOf(
       await this.DHedgeEnv.holders[0].getAddress(),
     );
     expect(posttokenBalance.isZero()).to.be.true;
@@ -100,18 +98,18 @@ describe("dHedge: Unit tests", function () {
     const holder2 = await this.DHedgeEnv.holders[1];
     const holder2Address = await holder2.getAddress();
 
-    const holder2Balance = await this.dHedgeTopIndexERC20.balanceOf(holder2Address);
+    const holder2Balance = await this.erc20.balanceOf(holder2Address);
     expect(holder2Balance.gt(BigNumber.from(0))).to.be.true;
-    await this.dHedgeTopIndexERC20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
+    await this.erc20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
-      .stake(this.DHedgeEnv.dHedgeTopIndex.address, holder2Balance.div(3), this.DHedgeEnv.adapter.address);
+      .stake(this.DHedgeEnv.pool.address, holder2Balance.div(3), this.DHedgeEnv.adapter.address);
     expect(
-      (await this.liquidityMigration.staked(holder2Address, this.DHedgeEnv.dHedgeTopIndex.address)).eq(
+      (await this.liquidityMigration.staked(holder2Address, this.DHedgeEnv.pool.address)).eq(
         holder2Balance.div(3),
       ),
     ).to.be.true;
-    const holder2AfterBalance = await this.dHedgeTopIndexERC20.balanceOf(holder2Address);
+    const holder2AfterBalance = await this.erc20.balanceOf(holder2Address);
     expect(holder2AfterBalance.gt(BigNumber.from(0))).to.be.true;
   });
 
@@ -120,18 +118,18 @@ describe("dHedge: Unit tests", function () {
     const holder2 = await this.DHedgeEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
-    const holder2BalanceBefore = await this.dHedgeTopIndexERC20.balanceOf(holder2Address);
+    const holder2BalanceBefore = await this.erc20.balanceOf(holder2Address);
     expect(holder2BalanceBefore.gt(BigNumber.from(0))).to.be.true;
-    await this.dHedgeTopIndexERC20
+    await this.erc20
       .connect(holder2)
       .approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
-      .stake(this.DHedgeEnv.dHedgeTopIndex.address, holder2BalanceBefore, this.DHedgeEnv.adapter.address);
-    const amount = await this.liquidityMigration.staked(holder2Address, this.DHedgeEnv.dHedgeTopIndex.address);
+      .stake(this.DHedgeEnv.pool.address, holder2BalanceBefore, this.DHedgeEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder2Address, this.DHedgeEnv.pool.address);
     expect(amount.gt(BigNumber.from(0))).to.be.true;
 
-    const holder2BalanceAfter = await this.dHedgeTopIndexERC20.balanceOf(holder2Address);
+    const holder2BalanceAfter = await this.erc20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
     const tx = await this.DHedgeEnv.adapter
       .connect(this.signers.default)
@@ -143,7 +141,7 @@ describe("dHedge: Unit tests", function () {
         .connect(holder2)
         ['migrate(address,address,address)']
         (
-          this.DHedgeEnv.dHedgeTopIndex.address,
+          this.DHedgeEnv.pool.address,
           this.DHedgeEnv.adapter.address,
           ethers.constants.AddressZero // Strategy doesn't matter right now
         ),
@@ -159,15 +157,15 @@ describe("dHedge: Unit tests", function () {
 
   it("Getting the output token list", async function () {
     // adding the dHedge Top Token as a whitelisted token
-    const [underlyingAssets, , ] = await this.DHedgeEnv.dHedgeTopIndex.getFundComposition();
-    const underlyingTokens = await Promise.all(underlyingAssets.map((asset: string) => this.DHedgeEnv.dHedgeTopIndex.getAssetProxy(asset)))
+    const [underlyingAssets, , ] = await this.DHedgeEnv.pool.getFundComposition();
+    const underlyingTokens = await Promise.all(underlyingAssets.map((asset: string) => this.DHedgeEnv.pool.getAssetProxy(asset)))
     const outputTokens = await this.DHedgeEnv.adapter.outputTokens(FACTORY_REGISTRIES.DHEDGE_TOP);
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
 
   it("Encode withdraw using a non-whitelisted token should fail", async function () {
     // Setup migration calls using DHedgeAdapter contract
-    await expect(this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.dHedgeTopIndex.address, BigNumber.from(10000))).to.be.revertedWith(
+    await expect(this.DHedgeEnv.adapter.encodeWithdraw(this.DHedgeEnv.pool.address, BigNumber.from(10000))).to.be.revertedWith(
       "Whitelistable#onlyWhitelisted: not whitelisted lp",
     );
   });
@@ -184,13 +182,13 @@ describe("dHedge: Unit tests", function () {
         this.signers.default.address,
         "dHedge Top Index",
         "DTOP",
-        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.DHedgeEnv.dHedgeTopIndex.address, this.underlyingTokens),
+        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.DHedgeEnv.pool.address, this.underlyingTokens),
         STRATEGY_STATE,
         ethers.constants.AddressZero,
         '0x'
       )
       tx = await this.liquidityMigration.createStrategy(
-        this.DHedgeEnv.dHedgeTopIndex.address,
+        this.DHedgeEnv.pool.address,
         this.DHedgeEnv.adapter.address,
         strategyData
       );
@@ -201,30 +199,27 @@ describe("dHedge: Unit tests", function () {
   })
 
   it("Should migrate tokens to strategy", async function () {
-    const routerContract = this.enso.routers[0].contract;
     const holder3 = await this.DHedgeEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
     // staking the tokens in the liquidity migration contract
-    const holder3BalanceBefore = await this.dHedgeTopIndexERC20.balanceOf(holder3Address);
+    const holder3BalanceBefore = await this.erc20.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-    await this.dHedgeTopIndexERC20
+    await this.erc20
       .connect(holder3)
       .approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
-      .stake(this.DHedgeEnv.dHedgeTopIndex.address, holder3BalanceBefore, this.DHedgeEnv.adapter.address);
-    const amount = await this.liquidityMigration.staked(holder3Address, this.DHedgeEnv.dHedgeTopIndex.address);
+      .stake(this.DHedgeEnv.pool.address, holder3BalanceBefore, this.DHedgeEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder3Address, this.DHedgeEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
-    const holder3BalanceAfter = await this.dHedgeTopIndexERC20.balanceOf(holder3Address);
+    const holder3BalanceAfter = await this.erc20.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
     // Migrate
     await this.liquidityMigration
-      .connect(holder3)
-      ['migrate(address,address,address)']
-      (
-        this.DHedgeEnv.dHedgeTopIndex.address,
+      .connect(holder3)['migrate(address,address,address)'](
+        this.DHedgeEnv.pool.address,
         this.DHedgeEnv.adapter.address,
         this.strategy.address
       );
@@ -237,17 +232,17 @@ describe("dHedge: Unit tests", function () {
     const defaultAddress = await this.signers.default.getAddress();
 
     // staking the tokens in the liquidity migration contract
-    const indexBalance = await this.dHedgeTopIndexERC20.balanceOf(defaultAddress);
+    const indexBalance = await this.erc20.balanceOf(defaultAddress);
     const strategyBalance = await this.strategy.balanceOf(defaultAddress);
     expect(indexBalance).to.be.eq(BigNumber.from(0));
     expect(strategyBalance).to.be.eq(BigNumber.from(0));
 
     const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.DHedgeEnv.adapter.callStatic.getAmountOut(this.DHedgeEnv.dHedgeTopIndex.address, UNISWAP_V2_ROUTER, ethAmount)
+    const expectedAmount = await this.DHedgeEnv.adapter.callStatic.getAmountOut(this.DHedgeEnv.pool.address, UNISWAP_V2_ROUTER, ethAmount)
     console.log("Expected: ", expectedAmount.toString())
 
     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
-      this.DHedgeEnv.dHedgeTopIndex.address,
+      this.DHedgeEnv.pool.address,
       this.DHedgeEnv.adapter.address,
       UNISWAP_V2_ROUTER,
       expectedAmount.mul(995).div(1000), //0.5% slippage

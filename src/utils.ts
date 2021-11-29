@@ -55,9 +55,9 @@ export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
 }
 
 export async function setupStrategyItems(oracle: Contract, adapter: string, pool: string, underlying: string[]): Promise<StrategyItem[]> {
-    let positions = [] as Position[];
+    const positions = [] as Position[];
     //let [total, estimates] = await enso.platform.oracles.protocols.uniswapOracle.estimateTotal(pool, underlying);
-    let [total, estimates] = await estimateTokens(oracle, pool, underlying)
+    const [total, estimates] = await estimateTokens(oracle, pool, underlying)
     for (let i = 0; i < underlying.length; i++) {
       const percentage = new bignumber(estimates[i].toString()).multipliedBy(1000).dividedBy(total.toString()).toFixed(0);
       positions.push({

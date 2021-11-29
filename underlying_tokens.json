@@ -95,9 +95,9 @@
     "name": "Reserve Rights"
   },
   {
-    "address": "0xD533a949740bb3306d119CC777fa900bA034cd52",
-    "tokenSymbol": "CRV",
-    "name": "Curve DAO Token"
+    "address": "0x4691937a7508860F876c9c0a2a617E7d9E945D4B",
+    "tokenSymbol": "WOO",
+    "name": "Wootrade Network"
   },
   {
     "address": "0x111111111117dC0aa78b770fA6A738034120C302",
@@ -125,29 +125,19 @@
     "name": "Wrapped MIR Token"
   },
   {
-    "address": "0x4691937a7508860F876c9c0a2a617E7d9E945D4B",
-    "tokenSymbol": "WOO",
-    "name": "Wootrade Network"
-  },
-  {
     "address": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
     "tokenSymbol": "LINK",
     "name": "ChainLink Token"
   },
   {
-    "address": "0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828",
-    "tokenSymbol": "UMA",
-    "name": "UMA Voting Token v1"
-  },
-  {
-    "address": "0x0D8775F648430679A709E98d2b0Cb6250d2887EF",
-    "tokenSymbol": "BAT",
-    "name": "Basic Attention Token"
-  },
-  {
     "address": "0x4c11249814f11b9346808179Cf06e71ac328c1b5",
     "tokenSymbol": "ORAI",
     "name": "Oraichain Token"
+  },
+  {
+    "address": "0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828",
+    "tokenSymbol": "UMA",
+    "name": "UMA Voting Token v1"
   },
   {
     "address": "0xBA11D00c5f74255f56a5E366F4F77f5A186d7f55",
@@ -163,31 +153,6 @@
     "address": "0x0b38210ea11411557c13457D4dA7dC6ea731B88a",
     "tokenSymbol": "API3",
     "name": "API3"
-  },
-  {
-    "address": "0xfa6de2697D59E88Ed7Fc4dFE5A33daC43565ea41",
-    "tokenSymbol": "DEFI5",
-    "name": "DEFI Top 5 Tokens Index"
-  },
-  {
-    "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    "tokenSymbol": "WETH",
-    "name": "Wrapped Ether"
-  },
-  {
-    "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-    "tokenSymbol": "WBTC",
-    "name": "Wrapped BTC"
-  },
-  {
-    "address": "0x126c121f99e1E211dF2e5f8De2d96Fa36647c855",
-    "tokenSymbol": "DEGEN",
-    "name": "DEGEN Index"
-  },
-  {
-    "address": "0x17aC188e09A7890a1844E5E65471fE8b0CcFadF3",
-    "tokenSymbol": "CC10",
-    "name": "Cryptocurrency Top 10 Tokens Index"
   },
   {
     "address": "0xF629cBd94d3791C9250152BD8dfBDF380E2a3B9c",
@@ -290,6 +255,11 @@
     "name": "Curve USDP Pool yVault"
   },
   {
+    "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    "tokenSymbol": "WETH",
+    "name": "Wrapped Ether"
+  },
+  {
     "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     "tokenSymbol": "DAI",
     "name": "Dai Stablecoin"
@@ -300,9 +270,9 @@
     "name": "WAX Economic Token"
   },
   {
-    "address": "0xB6Ca7399B4F9CA56FC27cBfF44F4d2e4Eef1fc81",
-    "tokenSymbol": "MUSE",
-    "name": "Muse"
+    "address": "0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
+    "tokenSymbol": "AXS",
+    "name": "Axie Infinity Shard"
   },
   {
     "address": "0xEE06A81a695750E71a662B51066F2c74CF4478a0",
@@ -330,9 +300,14 @@
     "name": "REVV"
   },
   {
-    "address": "0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
-    "tokenSymbol": "AXS",
-    "name": "Axie Infinity Shard"
+    "address": "0x25f8087EAD173b73D6e8B84329989A8eEA16CF73",
+    "tokenSymbol": "YGG",
+    "name": "Yield Guild Games Token"
+  },
+  {
+    "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+    "tokenSymbol": "WBTC",
+    "name": "Wrapped BTC"
   },
   {
     "address": "0x1fDaB294EDA5112B7d066ED8F2E4E562D5bCc664",
@@ -350,14 +325,19 @@
     "name": "Perpetual"
   },
   {
-    "address": "0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30",
-    "tokenSymbol": "INJ",
-    "name": "Injective Token"
+    "address": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+    "tokenSymbol": "CRV",
+    "name": "Curve DAO Token"
   },
   {
     "address": "0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671",
     "tokenSymbol": "NMR",
     "name": "Numeraire"
+  },
+  {
+    "address": "0x15b7c0c907e4C6b9AdaAaabC300C08991D6CEA05",
+    "tokenSymbol": "GEL",
+    "name": "Gelato Network Token"
   },
   {
     "address": "0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5",
@@ -440,19 +420,9 @@
     "name": "TrueUSD"
   },
   {
-    "address": "0x892B14321a4FCba80669aE30Bd0cd99a7ECF6aC0",
-    "tokenSymbol": "crCREAM",
-    "name": "Cream Cream"
-  },
-  {
     "address": "0x12e51E77DAAA58aA0E9247db7510Ea4B46F9bEAd",
     "tokenSymbol": "aYFI",
     "name": "Aave Interest bearing YFI"
-  },
-  {
-    "address": "0x903560b1CcE601794C584F58898dA8a8b789Fc5d",
-    "tokenSymbol": "crKP3R",
-    "name": "Cream Keep3rV1"
   },
   {
     "address": "0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272",

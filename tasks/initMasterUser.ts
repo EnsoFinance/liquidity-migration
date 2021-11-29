@@ -58,7 +58,7 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "powerpool",
-    walletAddress: "0xa36c6df92a5bef87a5de6b71cb92fba3e16f0a43",
+    walletAddress: "0x97283c716f72b6f716d6a1bf6bd7c3fcd840027a",
     lpTokenAddress: "0xFA2562da1Bba7B954f26C74725dF51fb62646313",
     lpTokenName: "ASSY Index",
     symbol: "ASSY",

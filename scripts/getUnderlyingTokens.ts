@@ -9,15 +9,16 @@ import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { EnsoBuilder } from "@enso/contracts";
+import { EnsoBuilder, ItemCategory, EstimatorCategory, EnsoEnvironment } from "@enso/contracts";
 import fs from "fs";
+const tokenRegistry: HashMap<RegisteredToken> = require("dictionary.json");
 
-const BYTES32_SYMBOL_ABI = [
+const ALT_ERC20 = [
   {
     constant: true,
     inputs: [],
-    name: "symbol",
-    outputs: [{ name: "", type: "bytes32" }],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint256" }],
     payable: false,
     stateMutability: "view",
     type: "function",
@@ -33,26 +34,77 @@ const BYTES32_SYMBOL_ABI = [
   },
 ];
 
-class Erc20 {
-  address: string;
-  tokenSymbol: string;
-  name: string;
+enum CoreProtocols {
+  Unknown,
+  Aave,
+  Balancer,
+  Compound,
+  Curve,
+  Sushi,
+  Synthetix,
+  UniswapV2,
+  UniswapV3,
+  Yearn,
+}
 
-  constructor(addr: string, sym: string, name: string) {
-    this.address = addr;
-    this.tokenSymbol = sym;
+enum TokenType {
+  Basic,
+  DerivedToken,
+}
+
+class Token {
+  chainId: number;
+  name: string;
+  decimals: number;
+  address: string;
+  logoUri: string;
+
+  constructor(chainId: number, name: string, decimals: number, address: string, logoUri?: string) {
+    this.chainId = chainId;
     this.name = name;
+    this.decimals = decimals;
+    this.address = address;
+    this.logoUri = logoUri ?? "https://etherscan.io/images/main/empty-token.png";
   }
 }
 
-class UnderlyingTokens {
-  signer: SignerWithAddress;
+type Position = {
+  token: string;
+  adapters: string[];
+  path: string[];
+};
 
+type DerivedAsset = {
+  chainId: number;
+  name: string;
+  decimals: number;
+  address: string;
+  logoUri: string;
+  apy: number;
+  position: Position;
+  protocol: CoreProtocols;
+  type: TokenType;
+};
+
+type RegisteredToken = {
+  token: Token;
+  derivedAssets: DerivedAsset[];
+};
+
+interface HashMap<T> {
+  [key: string]: T;
+}
+
+class UnderlyingTokens {
+  enso: EnsoEnvironment;
+  signer: SignerWithAddress;
+  dictionary: HashMap<RegisteredToken>;
   tokens: string[];
 
-  constructor(signer: SignerWithAddress) {
+  constructor(enso: EnsoEnvironment, signer: SignerWithAddress) {
+    this.enso = enso;
     this.signer = signer;
-
+    this.dictionary = tokenRegistry;
     this.tokens = [];
   }
 
@@ -65,36 +117,75 @@ class UnderlyingTokens {
     this.tokens = Array.from(new Set([...this.tokens, token]));
   }
 
-  async getTokenDetails(): Promise<Erc20[]> {
-    if (this.tokens.length === 0) throw Error("No tokens to get details of");
+  async findSupportedProtocol(token: Token): Promise<CoreProtocols> {
+    if (token.name.includes("gauge")) {
+      return CoreProtocols.Curve;
+    }
 
-    const detailedTokens: Erc20[] = [] as Erc20[];
+    try {
+      if (await this.enso.adapters.aaveborrow.contract?._checkAToken(token.address)) {
+        return CoreProtocols.Aave;
+      }
+    } catch {
+      if (await this.enso.adapters.aavelend.contract?._checkAToken(token.address)) {
+        return CoreProtocols.Aave;
+      }
+    }
 
-    for (let i = 0; i < this.tokens.length; i++) {
+    // try {
+      // TODO: add compound adapter to enso sdk
+    //   if (await this.enso.adapters.compound.contract?._checkAToken(token.address)) {
+    //     return CoreProtocols.Compound;
+    //   }
+    // } catch {}
+    // }
+    return CoreProtocols.Unknown;
+}
+
+  async getUnderlying(token: Token, protocol: CoreProtocols) {}
+
+  async toTokenRegistry(tokens: string[]): Promise<HashMap<RegisteredToken>> {
+    const toks = await this.getTokensInfo(tokens);
+    for (let i = 0; i < tokens.length; i++) {
+      if (!(this.dictionary[tokens[i].toLowerCase()].token.address == tokens[i])) {
+        const token = this.dictionary[tokens[i].toLowerCase()].derivedAssets.find(a => a.address == tokens[i]);
+
+        if (!token) {
+          let protocol: CoreProtocols = this.findSupportedProtocol(toks[i]);
+        }
+      }
+    }
+
+    return this.dictionary;
+  }
+
+  async getTokensInfo(tokens: string[]): Promise<Token[]> {
+    if (tokens.length === 0) throw Error("No tokens to get details of");
+
+    const detailedTokens: Token[] = [] as Token[];
+
+    for (let i = 0; i < tokens.length; i++) {
       let erc20;
-
-      let tokenSymbol: string;
-
+      let decimals: number;
       let name: string;
 
       try {
-        erc20 = await new ERC20Mock__factory(this.signer).attach(this.tokens[i]);
-        [tokenSymbol, name] = await Promise.all([await erc20.symbol(), await erc20.name()]);
+        erc20 = await new ERC20Mock__factory(this.signer).attach(tokens[i]);
+        [decimals, name] = await Promise.all([await erc20.decimals(), await erc20.name()]);
       } catch {
-        erc20 = new Contract(this.tokens[i], BYTES32_SYMBOL_ABI, this.signer);
-        [tokenSymbol, name] = await Promise.all([await erc20.symbol(), await erc20.name()]);
+        // TODO: decode bytes32 name/symbol
+        erc20 = new Contract(tokens[i], ALT_ERC20, this.signer);
+        [decimals, name] = await Promise.all([await erc20.decimals(), await erc20.name()]);
       }
 
-      if (tokenSymbol === "" || name === "") throw Error("Failed to get symbol/name for: " + this.tokens[i]);
+      if (!decimals || !name) throw Error("Failed to get symbol/name for: " + tokens[i]);
 
-      detailedTokens.push(new Erc20(this.tokens[i], tokenSymbol, name));
+      detailedTokens.push(new Token(1, name, decimals, tokens[i]));
     }
     return detailedTokens;
   }
 
-  async write2File() {
-    const tokens = await this.getTokenDetails();
-
+  async write2File(tokens: HashMap<RegisteredToken>) {
     const data = JSON.stringify(tokens, null, 2);
 
     fs.writeFileSync("./underlying_tokens.json", data);
@@ -105,8 +196,6 @@ async function main() {
   // @ts-ignore
   const signer = await ethers.getSigner();
 
-  const tokens = new UnderlyingTokens(signer);
-
   let enso, dhedge, indexed, powerpool, piedao;
 
   [enso, dhedge, indexed, powerpool, piedao] = await Promise.all([
@@ -116,6 +205,8 @@ async function main() {
     await new PowerpoolEnvironmentBuilder(signer).connect(),
     await new PieDaoEnvironmentBuilder(signer).connect(),
   ]);
+
+  const tokens = new UnderlyingTokens(enso, signer);
 
   try {
     for (const { victim, lpTokenAddress, lpTokenName } of LP_TOKEN_WHALES) {
@@ -170,7 +261,6 @@ async function main() {
           throw Error("Failed to parse victim");
       }
     }
-    await tokens.write2File();
   } catch (e) {
     console.log(e);
   }
