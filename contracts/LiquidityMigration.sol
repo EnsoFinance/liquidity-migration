@@ -16,7 +16,9 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     IStrategyProxyFactory public factory;
 
     mapping (address => bool) public adapters;
+    mapping (address => bool) public stakedCount;
     mapping (address => mapping (address => uint256)) public staked;
+
 
     event Staked(address adapter, address strategy, uint256 amount, address account);
     event Migrated(address adapter, address lp, address strategy, address account);
@@ -220,6 +222,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         onlyWhitelisted(_adapter, _lp)
     {
         staked[msg.sender][_lp] += _amount;
+        stakedCount[_adapter] += 1;
         emit Staked(_adapter, _lp, _amount, msg.sender);
     }
 
@@ -295,6 +298,14 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         returns(bool)
     {
         return staked[_account][_lp] > 0;
+    }
+
+    function getStakeCount(address _adapter)
+        external
+        view
+        returns(bool)
+    {
+        return staked[_adapter];
     }
 
     function _validateItems(address adapter, address lp, StrategyItem[] memory strategyItems) private view {
