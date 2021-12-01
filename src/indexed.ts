@@ -7,9 +7,11 @@ import { BalancerAdapter__factory, IBalancerPool__factory, IBalancerPool } from 
 
 export class IndexedEnvironmentBuilder {
   signer: Signer;
+  adapter?: Contract;
 
-  constructor(signer: Signer) {
+  constructor(signer: Signer, adapter?: Contract) {
     this.signer = signer;
+    this.adapter = adapter;
   }
 
   async connect(pool?: string, holders?: string[]): Promise<IndexedEnvironment> {
@@ -17,7 +19,7 @@ export class IndexedEnvironmentBuilder {
     const degenIndexPool = (await IBalancerPool__factory.connect(lp, this.signer)) as IBalancerPool;
     const BalancerAdapterFactory = (await ethers.getContractFactory("BalancerAdapter")) as BalancerAdapter__factory;
     const signerAddress = await this.signer.getAddress();
-    const adapter = await BalancerAdapterFactory.deploy(signerAddress);
+    const adapter = this.adapter?? await BalancerAdapterFactory.deploy(signerAddress);
     const addresses = holders ?? INDEXED_HOLDERS[FACTORY_REGISTRIES.DEGEN_INDEX];
     if (addresses === undefined) {
       throw Error(`Failed to find token holder for contract: ${FACTORY_REGISTRIES.DEGEN_INDEX} `);

@@ -1,18 +1,12 @@
 import { ethers } from "hardhat";
-import { expect } from "chai";
 import { MainnetSigner } from "../types";
 import { PIE_DAO_HOLDERS } from "../src/constants";
-import { BigNumber, Contract, Signer } from "ethers";
+import {  Contract, Signer } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { StrategyBuilder, Strategy, Implementation } from "./strategy";
 
 import { FACTORY_REGISTRIES } from "../src/constants";
 import {
-  ERC20,
-  ERC20__factory,
   PieDaoAdapter__factory,
-  SmartPoolRegistry,
-  SmartPoolRegistry__factory,
   IPV2SmartPool,
   IPV2SmartPool__factory,
   PCappedSmartPool,
@@ -25,9 +19,11 @@ import {
 
 export class PieDaoEnvironmentBuilder {
   signer: SignerWithAddress;
+  adapter?: Contract;
 
-  constructor(signer: SignerWithAddress) {
+  constructor(signer: SignerWithAddress, adapter?: Contract) {
     this.signer = signer;
+    this.adapter = adapter;
   }
   async connect(pool?: string, holders?: string[]): Promise<PieDaoEnvironment> {
     const lp = pool ?? "0x0327112423F3A68efdF1fcF402F6c5CB9f7C33fd";
@@ -40,7 +36,7 @@ export class PieDaoEnvironmentBuilder {
 
     const PieDaoAdapterFactory = (await ethers.getContractFactory("PieDaoAdapter")) as PieDaoAdapter__factory;
 
-    const adapter = await PieDaoAdapterFactory.deploy(this.signer.address);
+    const adapter = this.adapter?? await PieDaoAdapterFactory.deploy(this.signer.address);
 
     const contract = await this.getImplementation(lp);
 

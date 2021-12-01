@@ -106,7 +106,7 @@ const config: HardhatUserConfig = {
     apiKey: etherscanApiKey,
   },
   gasReporter: {
-    enabled: (process.env.REPORT_GAS) ? true : false,
+    enabled: false,
     currency: 'USD',
     gasPrice: 100
   },
@@ -123,7 +123,7 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 2000,
           },
         },
       },
@@ -132,7 +132,7 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 2000,
           },
         },
       },
@@ -150,14 +150,14 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 2000,
           },
         },
       },
     ],
   },
   mocha: {
-    timeout: 100000,
+    timeout: 9900000,
   },
   typechain: {
     outDir: "typechain",

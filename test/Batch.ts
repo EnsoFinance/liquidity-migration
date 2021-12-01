@@ -136,7 +136,7 @@ describe("Batch: Unit tests", function () {
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(signers.admin, enso);
     liquidityMigrationBuilder.addAdapters(
-      [AcceptedProtocols.Indexed, AcceptedProtocols.DefiPulseIndex, AcceptedProtocols.PieDao],
+      [AcceptedProtocols.Indexed, AcceptedProtocols.TokenSets, AcceptedProtocols.PieDao],
       [indexedEnv.adapter, dpiEnv.adapter, pieEnv.adapter],
     );
 

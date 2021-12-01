@@ -2,16 +2,16 @@ import hre from "hardhat";
 import { ethers } from "hardhat";
 import { ERC20Mock__factory } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { Contract } from "ethers";
+import { Contract, BigNumber } from "ethers";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { EnsoBuilder, ItemCategory, EstimatorCategory, EnsoEnvironment } from "@enso/contracts";
+import { EnsoBuilder, EnsoEnvironment } from "@enso/contracts";
 import fs from "fs";
-const tokenRegistry: HashMap<RegisteredToken> = require("dictionary.json");
+const tokenRegistry: HashMap<TokenDictionary> = require("../dictionary.json");
 
 const ALT_ERC20 = [
   {
@@ -86,7 +86,7 @@ type DerivedAsset = {
   type: TokenType;
 };
 
-type RegisteredToken = {
+type TokenDictionary = {
   token: Token;
   derivedAssets: DerivedAsset[];
 };
@@ -98,7 +98,7 @@ interface HashMap<T> {
 class UnderlyingTokens {
   enso: EnsoEnvironment;
   signer: SignerWithAddress;
-  dictionary: HashMap<RegisteredToken>;
+  dictionary: HashMap<TokenDictionary>;
   tokens: string[];
 
   constructor(enso: EnsoEnvironment, signer: SignerWithAddress) {
@@ -133,25 +133,25 @@ class UnderlyingTokens {
     }
 
     // try {
-      // TODO: add compound adapter to enso sdk
+    // TODO: add compound adapter to enso sdk
     //   if (await this.enso.adapters.compound.contract?._checkAToken(token.address)) {
     //     return CoreProtocols.Compound;
     //   }
     // } catch {}
     // }
     return CoreProtocols.Unknown;
-}
+  }
 
   async getUnderlying(token: Token, protocol: CoreProtocols) {}
 
-  async toTokenRegistry(tokens: string[]): Promise<HashMap<RegisteredToken>> {
+  async toTokenRegistry(tokens: string[]): Promise<HashMap<TokenDictionary>> {
     const toks = await this.getTokensInfo(tokens);
     for (let i = 0; i < tokens.length; i++) {
       if (!(this.dictionary[tokens[i].toLowerCase()].token.address == tokens[i])) {
         const token = this.dictionary[tokens[i].toLowerCase()].derivedAssets.find(a => a.address == tokens[i]);
 
         if (!token) {
-          let protocol: CoreProtocols = this.findSupportedProtocol(toks[i]);
+          let protocol: CoreProtocols = await this.findSupportedProtocol(toks[i]);
         }
       }
     }
@@ -166,16 +166,23 @@ class UnderlyingTokens {
 
     for (let i = 0; i < tokens.length; i++) {
       let erc20;
+
       let decimals: number;
+
       let name: string;
 
       try {
         erc20 = await new ERC20Mock__factory(this.signer).attach(tokens[i]);
+
         [decimals, name] = await Promise.all([await erc20.decimals(), await erc20.name()]);
       } catch {
-        // TODO: decode bytes32 name/symbol
         erc20 = new Contract(tokens[i], ALT_ERC20, this.signer);
+
         [decimals, name] = await Promise.all([await erc20.decimals(), await erc20.name()]);
+
+        name = ethers.utils.parseBytes32String(name);
+
+        decimals = BigNumber.from(decimals).toNumber();
       }
 
       if (!decimals || !name) throw Error("Failed to get symbol/name for: " + tokens[i]);
@@ -185,10 +192,16 @@ class UnderlyingTokens {
     return detailedTokens;
   }
 
-  async write2File(tokens: HashMap<RegisteredToken>) {
-    const data = JSON.stringify(tokens, null, 2);
+  async writeTokens() {
+    const data = JSON.stringify(await this.getTokensInfo(this.tokens), null, 2);
 
     fs.writeFileSync("./underlying_tokens.json", data);
+  }
+
+  async writeDictionary(tokens: HashMap<TokenDictionary>) {
+    const data = JSON.stringify(tokens, null, 2);
+
+    fs.writeFileSync("./dictionary_new.json", data);
   }
 }
 
@@ -260,6 +273,7 @@ async function main() {
         default:
           throw Error("Failed to parse victim");
       }
+      tokens.writeTokens();
     }
   } catch (e) {
     console.log(e);

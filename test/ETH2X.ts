@@ -31,7 +31,7 @@ describe("ETH_2X: Unit tests", function () {
     console.log(`Token Sets Adapter: ${this.TokenSetEnv.adapter.address}`);
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.enso);
-    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.TokenSetEnv.adapter);
+    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, this.TokenSetEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
     if (liquitityMigrationDeployed != undefined) {
       console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);

@@ -6,17 +6,19 @@ import { DHedgeAdapter__factory, IDHedge__factory, IDHedge } from "../typechain"
 
 export class DHedgeEnvironmentBuilder {
   signer: Signer;
+  adapter?: Contract;
 
-  constructor(signer: Signer) {
+  constructor(signer: Signer, adapter?: Contract) {
     this.signer = signer;
+    this.adapter = adapter;
   }
   async connect(pool?: string, holders?: string[]): Promise<DHedgeEnvironment> {
     const lp = pool ?? FACTORY_REGISTRIES.DHEDGE_TOP;
     const dhedgeIndex = IDHedge__factory.connect(lp, this.signer) as IDHedge;
     const DHedgeAdapterFactory = (await ethers.getContractFactory("DHedgeAdapter")) as DHedgeAdapter__factory;
     const signerAddress = await this.signer.getAddress();
-    const adapter = await DHedgeAdapterFactory.deploy(signerAddress, SUSD);
-    const addresses = holders?? DHEDGE_HOLDERS[FACTORY_REGISTRIES.DHEDGE_TOP];
+    const adapter = this.adapter ?? (await DHedgeAdapterFactory.deploy(signerAddress, SUSD));
+    const addresses = holders ?? DHEDGE_HOLDERS[FACTORY_REGISTRIES.DHEDGE_TOP];
     if (addresses === undefined) {
       throw Error(`Failed to find token holder for contract: ${FACTORY_REGISTRIES.DEGEN_INDEX} `);
     }

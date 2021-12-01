@@ -37,7 +37,7 @@ describe("DPI: Unit tests", function () {
     console.log(`DPI Adapter: ${this.DPIEnv.adapter.address}`);
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.enso);
-    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.DPIEnv.adapter);
+    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, this.DPIEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
     if (liquitityMigrationDeployed != undefined) {
       console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);

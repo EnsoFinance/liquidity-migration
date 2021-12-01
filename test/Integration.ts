@@ -1,31 +1,31 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Signer } from "ethers";
+import { BigNumber, Signer, Contract } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IAdapter, IERC20__factory } from "../typechain";
-import { TokenSetEnvironmentBuilder, TokenSetEnvironment } from "../src/tokenSets";
-import { PieDaoEnvironment, PieDaoEnvironmentBuilder } from "../src/piedao";
-import { IndexedEnvironment, IndexedEnvironmentBuilder } from "../src/indexed";
-import { PowerpoolEnvironment, PowerpoolEnvironmentBuilder } from "../src/powerpool";
-import { DHedgeEnvironment, DHedgeEnvironmentBuilder } from "../src/dhedge";
+import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
+import { PieDaoEnvironmentBuilder } from "../src/piedao";
+import { IndexedEnvironmentBuilder } from "../src/indexed";
+import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
+import { DHedgeEnvironmentBuilder } from "../src/dhedge";
 import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@enso/contracts";
 import { WETH, SUSD } from "../src/constants";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("Integration: Unit tests", function () {
-  const indexedPools: IndexedEnvironment[] = [];
-  const tokenSetsPools: TokenSetEnvironment[] = [];
-  const dhedgePools: DHedgeEnvironment[] = [];
-  const pieDaoPools: PieDaoEnvironment[] = [];
-  const powerpoolPools: PowerpoolEnvironment[] = [];
-  const indexCoopPools: TokenSetEnvironment[] = [];
   const poolsToMigrate: any[] = [];
+  let dhedgeAdapter: Contract;
+  let indexedAdapter: Contract;
+  let pieDaoAdapter: Contract;
+  let powerpoolAdapter: Contract;
+  let tokensetsAdapter: Contract;
+  let indexCoopAdapter: Contract;
 
-  const toErc20 =  (addr: string, signer: Signer) => {
+  const toErc20 = (addr: string, signer: Signer) => {
     return IERC20__factory.connect(addr, signer);
-  }
+  };
 
   const setupPools = async (signer: SignerWithAddress, enso: EnsoEnvironment) => {
     const liquidityMigrationBuilder = new LiquidityMigrationBuilder(signer, enso);
@@ -34,64 +34,79 @@ describe("Integration: Unit tests", function () {
       switch (victim.toLowerCase()) {
         case "dhedge":
           console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new DHedgeEnvironmentBuilder(signer).connect(lpTokenAddress, [walletAddress]);
-          dhedgePools.push(pool);
+          pool = await new DHedgeEnvironmentBuilder(signer, dhedgeAdapter).connect(lpTokenAddress, [walletAddress]);
+          if (!dhedgeAdapter) {
+            dhedgeAdapter = pool.adapter;
+            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DHedge, pool.adapter as IAdapter);
+          }
           poolsToMigrate.push(pool);
-          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DHedge, pool.adapter as IAdapter);
-          await pool.adapter.add(lpTokenAddress);
           break;
 
         case "indexed":
           console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new IndexedEnvironmentBuilder(signer).connect(lpTokenAddress, [walletAddress]);
-          indexedPools.push(pool);
+          pool = await new IndexedEnvironmentBuilder(signer, indexedAdapter).connect(lpTokenAddress, [walletAddress]);
+          if (!indexedAdapter) {
+            indexedAdapter = pool.adapter;
+            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, pool.adapter as IAdapter);
+          }
           poolsToMigrate.push(pool);
-          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, pool.adapter as IAdapter);
-          await pool.adapter.add(lpTokenAddress);
           break;
 
         case "piedao":
           console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new PieDaoEnvironmentBuilder(signer).connect();
-          pieDaoPools.push(pool);
+          pool = await new PieDaoEnvironmentBuilder(signer, pieDaoAdapter).connect(lpTokenAddress, [walletAddress]);
+          if (!pieDaoAdapter) {
+            pieDaoAdapter = pool.adapter;
+            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.PieDao, pool.adapter as IAdapter);
+          }
           poolsToMigrate.push(pool);
-          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.PieDao, pool.adapter as IAdapter);
-          await pool.adapter.add(lpTokenAddress);
           break;
 
         case "powerpool":
           console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new PowerpoolEnvironmentBuilder(signer).connect(lpTokenAddress, [walletAddress]);
-          powerpoolPools.push(pool);
+          pool = await new PowerpoolEnvironmentBuilder(signer, powerpoolAdapter).connect(lpTokenAddress, [
+            walletAddress,
+          ]);
+          if (!powerpoolAdapter) {
+            powerpoolAdapter = pool.adapter;
+            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, pool.adapter as IAdapter);
+          }
           poolsToMigrate.push(pool);
-          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, pool.adapter as IAdapter);
-          await pool.adapter.add(lpTokenAddress);
           break;
 
         case "tokensets":
           console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new TokenSetEnvironmentBuilder(signer, enso).connect(lpTokenAddress, [walletAddress]);
-          tokenSetsPools.push(pool);
+          pool = await new TokenSetEnvironmentBuilder(signer, enso, tokensetsAdapter).connect(lpTokenAddress, [
+            walletAddress,
+          ]);
+          if (!tokensetsAdapter) {
+            tokensetsAdapter = pool.adapter;
+            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, pool.adapter as IAdapter);
+          }
           poolsToMigrate.push(pool);
-          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, pool.adapter as IAdapter);
-          await pool.adapter.add(lpTokenAddress);
           break;
 
         case "indexcoop":
           console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new TokenSetEnvironmentBuilder(signer, enso).connect(lpTokenAddress, [walletAddress]);
-          indexCoopPools.push(pool);
+          pool = await new TokenSetEnvironmentBuilder(signer, enso, indexCoopAdapter).connect(lpTokenAddress, [
+            walletAddress,
+          ]);
+          if (!indexCoopAdapter) {
+            indexCoopAdapter = pool.adapter;
+            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.IndexCoop, pool.adapter as IAdapter);
+          }
           poolsToMigrate.push(pool);
-          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.IndexCoop, pool.adapter as IAdapter);
-          await pool.adapter.add(lpTokenAddress);
           break;
 
         default:
           throw Error("Failed to parse victim");
       }
     }
+    const lm = await liquidityMigrationBuilder.deploy();
+    const txs = await Promise.all(poolsToMigrate.map(async p => await p.adapter.add(p.pool.address)));
+    await Promise.all(txs.map(async p => await p.wait()));
 
-    return await liquidityMigrationBuilder.deploy();
+    return lm;
   };
 
   before(async function () {
@@ -124,19 +139,18 @@ describe("Integration: Unit tests", function () {
 
   it("Stake all tokens", async function () {
     for (let i = 0; i < poolsToMigrate.length; i++) {
-      console.log("Staking for pool: ", await poolsToMigrate[i].pool.address);
-      const erc20 = toErc20(poolsToMigrate[i].pool.address, this.signers.default);
-      const holder2 = await poolsToMigrate[i].holders[0];
+      const pool = poolsToMigrate[i];
+      const erc20 = toErc20(pool.pool.address, this.signers.default);
+      const holder2 = await pool.holders[0];
       const holder2Address = await holder2.getAddress();
       const holder2Balance = await erc20.balanceOf(holder2Address);
+      expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
       expect(holder2Balance).to.be.gt(BigNumber.from(0), "No balance found for holder: " + holder2Address);
       await erc20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
       await this.liquidityMigration
         .connect(holder2)
-        .stake(poolsToMigrate[i].pool.address, holder2Balance.div(2), poolsToMigrate[i].adapter.address);
-      expect(await this.liquidityMigration.staked(holder2Address, poolsToMigrate[i].pool.address)).to.equal(
-        holder2Balance.div(2),
-      );
+        .stake(pool.pool.address, holder2Balance.div(2), pool.adapter.address);
+      expect(await this.liquidityMigration.staked(holder2Address, pool.pool.address)).to.equal(holder2Balance.div(2));
       const holder2AfterBalance = await erc20.balanceOf(holder2Address);
       expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
     }

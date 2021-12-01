@@ -27,7 +27,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     console.log(`Token Sets Adapter: ${this.ETHUSDYieldEnv.adapter.address}`);
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.enso);
-    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.ETHUSDYieldEnv.adapter);
+    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, this.ETHUSDYieldEnv.adapter);
     const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
     if (liquitityMigrationDeployed != undefined) {
       console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);
