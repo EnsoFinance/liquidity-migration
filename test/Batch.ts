@@ -115,7 +115,7 @@ describe("Batch: Unit tests", function () {
     enso = await new EnsoBuilder(signers.admin).mainnet().build();
 
     // KNC not on Uniswap, use Chainlink
-    await enso.platform.oracles.protocols.chainlinkOracle
+    await enso.platform.oracles.registries.chainlinkRegistry
       .connect(signers.admin)
       .addOracle(SUSD, WETH, "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419", true); //sUSD
     await enso.platform.oracles.protocols.chainlinkOracle

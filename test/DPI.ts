@@ -25,8 +25,8 @@ describe("DPI: Unit tests", function () {
     this.enso = await new EnsoBuilder(this.signers.admin).mainnet().build();
 
     // KNC not on Uniswap, use Chainlink
-    await this.enso.platform.oracles.protocols.chainlinkOracle.connect(this.signers.admin).addOracle(SUSD, WETH, '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', true); //sUSD
-    await this.enso.platform.oracles.protocols.chainlinkOracle.connect(this.signers.admin).addOracle('0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202', SUSD, '0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc', false); //KNC
+    await this.enso.platform.oracles.registries.chainlinkRegistry.connect(this.signers.admin).addOracle(SUSD, WETH, '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', true); //sUSD
+    await this.enso.platform.oracles.registries.chainlinkRegistry.connect(this.signers.admin).addOracle('0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202', SUSD, '0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc', false); //KNC
     await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, '0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202') //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
 
 

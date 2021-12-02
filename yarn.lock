@@ -304,9 +304,8 @@
   resolved "https://registry.yarnpkg.com/@ensdomains/resolver/-/resolver-0.2.4.tgz#c10fe28bf5efbf49bff4666d909aed0265efbc89"
   integrity sha512-bvaTH34PMCbv6anRa9I/0zjLJgY4EuznbEMgbV77JBCQ9KNC46rzi0avuxpOfu+xDjPEtSFGqVEOr5GlUSGudA==
 
-"@enso/contracts@git+ssh://git@github.com:EnsoFinance/contracts-temp.git":
+"@enso/contracts@../Monorepo/packages/contracts/":
   version "0.1.3"
-  resolved "git+ssh://git@github.com:EnsoFinance/contracts-temp.git#4c71c0cabad7328e33a5099586cdfdf04d0afe8e"
   dependencies:
     "@0xsequence/token-directory" "1.1.13"
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"

@@ -20,7 +20,7 @@ describe("dHedge: Unit tests", function () {
     this.underlyingTokens = [];
 
     this.enso = await new EnsoBuilder(this.signers.admin).mainnet().build();
-    const chainlinkOracle = this.enso.platform.oracles.protocols.chainlinkOracle
+    const chainLinkRegistries = this.enso.platform.oracles.registries.chainlinkRegistry;
 
     this.DHedgeEnv = await new DHedgeEnvironmentBuilder(this.signers.default).connect();
     this.erc20 = IERC20__factory.connect(this.DHedgeEnv.pool.address, this.signers.default);
@@ -48,12 +48,12 @@ describe("dHedge: Unit tests", function () {
     const sADA = '0xe36e2d3c7c34281fa3bc737950a68571736880a1'
 
     // setup chainlink oracle
-    await chainlinkOracle.connect(this.signers.admin).addOracle(SUSD, WETH, '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', true); //sUSD
-		await chainlinkOracle.connect(this.signers.admin).addOracle(sETH, SUSD, '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', false); //sETH
-    await chainlinkOracle.connect(this.signers.admin).addOracle(sAAVE, WETH, '0x6df09e975c830ecae5bd4ed9d90f3a95a4f88012', false); //sAAVE
-    await chainlinkOracle.connect(this.signers.admin).addOracle(sBTC, WETH, '0xdeb288f737066589598e9214e782fa5a8ed689e8', false); //sBTC
-    await chainlinkOracle.connect(this.signers.admin).addOracle(sDOT, SUSD, '0x1c07afb8e2b827c5a4739c6d59ae3a5035f28734', false); //sDOT
-    await chainlinkOracle.connect(this.signers.admin).addOracle(sADA, SUSD, '0xae48c91df1fe419994ffda27da09d5ac69c30f55', false); //sADA
+    await chainLinkRegistries.connect(this.signers.admin).addOracle(SUSD, WETH, '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', true); //sUSD
+		await chainLinkRegistries.connect(this.signers.admin).addOracle(sETH, SUSD, '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', false); //sETH
+    await chainLinkRegistries.connect(this.signers.admin).addOracle(sAAVE, WETH, '0x6df09e975c830ecae5bd4ed9d90f3a95a4f88012', false); //sAAVE
+    await chainLinkRegistries.connect(this.signers.admin).addOracle(sBTC, WETH, '0xdeb288f737066589598e9214e782fa5a8ed689e8', false); //sBTC
+    await chainLinkRegistries.connect(this.signers.admin).addOracle(sDOT, SUSD, '0x1c07afb8e2b827c5a4739c6d59ae3a5035f28734', false); //sDOT
+    await chainLinkRegistries.connect(this.signers.admin).addOracle(sADA, SUSD, '0xae48c91df1fe419994ffda27da09d5ac69c30f55', false); //sADA
 
     // setup synth estimator
     await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, sETH)
