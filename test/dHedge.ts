@@ -56,11 +56,11 @@ describe("dHedge: Unit tests", function () {
     await chainlinkOracle.connect(this.signers.admin).addOracle(sADA, SUSD, '0xae48c91df1fe419994ffda27da09d5ac69c30f55', false); //sADA
 
     // setup synth estimator
-    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.SYNTH, sETH)
-    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.SYNTH, sAAVE)
-    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.SYNTH, sBTC)
-    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.SYNTH, sDOT)
-    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.SYNTH, sADA)
+    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, sETH)
+    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, sAAVE)
+    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, sBTC)
+    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, sDOT)
+    await this.enso.platform.strategyFactory.connect(this.signers.admin).addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, sADA)
   });
 
   it("Token holder should be able to withdraw from pool", async function () {

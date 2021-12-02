@@ -1,16 +1,17 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Signer, Contract } from "ethers";
+import { BigNumber, Signer, Contract, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IAdapter, IERC20__factory } from "../typechain";
+import { IAdapter, IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
+import { setupStrategyItems, encodeStrategyData } from "../src/utils";
 import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@enso/contracts";
-import { WETH, SUSD } from "../src/constants";
+import { WETH, SUSD, STRATEGY_STATE } from "../src/constants";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -102,8 +103,12 @@ describe("Integration: Unit tests", function () {
           throw Error("Failed to parse victim");
       }
     }
+    // deploy liqudity migration
     const lm = await liquidityMigrationBuilder.deploy();
+
+    // add pools to adapters
     const txs = await Promise.all(poolsToMigrate.map(async p => await p.adapter.add(p.pool.address)));
+
     await Promise.all(txs.map(async p => await p.wait()));
 
     return lm;
@@ -132,7 +137,7 @@ describe("Integration: Unit tests", function () {
       ); //KNC
     await this.enso.platform.strategyFactory
       .connect(this.signers.admin)
-      .addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.SYNTH, "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202"); //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
+      .addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202"); //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
 
     this.liquidityMigration = await setupPools(this.signers.default, this.enso);
   });
@@ -145,6 +150,7 @@ describe("Integration: Unit tests", function () {
       const holder2Address = await holder2.getAddress();
       const holder2Balance = await erc20.balanceOf(holder2Address);
       expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
+      console.log(holder2Address, ": ", holder2Balance);
       expect(holder2Balance).to.be.gt(BigNumber.from(0), "No balance found for holder: " + holder2Address);
       await erc20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
       await this.liquidityMigration
@@ -153,6 +159,39 @@ describe("Integration: Unit tests", function () {
       expect(await this.liquidityMigration.staked(holder2Address, pool.pool.address)).to.equal(holder2Balance.div(2));
       const holder2AfterBalance = await erc20.balanceOf(holder2Address);
       expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
+    }
+  });
+
+  it("Migrate tokens", async function () {
+    for (let i = 0; i < poolsToMigrate.length; i++) {
+      const pool = poolsToMigrate[i];
+      const underlyingTokens = await pool.adapter.outputToken(pool.pool.address);
+      // encode strategy items
+      const strategyItems = await setupStrategyItems(
+        this.enso.platform.oracles.ensoOracle,
+        this.enso.adapters.uniswap.contract.address,
+        pool.pool.address,
+        underlyingTokens,
+      );
+      // deploy strategy
+      const strategyData = encodeStrategyData(
+        this.signers.default.address,
+        `Token - ${i}`,
+        `Address: ${pool.pool.address}`,
+        strategyItems,
+        STRATEGY_STATE,
+        ethers.constants.AddressZero,
+        "0x",
+      );
+      const tx = await this.liquidityMigration.createStrategy(
+        pool.pool.address,
+        pool.adapter.address,
+        strategyData,
+      );
+      const receipt = await tx.wait();
+      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+      console.log("Strategy address: ", strategyAddress);
+      this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
     }
   });
 });

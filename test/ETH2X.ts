@@ -164,7 +164,6 @@ describe("ETH_2X: Unit tests", function () {
   })
 
   it("Should migrate tokens to strategy", async function () {
-    const routerContract = this.enso.routers[0].contract;
     const holder3 = await this.TokenSetEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 

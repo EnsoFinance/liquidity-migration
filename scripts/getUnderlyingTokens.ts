@@ -32,6 +32,15 @@ const ALT_ERC20 = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    constant: true,
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "bytes32" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
 enum CoreProtocols {
@@ -55,13 +64,15 @@ enum TokenType {
 class Token {
   chainId: number;
   name: string;
+  symbol: string;
   decimals: number;
   address: string;
   logoUri: string;
 
-  constructor(chainId: number, name: string, decimals: number, address: string, logoUri?: string) {
+  constructor(chainId: number, name: string, symbol: string, decimals: number, address: string, logoUri?: string) {
     this.chainId = chainId;
     this.name = name;
+    this.symbol = symbol;
     this.decimals = decimals;
     this.address = address;
     this.logoUri = logoUri ?? "https://etherscan.io/images/main/empty-token.png";
@@ -77,6 +88,7 @@ type Position = {
 type DerivedAsset = {
   chainId: number;
   name: string;
+  symbol: string;
   decimals: number;
   address: string;
   logoUri: string;
@@ -171,14 +183,16 @@ class UnderlyingTokens {
 
       let name: string;
 
+      let symbol: string;
+
       try {
         erc20 = await new ERC20Mock__factory(this.signer).attach(tokens[i]);
 
-        [decimals, name] = await Promise.all([await erc20.decimals(), await erc20.name()]);
+        [decimals, name, symbol] = await Promise.all([await erc20.decimals(), await erc20.name(), await erc20.symbol()]);
       } catch {
         erc20 = new Contract(tokens[i], ALT_ERC20, this.signer);
 
-        [decimals, name] = await Promise.all([await erc20.decimals(), await erc20.name()]);
+        [decimals, name, symbol] = await Promise.all([await erc20.decimals(), await erc20.name(), await erc20.symbol()]);
 
         name = ethers.utils.parseBytes32String(name);
 
@@ -187,7 +201,7 @@ class UnderlyingTokens {
 
       if (!decimals || !name) throw Error("Failed to get symbol/name for: " + tokens[i]);
 
-      detailedTokens.push(new Token(1, name, decimals, tokens[i]));
+      detailedTokens.push(new Token(1, name, symbol, decimals, tokens[i]));
     }
     return detailedTokens;
   }

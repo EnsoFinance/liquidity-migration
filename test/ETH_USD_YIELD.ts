@@ -3,10 +3,9 @@ import { expect } from "chai";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IERC20, IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
-
+import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 import { EnsoBuilder} from "@enso/contracts";
 

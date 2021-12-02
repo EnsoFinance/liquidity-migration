@@ -53,13 +53,14 @@ export class LiquidityMigrationBuilder {
   async deploy(): Promise<Contract> {
     if (this.adapters.length === 0) throw new Error("No adapters set!");
 
+    if (!this.enso.routers[0].contract) throw Error("Enso environment has no routers");
+
     const LiquidityMigrationFactory = (await ethers.getContractFactory(
       "LiquidityMigration",
     )) as LiquidityMigration__factory;
 
-    const unlock = await getBlockTime(await ethers.provider.getBlockNumber() + 1);
+    const unlock = await getBlockTime(5);
 
-    if (!this.enso.routers[0].contract) throw Error("Enso environment has no routers");
     this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(
       this.adapters.map(a => a.adapter),
       this.enso.routers[0].contract.address,
@@ -69,7 +70,9 @@ export class LiquidityMigrationBuilder {
       ethers.constants.MaxUint256,
       this.signer.address,
     );
+
     if (!this.liquidityMigration) throw Error("Failed to deploy");
+
     // TODO: return whole class
     return this.liquidityMigration;
   }
