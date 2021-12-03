@@ -26,34 +26,10 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "indexed",
-    walletAddress: "0x19815bbe01cd7de11db29ae43b3ae8ebb687eff5",
-    lpTokenAddress: "0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3",
-    lpTokenName: "Cryptocurrency Top 10 Tokens Index",
-    symbol: "CC10",
-    adapter: "IndexedAdapter",
-  },
-  {
-    victim: "indexed",
-    walletAddress: "0xaee146b0442e718d00dfe3bebb5bf0b91a11cbac",
-    lpTokenAddress: "0xfa6de2697d59e88ed7fc4dfe5a33dac43565ea41",
-    lpTokenName: "DEFI Top 5 Tokens Index",
-    symbol: "DEFI5",
-    adapter: "IndexedAdapter",
-  },
-  {
-    victim: "indexed",
     walletAddress: "0xb8F9B20B15fD45400D6F679347bD83184D67a363",
     lpTokenAddress: "0xd6cb2adf47655b1babddc214d79257348cbc39a7",
     lpTokenName: "Oracle Top 5 Tokens Index",
     symbol: "ORCL5",
-    adapter: "IndexedAdapter",
-  },
-  {
-    victim: "indexed",
-    walletAddress: "0x75f03bCF0E56b7DE72Ed26585caEE949F0D5Bf1a",
-    lpTokenAddress: "0xabafa52d3d5a2c18a4c1ae24480d22b831fc0413",
-    lpTokenName: "Future of Finance Fund",
-    symbol: "FFF",
     adapter: "IndexedAdapter",
   },
   {
@@ -162,7 +138,7 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "pieDao",
-    walletAddress: "0xae1e5c84b73136a49efb70a15149c350015391ed",
+    walletAddress: "0x4281579d99d855f2430c95a13720e53a0fcc0549",
     lpTokenAddress: "0x33e18a092a93ff21ad04746c7da12e35d34dc7c4",
     lpTokenName: "Metaverse NFT Index",
     symbol: "PLAY",
