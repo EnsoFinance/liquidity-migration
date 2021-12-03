@@ -305,7 +305,7 @@
   integrity sha512-bvaTH34PMCbv6anRa9I/0zjLJgY4EuznbEMgbV77JBCQ9KNC46rzi0avuxpOfu+xDjPEtSFGqVEOr5GlUSGudA==
 
 "@enso/contracts@../Monorepo/packages/contracts/":
-  version "0.1.3"
+  version "0.1.5"
   dependencies:
     "@0xsequence/token-directory" "1.1.13"
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"
@@ -1548,9 +1548,9 @@
     debug "^4.3.1"
 
 "@truffle/contract@^4.3.8":
-  version "4.3.42"
-  resolved "https://registry.yarnpkg.com/@truffle/contract/-/contract-4.3.42.tgz#75965224814e7c1efedfd9d0ec5130f51f701365"
-  integrity sha512-CWbKz3L6ldAoh0JX14nNzOyXxWsLiGX5PYpswrwOy0Uk4JYpbVtpSzoQxJbnDTfLUciowfCdG/4QMZ+zo2WVqA==
+  version "4.3.43"
+  resolved "https://registry.yarnpkg.com/@truffle/contract/-/contract-4.3.43.tgz#0d3944d98e9924809283f8fa6adcfb0ffc130590"
+  integrity sha512-F06lBURJ3Mow4fov/9O2rI2giVUhlCskpfESjLSuYnE5ZEDwTiNF99P2iv66EhUqNg6JkUFd9RlDZE5bDnZzJA==
   dependencies:
     "@ensdomains/ensjs" "^2.0.1"
     "@truffle/blockchain-utils" "^0.0.31"

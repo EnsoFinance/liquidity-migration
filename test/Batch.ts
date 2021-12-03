@@ -118,7 +118,7 @@ describe("Batch: Unit tests", function () {
     await enso.platform.oracles.registries.chainlinkRegistry
       .connect(signers.admin)
       .addOracle(SUSD, WETH, "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419", true); //sUSD
-    await enso.platform.oracles.protocols.chainlinkOracle
+    await enso.platform.oracles.registries.chainlinkRegistry
       .connect(signers.admin)
       .addOracle(
         "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
