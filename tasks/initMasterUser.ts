@@ -106,7 +106,7 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "tokenSets",
-    walletAddress: "0xd4ad5d62dce1a8bf661777a5c1df79bd12ac8f1d",
+    walletAddress: "0x65bdef0e45b652e86973c3408c7cd24dda9d844d",
     lpTokenAddress: "0xaa6e8127831c9de45ae56bb1b0d4d4da6e5665bd",
     lpTokenName: "ETH 2x Flexible Leverage Index",
     symbol: "ETH2x-FLI",
@@ -122,7 +122,7 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "tokenSets",
-    walletAddress: "0x4987ae7696206117891e2e500b09ad5071baa4d5",
+    walletAddress: "0x9e42945623dee3efb68797f4bdd52e6fed5c5601",
     lpTokenAddress: "0x2af1df3ab0ab157e1e2ad8f88a7d04fbea0c7dc6",
     lpTokenName: "Bankless BED Index",
     symbol: "BED",
@@ -194,7 +194,7 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "pieDao",
-    walletAddress: "0x198ca1beacf70b82c4e6de21e8cb7b6da6d8477a",
+    walletAddress: "0xebfb007ac8e6239baee43d4812e0373783e0d34f",
     lpTokenAddress: "0xe4f726adc8e89c6a6017f01eada77865db22da14",
     lpTokenName: "PieDAO Balanced Crypto Pie",
     symbol: "BCP",
