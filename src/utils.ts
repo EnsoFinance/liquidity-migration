@@ -1,7 +1,7 @@
 import bignumber from "bignumber.js";
 import { BigNumber, Contract } from "ethers";
 import { ethers } from "hardhat";
-import { Position, Multicall, StrategyItem, StrategyState, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { Position, Multicall, StrategyItem, InitialState, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { IERC20__factory } from "../typechain";
 
 export enum Networks {
@@ -12,18 +12,19 @@ export enum Networks {
 
 const strategyItemTuple = 'tuple(address item, int256 percentage, tuple(address[] adapters, address[] path, bytes cache) data)'
 const strategyStateTuple = 'tuple(uint32 timelock, uint16 rebalanceThreshold, uint16 slippage, uint16 performanceFee, bool social, bool set)'
+const initialStateTuple = 'tuple(uint32 timelock, uint16 rebalanceThreshold, uint16 rebalanceSlippage, uint16 restructureSlippage, uint16 performanceFee, bool social, bool set'
 
 export function encodeStrategyData(
     manager: string,
     name: string,
     symbol: string,
     strategyItems: StrategyItem[],
-    strategyState: StrategyState,
+    strategyState: InitialState,
     router: string,
     data: string
 ): string {
     return ethers.utils.defaultAbiCoder.encode(
-      ['address', 'string', 'string', `${strategyItemTuple}[]`, strategyStateTuple, 'address', 'bytes'],
+      ['address', 'string', 'string', `${strategyItemTuple}[]`, initialStateTuple, 'address', 'bytes'],
       [manager, name, symbol, strategyItems, strategyState, router, data]
     )
 }

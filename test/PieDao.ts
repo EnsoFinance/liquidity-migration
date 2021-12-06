@@ -6,7 +6,7 @@ import { IStrategy__factory } from "../typechain";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { EnsoBuilder } from "@enso/contracts";
-import { STRATEGY_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
+import { DEPOSIT_SLIPPAGE, INITIAL_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils";
 
 describe("PieDao: Unit tests", function () {
@@ -59,11 +59,10 @@ describe("PieDao: Unit tests", function () {
       await setupStrategyItems(
         this.enso.platform.oracles.ensoOracle,
         this.enso.adapters.uniswap.contract.address,
-        // TODO: why is the balancer pool being used here?
         await pool.getBPool(),
         this.pieDaoTokens,
       ),
-      STRATEGY_STATE,
+      INITIAL_STATE,
       ethers.constants.AddressZero,
       "0x",
     );
@@ -81,7 +80,7 @@ describe("PieDao: Unit tests", function () {
     // Migrate
     await this.liquidityMigration
       .connect(holder)
-      ["migrate(address,address,address)"](pool.address, this.pieDaoEnv.adapter.address, this.strategy.address);
+      ["migrate(address,address,address,uint256)"](pool.address, this.pieDaoEnv.adapter.address, this.strategy.address, DEPOSIT_SLIPPAGE);
     const [total] = await estimateTokens(
       this.enso.platform.oracles.ensoOracle,
       this.strategy.address,

@@ -11,7 +11,7 @@ import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
 import { setupStrategyItems, encodeStrategyData } from "../src/utils";
 import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@enso/contracts";
-import { WETH, SUSD, STRATEGY_STATE } from "../src/constants";
+import { WETH, SUSD, INITIAL_STATE } from "../src/constants";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -183,7 +183,7 @@ describe("Integration: Unit tests", function () {
       //   `Token - ${i}`,
       //   `Address: ${pool.pool.address}`,
       //   strategyItems,
-      //   STRATEGY_STATE,
+      //   INITIAL_STATE,
       //   ethers.constants.AddressZero,
       //   "0x",
       // );

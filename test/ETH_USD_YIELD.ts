@@ -5,7 +5,7 @@ import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
+import { DEPOSIT_SLIPPAGE, FACTORY_REGISTRIES, INITIAL_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 import { EnsoBuilder} from "@enso/contracts";
 
@@ -112,10 +112,11 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address)'](
+        ['migrate(address,address,address,uint256)'](
           this.ETHUSDYieldEnv.pool.address,
           this.ETHUSDYieldEnv.adapter.address,
-          ethers.constants.AddressZero
+          ethers.constants.AddressZero,
+          DEPOSIT_SLIPPAGE
         ),
     ).to.be.reverted;
   });
@@ -158,7 +159,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
         "ETH_USD_YIELD",
         "ETH_USD_YIELD",
         await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.ETHUSDYieldEnv.pool.address, underlyingTokens),
-        STRATEGY_STATE,
+        INITIAL_STATE,
         ethers.constants.AddressZero,
         '0x'
       )
@@ -193,10 +194,11 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address)'](
+      ['migrate(address,address,address,uint256)'](
         this.ETHUSDYieldEnv.pool.address,
         this.ETHUSDYieldEnv.adapter.address,
-        this.strategy.address
+        this.strategy.address,
+        DEPOSIT_SLIPPAGE
       );
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, await this.ETHUSDYieldEnv.pool.getComponents());
     expect(total).to.be.gt(0);

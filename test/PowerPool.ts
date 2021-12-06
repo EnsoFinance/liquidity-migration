@@ -6,7 +6,7 @@ import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
-import { FACTORY_REGISTRIES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, WETH, DIVISOR, INITIAL_STATE, UNISWAP_V3_ROUTER, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { setupStrategyItems, estimateTokens } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
@@ -49,7 +49,7 @@ describe("PowerPool: Unit tests", function () {
       "power",
       "power",
       await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.PowerEnv.pool.address, this.underlyingTokens),
-      STRATEGY_STATE,
+      INITIAL_STATE,
       ethers.constants.AddressZero,
       '0x',
     );
@@ -140,10 +140,11 @@ describe("PowerPool: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address)'](
+        ['migrate(address,address,address,uint256)'](
           this.PowerEnv.pool.address,
           this.PowerEnv.adapter.address,
-          this.strategy.address
+          this.strategy.address,
+          DEPOSIT_SLIPPAGE
         ),
     ).to.be.reverted;
   });
@@ -197,10 +198,11 @@ describe("PowerPool: Unit tests", function () {
     // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address)'](
+      ['migrate(address,address,address,uint256)'](
         this.PowerEnv.pool.address,
         this.PowerEnv.adapter.address,
-        this.strategy.address
+        this.strategy.address,
+        DEPOSIT_SLIPPAGE
       );
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, this.underlyingTokens);
     expect(total).to.gt(0);

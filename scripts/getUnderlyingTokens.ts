@@ -94,11 +94,10 @@ type TokenDictionary = {
   derivedAssets: DerivedAsset[];
 };
 
-// type TokenMap = Map<string, TokenDictionary>;
-
 interface HashMap<T> {
   [key: string]: T;
 }
+
 class UnderlyingTokens {
   enso: EnsoEnvironment;
   signer: SignerWithAddress;
@@ -138,23 +137,23 @@ class UnderlyingTokens {
     } catch {}
     // aave
     try {
-      if (await this.enso.adapters.aaveborrow?.contract._checkAToken(token.address)) {
+      if (await this.enso.adapters.aaveborrow?.contract.checkAToken(token.address)) {
         // TODO: should this be aave_lend?
-        return AcceptedProtocols.AAVE;
+        return AcceptedProtocols.AAVE_V2;
       }
     } catch {
-      if (await this.enso.adapters.aavelend?.contract._checkAToken(token.address)) {
-        return AcceptedProtocols.AAVE;
+      if (await this.enso.adapters.aavelend?.contract.checkAToken(token.address)) {
+        return AcceptedProtocols.AAVE_V2;
       }
     }
     try {
-      if (await this.enso.adapters.leverage?.contract._checkAToken(token.address)) {
+      if (await this.enso.adapters.leverage?.contract.checkAToken(token.address)) {
         return AcceptedProtocols.AAVE_DEBT;
       }
     } catch {}
     // compound
     try {
-      if (await this.enso.adapters.compound?.contract._checkCToken(token.address)) {
+      if (await this.enso.adapters.compound?.contract.checkCToken(token.address)) {
         return AcceptedProtocols.COMPOUND;
       }
     } catch {}
@@ -170,7 +169,7 @@ class UnderlyingTokens {
 
   getAdapter(protocol: AcceptedProtocols): string | undefined {
     switch (protocol) {
-      case AcceptedProtocols.AAVE:
+      case AcceptedProtocols.AAVE_V2:
         if (this.enso.adapters.aavelend) return this.enso.adapters.aavelend.contract.address;
         break;
       case AcceptedProtocols.AAVE_DEBT:

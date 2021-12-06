@@ -1,5 +1,5 @@
 import { BigNumber } from "ethers";
-import { StrategyState } from "@enso/contracts";
+import { StrategyState, InitialState } from "@enso/contracts";
 
 interface Holders {
   [key: string]: string[] | undefined;
@@ -123,11 +123,22 @@ export const UNISWAP_V3_ROUTER: string = "0xE592427A0AEce92De3Edee1F18E0157C0586
 
 export const DIVISOR = 1000;
 
+export const DEPOSIT_SLIPPAGE = BigNumber.from(990);
+
 export const STRATEGY_STATE: StrategyState = {
   timelock: BigNumber.from(60),
-  rebalanceThreshold: BigNumber.from(50),
-  slippage: BigNumber.from(995),
-  performanceFee: BigNumber.from(50),
+  rebalanceSlippage: BigNumber.from(995),
+  restructureSlippage: BigNumber.from(980),
+  social: true,
+  set: false
+};
+
+export const INITIAL_STATE: InitialState = {
+  timelock: BigNumber.from(60),  // 1 minute
+  rebalanceThreshold: BigNumber.from(10), // 1%
+  rebalanceSlippage: BigNumber.from(997), // 99.7 %
+  restructureSlippage: BigNumber.from(995),// 99.5 %
+  performanceFee: BigNumber.from(1001),
   social: true,
   set: false,
 };

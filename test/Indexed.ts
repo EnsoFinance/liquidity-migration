@@ -6,7 +6,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { FACTORY_REGISTRIES, STRATEGY_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
+import { DEPOSIT_SLIPPAGE, FACTORY_REGISTRIES, INITIAL_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 import { EnsoBuilder} from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
@@ -122,10 +122,11 @@ describe("Indexed: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address)'](
+        ['migrate(address,address,address,uint256)'](
           this.IndexedEnv.pool.address,
           this.IndexedEnv.adapter.address,
-          ethers.constants.AddressZero
+          ethers.constants.AddressZero,
+          DEPOSIT_SLIPPAGE
         ),
     ).to.be.reverted;
   });
@@ -164,7 +165,7 @@ describe("Indexed: Unit tests", function () {
         "DEGEN",
         "DEGEN",
         await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.IndexedEnv.pool.address, this.underlyingTokens),
-        STRATEGY_STATE,
+        INITIAL_STATE,
         ethers.constants.AddressZero,
         '0x'
       )
@@ -199,10 +200,11 @@ describe("Indexed: Unit tests", function () {
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     const tx = await this.liquidityMigration
-      .connect(holder3)['migrate(address,address,address)'](
+      .connect(holder3)['migrate(address,address,address,uint256)'](
         this.IndexedEnv.pool.address,
         this.IndexedEnv.adapter.address,
-        this.strategy.address
+        this.strategy.address,
+        DEPOSIT_SLIPPAGE
       );
     const receipt = await tx.wait()
     console.log('Migration Gas Used: ', receipt.gasUsed.toString())

@@ -125,31 +125,34 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     function migrate(
         address _lp,
         address _adapter,
-        IStrategy _strategy
+        IStrategy _strategy,
+        uint256 _slippage
     )
         external
         onlyUnlocked
     {
-        _migrate(msg.sender, _lp, _adapter, _strategy);
+        _migrate(msg.sender, _lp, _adapter, _strategy, _slippage);
     }
 
     function migrate(
         address _user,
         address _lp,
         address _adapter,
-        IStrategy _strategy
+        IStrategy _strategy,
+        uint256 _slippage
     )
         external
         onlyOwner
         onlyUnlocked
     {
-        _migrate(_user, _lp, _adapter, _strategy);
+        _migrate(_user, _lp, _adapter, _strategy, _slippage);
     }
 
     function batchMigrate(
         address[] memory _lp,
         address[] memory _adapter,
-        IStrategy[] memory _strategy
+        IStrategy[] memory _strategy,
+        uint256[] memory _slippage
     )
         external
         onlyUnlocked
@@ -158,7 +161,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         require(_adapter.length == _strategy.length);
 
         for (uint256 i = 0; i < _lp.length; i++) {
-            _migrate(msg.sender, _lp[i], _adapter[i], _strategy[i]);
+            _migrate(msg.sender, _lp[i], _adapter[i], _strategy[i], _slippage[i]);
         }
     }
 
@@ -166,7 +169,8 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _user,
         address[] memory _lp,
         address[] memory _adapter,
-        IStrategy[] memory _strategy
+        IStrategy[] memory _strategy,
+        uint256 _slippage
     )
         external
         onlyOwner
@@ -177,7 +181,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         require(_adapter.length == _strategy.length);
 
         for (uint256 i = 0; i < _lp.length; i++) {
-            _migrate(_user[i], _lp[i], _adapter[i], _strategy[i]);
+            _migrate(_user[i], _lp[i], _adapter[i], _strategy[i], _slippage);
         }
     }
 
@@ -185,7 +189,8 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _user,
         address _lp,
         address _adapter,
-        IStrategy _strategy
+        IStrategy _strategy,
+        uint256 _slippage
     )
         internal
         onlyRegistered(_adapter)
@@ -205,7 +210,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         uint256 _before = _strategy.balanceOf(address(this));
         bytes memory migrationData =
             abi.encode(IAdapter(_adapter).encodeMigration(generic, address(_strategy), _lp, _stakeAmount));
-        IStrategyController(controller).deposit(_strategy, IStrategyRouter(generic), 0, migrationData);
+        IStrategyController(controller).deposit(_strategy, IStrategyRouter(generic), 0, _slippage, migrationData);
         uint256 _after = _strategy.balanceOf(address(this));
 
         _strategy.transfer(_user, (_after - _before));
@@ -253,7 +258,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     {
         ( , , , StrategyItem[] memory strategyItems, , , ) = abi.decode(
             data,
-            (address, string, string, StrategyItem[], StrategyState, address, bytes)
+            (address, string, string, StrategyItem[], InitialState, address, bytes)
         );
         _validateItems(_adapter, _lp, strategyItems);
         address strategy = _createStrategy(data);
@@ -330,12 +335,12 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
             string memory name,
             string memory symbol,
             StrategyItem[] memory strategyItems,
-            StrategyState memory strategyState,
+            InitialState memory strategyState,
             address router,
             bytes memory depositData
         ) = abi.decode(
             data,
-            (address, string, string, StrategyItem[], StrategyState, address, bytes)
+            (address, string, string, StrategyItem[], InitialState, address, bytes)
         );
         return factory.createStrategy(
             manager,

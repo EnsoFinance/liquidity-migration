@@ -6,7 +6,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import {  IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, INITIAL_STATE, UNISWAP_V3_ROUTER, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { estimateTokens} from "../src/utils"
 import { EnsoBuilder, Position, Multicall, Tokens, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 
@@ -85,10 +85,11 @@ describe("ETH_2X: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address)'](
+        ['migrate(address,address,address,uint256)'](
           this.TokenSetEnv.pool.address,
           this.TokenSetEnv.adapter.address,
-          ethers.constants.AddressZero
+          ethers.constants.AddressZero,
+          DEPOSIT_SLIPPAGE
         ),
     ).to.be.reverted;
   });
@@ -153,7 +154,7 @@ describe("ETH_2X: Unit tests", function () {
           "ETH_2X",
           "ETH_2X",
   				strategyItems,
-          STRATEGY_STATE,
+          INITIAL_STATE,
           ethers.constants.AddressZero,
           '0x'
   			)
@@ -183,10 +184,11 @@ describe("ETH_2X: Unit tests", function () {
     // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address)'](
+      ['migrate(address,address,address,uint256)'](
         this.TokenSetEnv.pool.address,
         this.TokenSetEnv.adapter.address,
-        this.strategy.address
+        this.strategy.address,
+        DEPOSIT_SLIPPAGE
       );
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, [this.tokens.aWETH, this.tokens.debtUSDC]);
     expect(total).to.gt(0);

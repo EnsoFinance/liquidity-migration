@@ -6,7 +6,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
-import { FACTORY_REGISTRIES, WETH, SUSD, STRATEGY_STATE} from "../src/constants";
+import { FACTORY_REGISTRIES, WETH, SUSD, DEPOSIT_SLIPPAGE, INITIAL_STATE} from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
 import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 
@@ -139,11 +139,12 @@ describe("dHedge: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address)']
+        ['migrate(address,address,address,uint256)']
         (
           this.DHedgeEnv.pool.address,
           this.DHedgeEnv.adapter.address,
-          ethers.constants.AddressZero // Strategy doesn't matter right now
+          ethers.constants.AddressZero, // Strategy doesn't matter right now,
+          DEPOSIT_SLIPPAGE
         ),
     ).to.be.reverted;
   });
@@ -183,7 +184,7 @@ describe("dHedge: Unit tests", function () {
         "dHedge Top Index",
         "DTOP",
         await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.DHedgeEnv.pool.address, this.underlyingTokens),
-        STRATEGY_STATE,
+        INITIAL_STATE,
         ethers.constants.AddressZero,
         '0x'
       )
@@ -218,10 +219,11 @@ describe("dHedge: Unit tests", function () {
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
     // Migrate
     await this.liquidityMigration
-      .connect(holder3)['migrate(address,address,address)'](
+      .connect(holder3)['migrate(address,address,address,uint256)'](
         this.DHedgeEnv.pool.address,
         this.DHedgeEnv.adapter.address,
-        this.strategy.address
+        this.strategy.address,
+        DEPOSIT_SLIPPAGE
       );
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, await this.DHedgeEnv.adapter.outputTokens(FACTORY_REGISTRIES.DHEDGE_TOP));
     expect(total).to.gt(0);

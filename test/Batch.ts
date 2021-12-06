@@ -4,14 +4,12 @@ import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20__factory, IStrategy__factory } from "../typechain";
-
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES } from "../src/constants";
-import { EnsoBuilder, StrategyState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
-import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
-import { WETH, SUSD, STRATEGY_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, DEPOSIT_SLIPPAGE, INITIAL_STATE} from "../src/constants";
+import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
+import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems } from "../src/utils";
 
 describe("Batch: Unit tests", function () {
@@ -44,7 +42,7 @@ describe("Batch: Unit tests", function () {
           dpiEnv.pool.address,
           dpiUnderlying,
         ),
-        STRATEGY_STATE,
+        INITIAL_STATE,
       ),
       signers.default,
     );
@@ -64,7 +62,7 @@ describe("Batch: Unit tests", function () {
           await pieEnv.pool.getBPool(),
           pieUnderlying,
         ),
-        STRATEGY_STATE,
+        INITIAL_STATE,
       ),
       signers.default,
     );
@@ -84,14 +82,14 @@ describe("Batch: Unit tests", function () {
           indexedEnv.pool.address,
           indexedUnderlying,
         ),
-        STRATEGY_STATE,
+        INITIAL_STATE,
       ),
       signers.default,
     );
     indexedPool = IERC20__factory.connect(indexedEnv.pool.address, signers.default);
   };
 
-  const deployStrategy = async (name: string, symbol: string, items: StrategyItem[], state: StrategyState) => {
+  const deployStrategy = async (name: string, symbol: string, items: StrategyItem[], state: InitialState) => {
     const tx = await enso.platform.strategyFactory.createStrategy(
       signers.default.address,
       name,
@@ -211,21 +209,23 @@ describe("Batch: Unit tests", function () {
   it("Should batch migrate", async function () {
     await liquidityMigration
       .connect(signers.default)
-      ["batchMigrate(address[],address[],address[])"](
+      ["batchMigrate(address[],address[],address[],uint256[])"](
         [indexedPool.address, dpiPool.address, piePool.address],
         [indexedEnv.adapter.address, dpiEnv.adapter.address, pieEnv.adapter.address],
         [indexedStrategy.address, dpiStrategy.address, pieStrategy.address],
+        Array(3).fill(DEPOSIT_SLIPPAGE)
       );
   });
   it("Should batch migrate", async function () {
     const user = await signers.secondary.getAddress();
     await liquidityMigration
       .connect(signers.admin)
-      ["batchMigrate(address[],address[],address[],address[])"](
+      ["batchMigrate(address[],address[],address[],address[],uint256[])"](
         [user, user, user],
         [indexedPool.address, dpiPool.address, piePool.address],
         [indexedEnv.adapter.address, dpiEnv.adapter.address, pieEnv.adapter.address],
         [indexedStrategy.address, dpiStrategy.address, pieStrategy.address],
+        Array(3).fill(DEPOSIT_SLIPPAGE)
       );
   });
 });
