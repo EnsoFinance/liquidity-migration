@@ -170,7 +170,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _lp,
         address[] memory _adapter,
         IStrategy[] memory _strategy,
-        uint256 _slippage
+        uint256[] memory _slippage
     )
         external
         onlyOwner
@@ -181,7 +181,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         require(_adapter.length == _strategy.length);
 
         for (uint256 i = 0; i < _lp.length; i++) {
-            _migrate(_user[i], _lp[i], _adapter[i], _strategy[i], _slippage);
+            _migrate(_user[i], _lp[i], _adapter[i], _strategy[i], _slippage[i]);
         }
     }
 

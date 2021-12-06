@@ -135,10 +135,10 @@ export const STRATEGY_STATE: StrategyState = {
 
 export const INITIAL_STATE: InitialState = {
   timelock: BigNumber.from(60),  // 1 minute
-  rebalanceThreshold: BigNumber.from(10), // 1%
+  rebalanceThreshold: BigNumber.from(40), // 4%
   rebalanceSlippage: BigNumber.from(997), // 99.7 %
   restructureSlippage: BigNumber.from(995),// 99.5 %
-  performanceFee: BigNumber.from(1001),
+  performanceFee: BigNumber.from(0),
   social: true,
   set: false,
 };

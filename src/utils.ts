@@ -12,7 +12,7 @@ export enum Networks {
 
 const strategyItemTuple = 'tuple(address item, int256 percentage, tuple(address[] adapters, address[] path, bytes cache) data)'
 const strategyStateTuple = 'tuple(uint32 timelock, uint16 rebalanceThreshold, uint16 slippage, uint16 performanceFee, bool social, bool set)'
-const initialStateTuple = 'tuple(uint32 timelock, uint16 rebalanceThreshold, uint16 rebalanceSlippage, uint16 restructureSlippage, uint16 performanceFee, bool social, bool set'
+const initialStateTuple = 'tuple(uint32 timelock, uint16 rebalanceThreshold, uint16 rebalanceSlippage, uint16 restructureSlippage, uint16 performanceFee, bool social, bool set)'
 
 export function encodeStrategyData(
     manager: string,

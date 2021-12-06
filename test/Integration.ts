@@ -150,7 +150,7 @@ describe("Integration: Unit tests", function () {
       const holder2Address = await holder2.getAddress();
       const holder2Balance = await erc20.balanceOf(holder2Address);
       expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
-      console.log("Balance: ", holder2Balance,"  \nHolder: ",holder2Address);
+      //console.log("Balance: ", holder2Balance,"  \nHolder: ",holder2Address);
       expect(holder2Balance).to.be.gt(BigNumber.from(0));
       await erc20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
       await this.liquidityMigration
@@ -167,7 +167,6 @@ describe("Integration: Unit tests", function () {
       const pool = poolsToMigrate[i];
       const underlyingTokens = await pool.adapter.outputTokens(pool.pool.address);
       // // encode strategy items
-
       console.log("Pool: ", pool.pool.address)
       console.log(" \nUnderlying tokens: \n", underlyingTokens);
       // TODO: figure out adapter?
