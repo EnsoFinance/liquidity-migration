@@ -32,13 +32,7 @@ describe("PowerPool: Unit tests", function () {
 
 
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, this.PowerEnv.adapter);
-    const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
-    if (liquitityMigrationDeployed != undefined) {
-      console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);
-    } else {
-      console.log(`Liquidity Migration is undefined`);
-    }
-
+    await liquidityMigrationBuilder.deploy();
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from DEGEN

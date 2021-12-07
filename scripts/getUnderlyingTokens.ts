@@ -9,13 +9,11 @@ import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { setupStrategyItems } from "../src/utils";
 import { EnsoBuilder, EnsoEnvironment, ESTIMATOR_CATEGORY as AcceptedProtocols } from "@enso/contracts";
 import ISynthetix from "@enso/contracts/artifacts/contracts/interfaces/synthetix/ISynthetix.sol/ISynthetix.json";
 import ICurveAddressProvider from "@enso/contracts/artifacts/contracts/interfaces/curve/ICurveAddressProvider.sol/ICurveAddressProvider.json";
 import ICurveRegistry from "@enso/contracts/artifacts/contracts/interfaces/curve/ICurveRegistry.sol/ICurveRegistry.json";
 import fs from "fs";
-import dictionary from "../dictionary.json";
 const tokenRegistry: HashMap<TokenDictionary> = require("../dictionary.json");
 const ALT_ERC20 = [
   {
@@ -128,35 +126,26 @@ class UnderlyingTokens {
     if (token.name.includes("gauge")) {
       return AcceptedProtocols.CURVE_GAUGE;
     }
-    try {
-      const curvePool = await curveRegistry.get_pool_from_lp_token(token.address);
-      console.log("curve  pooL: ", curvePool);
-      if (curvePool != constants.AddressZero) {
-        return AcceptedProtocols.CURVE;
-      }
-    } catch {}
-    // aave
-    try {
-      if (await this.enso.adapters.aaveborrow?.contract.checkAToken(token.address)) {
-        // TODO: should this be aave_lend?
-        return AcceptedProtocols.AAVE_V2;
-      }
-    } catch {
-      if (await this.enso.adapters.aavelend?.contract.checkAToken(token.address)) {
-        return AcceptedProtocols.AAVE_V2;
-      }
+    const curvePool = await curveRegistry.get_pool_from_lp_token(token.address);
+    console.log("curve  pooL: ", curvePool);
+    if (curvePool != constants.AddressZero) {
+      return AcceptedProtocols.CURVE;
     }
-    try {
-      if (await this.enso.adapters.leverage?.contract.checkAToken(token.address)) {
-        return AcceptedProtocols.AAVE_DEBT;
-      }
-    } catch {}
+    // aave
+    if (await this.enso.adapters.aaveborrow?.contract.checkAToken(token.address)) {
+      // TODO: should this be aave debt?
+      return AcceptedProtocols.AAVE_V2;
+    }
+    if (await this.enso.adapters.aavelend?.contract.checkAToken(token.address)) {
+      return AcceptedProtocols.AAVE_V2;
+    }
+    if (await this.enso.adapters.leverage?.contract.checkAToken(token.address)) {
+      return AcceptedProtocols.AAVE_DEBT;
+    }
     // compound
-    try {
-      if (await this.enso.adapters.compound?.contract.checkCToken(token.address)) {
-        return AcceptedProtocols.COMPOUND;
-      }
-    } catch {}
+    if (await this.enso.adapters.compound?.contract.checkCToken(token.address)) {
+      return AcceptedProtocols.COMPOUND;
+    }
 
     // TODO: how to check if synth?
     const synthetix = new Contract(
@@ -309,16 +298,20 @@ async function main() {
   // @ts-ignore
   const signer = await ethers.getSigner();
 
+  let builder = new EnsoBuilder(signer);
+  builder
+    .addAdapter("balancer")
+    .addAdapter("curve")
+    .addAdapter("compound")
+    .addAdapter("leverage")
+    .addAdapter("aavelend")
+    .addAdapter("aaveborrow")
+    .addAdapter("synthetix");
+
   let enso, dhedge, indexed, powerpool, piedao;
 
   [enso, dhedge, indexed, powerpool, piedao] = await Promise.all([
-    await new EnsoBuilder(signer)
-      .addAdapter("curve")
-      .addAdapter("compound")
-      .addAdapter("aavelend")
-      .addAdapter("aaveborrow")
-      .addAdapter("synthetix")
-      .build(),
+    await builder.build(),
     await new DHedgeEnvironmentBuilder(signer).connect(),
     await new IndexedEnvironmentBuilder(signer).connect(),
     await new PowerpoolEnvironmentBuilder(signer).connect(),

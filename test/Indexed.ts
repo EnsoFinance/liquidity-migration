@@ -29,15 +29,8 @@ describe("Indexed: Unit tests", function () {
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.enso);
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, this.IndexedEnv.adapter);
-    const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
-    if (liquitityMigrationDeployed != undefined) {
-      console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);
-    } else {
-      console.log(`Liquidity Migration is undefined`);
-    }
-
+    await liquidityMigrationBuilder.deploy();
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
-
     // getting the underlying tokens from DEGEN
     this.underlyingTokens = await this.IndexedEnv.adapter.outputTokens(this.IndexedEnv.pool.address);
   });

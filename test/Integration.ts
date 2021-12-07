@@ -111,7 +111,7 @@ describe("Integration: Unit tests", function () {
 
     await Promise.all(txs.map(async p => await p.wait()));
 
-    return lm;
+    return lm.liquidityMigration;
   };
 
   before(async function () {
@@ -137,7 +137,11 @@ describe("Integration: Unit tests", function () {
       ); //KNC
     await this.enso.platform.strategyFactory
       .connect(this.signers.admin)
-      .addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202"); //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
+      .addItemToRegistry(
+        ITEM_CATEGORY.BASIC,
+        ESTIMATOR_CATEGORY.CHAINLINK_ORACLE,
+        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
+      ); //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
 
     this.liquidityMigration = await setupPools(this.signers.default, this.enso);
   });
@@ -149,15 +153,19 @@ describe("Integration: Unit tests", function () {
       const holder2 = await pool.holders[0];
       const holder2Address = await holder2.getAddress();
       const holder2Balance = await erc20.balanceOf(holder2Address);
+
+      if (holder2Balance == BigNumber.from(0)) console.log("Balance: ", holder2Balance, "  \nHolder: ", holder2Address);
       expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
-      //console.log("Balance: ", holder2Balance,"  \nHolder: ",holder2Address);
       expect(holder2Balance).to.be.gt(BigNumber.from(0));
+
       await erc20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
       await this.liquidityMigration
         .connect(holder2)
         .stake(pool.pool.address, holder2Balance.div(2), pool.adapter.address);
       expect(await this.liquidityMigration.staked(holder2Address, pool.pool.address)).to.equal(holder2Balance.div(2));
       const holder2AfterBalance = await erc20.balanceOf(holder2Address);
+
+      if (holder2Balance == BigNumber.from(0)) console.log("Balance: ", holder2Balance, " \nHolder: ", holder2Address);
       expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
     }
   });
@@ -167,15 +175,15 @@ describe("Integration: Unit tests", function () {
       const pool = poolsToMigrate[i];
       const underlyingTokens = await pool.adapter.outputTokens(pool.pool.address);
       // // encode strategy items
-      console.log("Pool: ", pool.pool.address)
-      console.log(" \nUnderlying tokens: \n", underlyingTokens);
+      // console.log("Pool: ", pool.pool.address);
+      // console.log(" \nUnderlying tokens: \n", underlyingTokens);
       // TODO: figure out adapter?
-      const strategyItems = await setupStrategyItems(
-        this.enso.platform.oracles.ensoOracle,
-        this.enso.adapters.uniswap.contract.address,
-        pool.pool.address,
-        underlyingTokens,
-      );
+      // const strategyItems = await setupStrategyItems(
+      //   this.enso.platform.oracles.ensoOracle,
+      //   this.enso.adapters.uniswap.contract.address,
+      //   pool.pool.address,
+      //   underlyingTokens,
+      // );
       // // deploy strategy
       // const strategyData = encodeStrategyData(
       //   this.signers.default.address,

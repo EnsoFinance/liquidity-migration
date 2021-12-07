@@ -35,13 +35,7 @@ describe("METAVERSE: Unit tests", function () {
 
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, this.metaverse.adapter);
 
-    const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
-
-    if (liquitityMigrationDeployed != undefined) {
-      console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);
-    } else {
-      console.log(`Liquidity Migration is undefined`);
-    }
+    await liquidityMigrationBuilder.deploy();
 
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
   });

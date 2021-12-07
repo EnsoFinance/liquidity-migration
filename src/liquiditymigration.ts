@@ -50,7 +50,7 @@ export class LiquidityMigrationBuilder {
     }
   }
 
-  async deploy(): Promise<Contract> {
+  async deploy(): Promise<LiquidityMigration> {
     if (this.adapters.length === 0) throw new Error("No adapters set!");
 
     if (!this.enso.routers[0].contract) throw Error("Enso environment has no routers");
@@ -73,7 +73,18 @@ export class LiquidityMigrationBuilder {
 
     if (!this.liquidityMigration) throw Error("Failed to deploy");
 
-    // TODO: return whole class
-    return this.liquidityMigration;
+    return new LiquidityMigration(this.signer, this.adapters, this.liquidityMigration, this.enso);
+  }
+}
+export class LiquidityMigration {
+  signer: SignerWithAddress;
+  adapters: Adapter[];
+  liquidityMigration: Contract;
+  enso: EnsoEnvironment;
+  constructor(signer: SignerWithAddress, adapters: Adapter[], liquidityMigration: Contract, enso: EnsoEnvironment) {
+    this.signer = signer;
+    this.adapters = adapters;
+    this.liquidityMigration = liquidityMigration;
+    this.enso = enso;
   }
 }

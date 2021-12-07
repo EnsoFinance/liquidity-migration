@@ -281,6 +281,15 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         generic = _generic;
     }
 
+    function updateFactory(address _factory)
+        external
+        onlyOwner
+        {
+            require(factory != IStrategyProxyFactory(_factory), "LiquidityMigration#updateFactory: already exists");
+            factory = IStrategyProxyFactory(_factory);
+        }
+        
+
     function addAdapter(address _adapter)
         external
         onlyOwner
