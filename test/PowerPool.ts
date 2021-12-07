@@ -6,7 +6,7 @@ import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
-import { FACTORY_REGISTRIES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
+import { FACTORY_REGISTRIES, WETH, DIVISOR, INITIAL_STATE, UNISWAP_V3_ROUTER, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { setupStrategyItems, estimateTokens } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
@@ -23,7 +23,8 @@ describe("PowerPool: Unit tests", function () {
     this.enso = await new EnsoBuilder(this.signers.admin).mainnet().build();
 
     this.PowerEnv = await new PowerpoolEnvironmentBuilder(this.signers.default).connect();
-    this.powerIndexPoolERC20 = IERC20__factory.connect(this.PowerEnv.powerIndexPool.address, this.signers.default);
+
+    this.erc20 = IERC20__factory.connect(this.PowerEnv.pool.address, this.signers.default);
 
     console.log(`Powerpool Adapter: ${this.PowerEnv.adapter.address}`);
 
@@ -31,24 +32,18 @@ describe("PowerPool: Unit tests", function () {
 
 
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, this.PowerEnv.adapter);
-    const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
-    if (liquitityMigrationDeployed != undefined) {
-      console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);
-    } else {
-      console.log(`Liquidity Migration is undefined`);
-    }
-
+    await liquidityMigrationBuilder.deploy();
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
 
     // getting the underlying tokens from DEGEN
-    this.underlyingTokens = await this.PowerEnv.adapter.outputTokens(this.PowerEnv.powerIndexPool.address);
+    this.underlyingTokens = await this.PowerEnv.adapter.outputTokens(this.PowerEnv.pool.address);
 
     const tx = await this.enso.platform.strategyFactory.createStrategy(
       this.signers.default.address,
       "power",
       "power",
-      await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.PowerEnv.powerIndexPool.address, this.underlyingTokens),
-      STRATEGY_STATE,
+      await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.PowerEnv.pool.address, this.underlyingTokens),
+      INITIAL_STATE,
       ethers.constants.AddressZero,
       '0x',
     );
@@ -65,9 +60,9 @@ describe("PowerPool: Unit tests", function () {
     for (let i = 0; i < this.PowerEnv.holders.length; i++) {
       holderBalances[i] = {
         holder: await this.PowerEnv.holders[i].getAddress(),
-        balance: await this.powerIndexPoolERC20.balanceOf(await this.PowerEnv.holders[i].getAddress()),
+        balance: await this.erc20.balanceOf(await this.PowerEnv.holders[i].getAddress()),
       };
-      expect(await this.powerIndexPoolERC20.balanceOf(await this.PowerEnv.holders[i].getAddress())).to.gt(
+      expect(await this.erc20.balanceOf(await this.PowerEnv.holders[i].getAddress())).to.gt(
         BigNumber.from(0),
       );
     }
@@ -79,11 +74,11 @@ describe("PowerPool: Unit tests", function () {
     for (let i = 0; i < this.underlyingTokens.length; i++) {
       minAmount[i] = 0;
     }
-    const tx = await this.PowerEnv.powerIndexPool
+    const tx = await this.PowerEnv.pool
       .connect(this.PowerEnv.holders[0])
       .exitPool(previoustokenBalance, minAmount);
     await tx.wait();
-    const posttokenBalance = await this.powerIndexPoolERC20.balanceOf(
+    const posttokenBalance = await this.erc20.balanceOf(
       await this.PowerEnv.holders[0].getAddress(),
     );
     expect(posttokenBalance.isZero()).to.be.true;
@@ -97,18 +92,18 @@ describe("PowerPool: Unit tests", function () {
     const holder2 = await this.PowerEnv.holders[1];
     const holder2Address = await holder2.getAddress();
 
-    const holder2Balance = await this.powerIndexPoolERC20.balanceOf(holder2Address);
+    const holder2Balance = await this.erc20.balanceOf(holder2Address);
     expect(holder2Balance.gt(BigNumber.from(0))).to.be.true;
-    await this.powerIndexPoolERC20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
+    await this.erc20.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
-      .stake(this.PowerEnv.powerIndexPool.address, holder2Balance.div(3), this.PowerEnv.adapter.address);
+      .stake(this.PowerEnv.pool.address, holder2Balance.div(3), this.PowerEnv.adapter.address);
     expect(
-      (await this.liquidityMigration.staked(holder2Address, this.PowerEnv.powerIndexPool.address)).eq(
+      (await this.liquidityMigration.staked(holder2Address, this.PowerEnv.pool.address)).eq(
         holder2Balance.div(3),
       ),
     ).to.be.true;
-    const holder2AfterBalance = await this.powerIndexPoolERC20.balanceOf(holder2Address);
+    const holder2AfterBalance = await this.erc20.balanceOf(holder2Address);
     expect(holder2AfterBalance.gt(BigNumber.from(0))).to.be.true;
   });
 
@@ -117,18 +112,18 @@ describe("PowerPool: Unit tests", function () {
     const holder2 = await this.PowerEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
-    const holder2BalanceBefore = await this.powerIndexPoolERC20.balanceOf(holder2Address);
+    const holder2BalanceBefore = await this.erc20.balanceOf(holder2Address);
     expect(holder2BalanceBefore.gt(BigNumber.from(0))).to.be.true;
-    await this.powerIndexPoolERC20
+    await this.erc20
       .connect(holder2)
       .approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
-      .stake(this.PowerEnv.powerIndexPool.address, holder2BalanceBefore, this.PowerEnv.adapter.address);
-    const amount = await this.liquidityMigration.staked(holder2Address, this.PowerEnv.powerIndexPool.address);
+      .stake(this.PowerEnv.pool.address, holder2BalanceBefore, this.PowerEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder2Address, this.PowerEnv.pool.address);
     expect(amount.gt(BigNumber.from(0))).to.be.true;
 
-    const holder2BalanceAfter = await this.powerIndexPoolERC20.balanceOf(holder2Address);
+    const holder2BalanceAfter = await this.erc20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
 
     const tx = await this.PowerEnv.adapter
@@ -139,10 +134,11 @@ describe("PowerPool: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address)'](
-          this.PowerEnv.powerIndexPool.address,
+        ['migrate(address,address,address,uint256)'](
+          this.PowerEnv.pool.address,
           this.PowerEnv.adapter.address,
-          this.strategy.address
+          this.strategy.address,
+          DEPOSIT_SLIPPAGE
         ),
     ).to.be.reverted;
   });
@@ -156,14 +152,14 @@ describe("PowerPool: Unit tests", function () {
 
   it("Getting the output token list", async function () {
     // adding the DEGEN Token as a whitelisted token
-    const underlyingTokens = await this.PowerEnv.powerIndexPool.getCurrentTokens();
+    const underlyingTokens = await this.PowerEnv.pool.getCurrentTokens();
     const outputTokens = await this.PowerEnv.adapter.outputTokens(FACTORY_REGISTRIES.POWER);
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
 
   it("Migration using a non-whitelisted token should fail", async function () {
     // Setup migration calls using DEGENAdapter contract
-    await expect(this.PowerEnv.adapter.encodeWithdraw(this.PowerEnv.powerIndexPool.address, BigNumber.from(10000))).to.be.revertedWith(
+    await expect(this.PowerEnv.adapter.encodeWithdraw(this.PowerEnv.pool.address, BigNumber.from(10000))).to.be.revertedWith(
       "Whitelistable#onlyWhitelisted: not whitelisted lp",
     );
   });
@@ -179,27 +175,28 @@ describe("PowerPool: Unit tests", function () {
     const holder3Address = await holder3.getAddress();
 
     // staking the tokens in the liquidity migration contract
-    const holder3BalanceBefore = await this.powerIndexPoolERC20.balanceOf(holder3Address);
+    const holder3BalanceBefore = await this.erc20.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-    await this.powerIndexPoolERC20
+    await this.erc20
       .connect(holder3)
       .approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
-      .stake(this.PowerEnv.powerIndexPool.address, holder3BalanceBefore, this.PowerEnv.adapter.address);
-    const amount = await this.liquidityMigration.staked(holder3Address, this.PowerEnv.powerIndexPool.address);
+      .stake(this.PowerEnv.pool.address, holder3BalanceBefore, this.PowerEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder3Address, this.PowerEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
-    const holder3BalanceAfter = await this.powerIndexPoolERC20.balanceOf(holder3Address);
+    const holder3BalanceAfter = await this.erc20.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address)'](
-        this.PowerEnv.powerIndexPool.address,
+      ['migrate(address,address,address,uint256)'](
+        this.PowerEnv.pool.address,
         this.PowerEnv.adapter.address,
-        this.strategy.address
+        this.strategy.address,
+        DEPOSIT_SLIPPAGE
       );
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, this.underlyingTokens);
     expect(total).to.gt(0);
@@ -208,7 +205,7 @@ describe("PowerPool: Unit tests", function () {
 
   it("Should fail to buy and stake: token not on exchange", async function () {
     await expect(this.liquidityMigration.connect(this.signers.default).buyAndStake(
-      this.powerIndexPoolERC20.address,
+      this.erc20.address,
       this.PowerEnv.adapter.address,
       UNISWAP_V3_ROUTER,
       0,

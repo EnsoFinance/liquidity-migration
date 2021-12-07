@@ -1,5 +1,5 @@
 import { BigNumber } from "ethers";
-import { StrategyState } from "@enso/contracts";
+import { StrategyState, InitialState } from "@enso/contracts";
 
 interface Holders {
   [key: string]: string[] | undefined;
@@ -19,6 +19,12 @@ export const FACTORY_REGISTRIES = {
   DEGEN_INDEX: "0x126c121f99e1E211dF2e5f8De2d96Fa36647c855",
   DHEDGE_TOP: "0x0f4c00139602ab502bc7c1c0e71d6cb72a9fb0e7",
   POWER: "0x26607aC599266b21d13c7aCF7942c7701a8b699c",
+  METAVERSE: "0x72e364f2abdc788b7e918bc238b21f109cd634d7",
+  ETH_WBTC_YIELD_FARM: "0xf059afa5239ed6463a00fc06a447c14fe26406e1",
+  SCI_FI_TOKEN: "0xfdc4a3fc36df16a78edcaf1b837d3acaaedb2cb4",
+  ETH_2x_FLEXIBLE_LEVERAGE: "0xaa6e8127831c9de45ae56bb1b0d4d4da6e5665bd",
+  BTC_2x_FLEXIBLE_LEVERAGE: "0x0b498ff89709d3838a063f1dfa463091f9801c2b",
+  BANKLESS_BED_INDEX: "0x2af1df3ab0ab157e1e2ad8f88a7d04fbea0c7dc6",
 };
 
 export const PIE_DAO_HOLDERS: Holders = {
@@ -36,9 +42,9 @@ export const TOKENSET_ISSUANCE_MODULES: Modules = {
 
 export const TOKENSET_HOLDERS: Holders = {
   "0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b": [
-    "0xa9e1499b4883f4c59a06557a6d25bad4802fce1a",
-    "0xfc624f8f58db41bdb95aedee1de3c1cf047105f1",
-    "0xcfc50541c3dEaf725ce738EF87Ace2Ad778Ba0C5",
+    "0x229eb11d30004f46C68efDFD4d7d809b748d0e3D",
+    "0xBAdb34560712bf98c93E168Bf9343fb627162eDd",
+    "0x4996De5A4e624fCE5A718B2a2547901fB050C2B4",
   ], // DPI
   "0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD": [
     "0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9",
@@ -52,9 +58,9 @@ export const TOKENSET_HOLDERS: Holders = {
     "0x4C55AE27581b44cD6E014bCED60d67680fc86586",
   ], // ETH_USD_YIELD
   "0x72e364f2abdc788b7e918bc238b21f109cd634d7": [
-    "0x051135b3395913810fe2919c0e3ef21bcbcdb061",
-    "0xe96f8731dea71af14a2799b5d2576cc67d4434a0",
-    "0x91a88dd9c43e1e6d580abe4c54f1b6b53900a644",
+    "0x6B9dFC960299166Df15aB8a85f054c69e2BE2353",
+    "0xBAdb34560712bf98c93E168Bf9343fb627162eDd",
+    "0xD3D7E517EaC437931cd06672198Ff55fBcc0496D",
   ], // Metaverse
   "0xf059afa5239ed6463a00fc06a447c14fe26406e1": [
     "0x0d996171e7883a286ef720030935f72d0bac8219",
@@ -93,17 +99,17 @@ export const INDEXED_HOLDERS: Holders = {
 
 export const POWERPOOL_HOLDERS: Holders = {
   "0x26607aC599266b21d13c7aCF7942c7701a8b699c": [
-    "0x406987006b033e796e7e717c1c52ef980f6933ed",
-    "0x3142Ee34925B38a581Ff6152C4B41B1E0Bc5160F",
-    "0x87fC1313880d579039aC48dB8B25428ed5F33C4a",
+    "0xBc89aBDCed7ED9c7EcE1A13932C606EAD623C00F",
+    "0xb4367aBE9d87C508eceb60c422cBBF8E34Aa8dc9",
+    "0xBFd5c23A95Ca6A52BA151F8525d49890693Dd9F8",
   ], // Power Index
 };
 
 export const DHEDGE_HOLDERS: Holders = {
   "0x0f4c00139602ab502bc7c1c0e71d6cb72a9fb0e7": [
-    "0xd374225abb84dca94e121f0b8a06b93e39ad7a99",
-    "0xFEa2133278A3b35Ad142F91b15B45501B5089FA6",
-    "0x5E7646f5FCFC146db31f27361544f1505783248B",
+    "0xE8869DFE6492c4F6F078bA74c651B4808bfb784B",
+    "0x4D89D373A7Ec36cEC559d81c3820FB22c460053f",
+    "0x3CefaAe1F9ecD24762a4744B78c8e850A143570A",
   ], // DHedge Top Index
 };
 
@@ -117,11 +123,22 @@ export const UNISWAP_V3_ROUTER: string = "0xE592427A0AEce92De3Edee1F18E0157C0586
 
 export const DIVISOR = 1000;
 
+export const DEPOSIT_SLIPPAGE = BigNumber.from(990);
+
 export const STRATEGY_STATE: StrategyState = {
   timelock: BigNumber.from(60),
-  rebalanceThreshold: BigNumber.from(50),
-  slippage: BigNumber.from(995),
-  performanceFee: BigNumber.from(50),
+  rebalanceSlippage: BigNumber.from(995),
+  restructureSlippage: BigNumber.from(980),
+  social: true,
+  set: false
+};
+
+export const INITIAL_STATE: InitialState = {
+  timelock: BigNumber.from(60),  // 1 minute
+  rebalanceThreshold: BigNumber.from(40), // 4%
+  rebalanceSlippage: BigNumber.from(997), // 99.7 %
+  restructureSlippage: BigNumber.from(995),// 99.5 %
+  performanceFee: BigNumber.from(0),
   social: true,
   set: false,
 };

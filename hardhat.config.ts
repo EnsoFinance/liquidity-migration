@@ -73,7 +73,7 @@ function getNetworks(): NetworksUserConfig {
     if (archiveNode)
       networks.hardhat.forking = {
         url: archiveNode,
-        blockNumber: 13365750,
+        blockNumber: 13671540,
       };
   }
   if (mnemonic && infuraApiKey) {
@@ -106,9 +106,9 @@ const config: HardhatUserConfig = {
     apiKey: etherscanApiKey,
   },
   gasReporter: {
-    enabled: (process.env.REPORT_GAS) ? true : false,
+    enabled: false,
     currency: 'USD',
-    gasPrice: 45
+    gasPrice: 100
   },
   paths: {
     artifacts: "./artifacts",
@@ -123,7 +123,7 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 2000,
           },
         },
       },
@@ -132,7 +132,7 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 2000,
           },
         },
       },
@@ -150,14 +150,14 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 2000,
           },
         },
       },
     ],
   },
   mocha: {
-    timeout: 100000,
+    timeout: 9900000,
   },
   typechain: {
     outDir: "typechain",

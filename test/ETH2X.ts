@@ -1,14 +1,13 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import bignumber from "bignumber.js";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IERC20, IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
+import {  IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, WETH, DIVISOR, STRATEGY_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
-import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
+import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, INITIAL_STATE, UNISWAP_V3_ROUTER, DEPOSIT_SLIPPAGE } from "../src/constants";
+import { estimateTokens} from "../src/utils"
 import { EnsoBuilder, Position, Multicall, Tokens, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 
 describe("ETH_2X: Unit tests", function () {
@@ -32,14 +31,8 @@ describe("ETH_2X: Unit tests", function () {
     console.log(`Token Sets Adapter: ${this.TokenSetEnv.adapter.address}`);
 
     const liquidityMigrationBuilder = await new LiquidityMigrationBuilder(this.signers.admin, this.enso);
-    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DefiPulseIndex, this.TokenSetEnv.adapter);
-    const liquitityMigrationDeployed = await liquidityMigrationBuilder.deploy();
-    if (liquitityMigrationDeployed != undefined) {
-      console.log(`Liquidity Migration: ${liquitityMigrationDeployed.address}`);
-    } else {
-      console.log(`Liquidity Migration is undefined`);
-    }
-
+    liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, this.TokenSetEnv.adapter);
+    await liquidityMigrationBuilder.deploy();
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
   });
 
@@ -51,16 +44,16 @@ describe("ETH_2X: Unit tests", function () {
     const holder2 = await this.TokenSetEnv.holders[1];
     const holder2Address = await holder2.getAddress();
 
-    const holder2Balance = await this.TokenSetEnv.tokenSet.balanceOf(holder2Address);
+    const holder2Balance = await this.TokenSetEnv.pool.balanceOf(holder2Address);
     expect(holder2Balance).to.be.gt(BigNumber.from(0));
-    await this.TokenSetEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
+    await this.TokenSetEnv.pool.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
-      .stake(this.TokenSetEnv.tokenSet.address, holder2Balance.div(2), this.TokenSetEnv.adapter.address);
-    expect(await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.tokenSet.address)).to.equal(
+      .stake(this.TokenSetEnv.pool.address, holder2Balance.div(2), this.TokenSetEnv.adapter.address);
+    expect(await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.pool.address)).to.equal(
       holder2Balance.div(2),
     );
-    const holder2AfterBalance = await this.TokenSetEnv.tokenSet.balanceOf(holder2Address);
+    const holder2AfterBalance = await this.TokenSetEnv.pool.balanceOf(holder2Address);
     expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
   });
 
@@ -69,13 +62,13 @@ describe("ETH_2X: Unit tests", function () {
     const holder2 = await this.TokenSetEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
-    const holder2BalanceBefore = await this.TokenSetEnv.tokenSet.balanceOf(holder2Address);
+    const holder2BalanceBefore = await this.TokenSetEnv.pool.balanceOf(holder2Address);
     expect(holder2BalanceBefore).to.be.gt(BigNumber.from(0));
-    await this.TokenSetEnv.tokenSet.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
+    await this.TokenSetEnv.pool.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
-      .stake(this.TokenSetEnv.tokenSet.address, holder2BalanceBefore, this.TokenSetEnv.adapter.address);
-    const amount = await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.tokenSet.address);
+      .stake(this.TokenSetEnv.pool.address, holder2BalanceBefore, this.TokenSetEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
 
     const tx = await this.TokenSetEnv.adapter
@@ -86,10 +79,11 @@ describe("ETH_2X: Unit tests", function () {
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address)'](
-          this.TokenSetEnv.tokenSet.address,
+        ['migrate(address,address,address,uint256)'](
+          this.TokenSetEnv.pool.address,
           this.TokenSetEnv.adapter.address,
-          ethers.constants.AddressZero
+          ethers.constants.AddressZero,
+          DEPOSIT_SLIPPAGE
         ),
     ).to.be.reverted;
   });
@@ -103,7 +97,7 @@ describe("ETH_2X: Unit tests", function () {
 
   it("Getting the output token list", async function () {
     // adding the ETH_2X Token as a whitelisted token
-    const underlyingTokens = await this.TokenSetEnv.tokenSet.getComponents();
+    const underlyingTokens = await this.TokenSetEnv.pool.getComponents();
     const outputTokens = await this.TokenSetEnv.adapter.outputTokens(FACTORY_REGISTRIES.ETH_2X);
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
@@ -154,7 +148,7 @@ describe("ETH_2X: Unit tests", function () {
           "ETH_2X",
           "ETH_2X",
   				strategyItems,
-          STRATEGY_STATE,
+          INITIAL_STATE,
           ethers.constants.AddressZero,
           '0x'
   			)
@@ -165,30 +159,30 @@ describe("ETH_2X: Unit tests", function () {
   })
 
   it("Should migrate tokens to strategy", async function () {
-    const routerContract = this.enso.routers[0].contract;
     const holder3 = await this.TokenSetEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
     // staking the tokens in the liquidity migration contract
-    const holder3BalanceBefore = await this.TokenSetEnv.tokenSet.balanceOf(holder3Address);
+    const holder3BalanceBefore = await this.TokenSetEnv.pool.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-    await this.TokenSetEnv.tokenSet.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
+    await this.TokenSetEnv.pool.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
-      .stake(this.TokenSetEnv.tokenSet.address, holder3BalanceBefore.div(10), this.TokenSetEnv.adapter.address);
-    const amount = await this.liquidityMigration.staked(holder3Address, this.TokenSetEnv.tokenSet.address);
+      .stake(this.TokenSetEnv.pool.address, holder3BalanceBefore.div(10), this.TokenSetEnv.adapter.address);
+    const amount = await this.liquidityMigration.staked(holder3Address, this.TokenSetEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
-    const holder3BalanceAfter = await this.TokenSetEnv.tokenSet.balanceOf(holder3Address);
+    const holder3BalanceAfter = await this.TokenSetEnv.pool.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(holder3BalanceAfter);
 
     // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address)'](
-        this.TokenSetEnv.tokenSet.address,
+      ['migrate(address,address,address,uint256)'](
+        this.TokenSetEnv.pool.address,
         this.TokenSetEnv.adapter.address,
-        this.strategy.address
+        this.strategy.address,
+        DEPOSIT_SLIPPAGE
       );
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, [this.tokens.aWETH, this.tokens.debtUSDC]);
     expect(total).to.gt(0);
@@ -198,16 +192,16 @@ describe("ETH_2X: Unit tests", function () {
   it("Should buy and stake", async function () {
     const defaultAddress = await this.signers.default.getAddress();
 
-    expect(await this.TokenSetEnv.tokenSet.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
+    expect(await this.TokenSetEnv.pool.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
     expect(await this.strategy.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
-    expect(await this.liquidityMigration.staked(defaultAddress, this.TokenSetEnv.tokenSet.address)).to.be.eq(BigNumber.from(0));
+    expect(await this.liquidityMigration.staked(defaultAddress, this.TokenSetEnv.pool.address)).to.be.eq(BigNumber.from(0));
 
     const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.TokenSetEnv.adapter.callStatic.getAmountOut(this.TokenSetEnv.tokenSet.address, UNISWAP_V3_ROUTER, ethAmount)
+    const expectedAmount = await this.TokenSetEnv.adapter.callStatic.getAmountOut(this.TokenSetEnv.pool.address, UNISWAP_V3_ROUTER, ethAmount)
     console.log("Expected: ", expectedAmount.toString())
 
     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
-      this.TokenSetEnv.tokenSet.address,
+      this.TokenSetEnv.pool.address,
       this.TokenSetEnv.adapter.address,
       UNISWAP_V3_ROUTER,
       expectedAmount.mul(995).div(1000), //0.5% slippage
@@ -215,7 +209,7 @@ describe("ETH_2X: Unit tests", function () {
       {value: ethAmount}
     )
 
-    const staked = await this.liquidityMigration.staked(defaultAddress, this.TokenSetEnv.tokenSet.address)
+    const staked = await this.liquidityMigration.staked(defaultAddress, this.TokenSetEnv.pool.address)
     console.log("Staked: ", staked.toString())
     expect(staked).to.be.gt(BigNumber.from(0));
   })

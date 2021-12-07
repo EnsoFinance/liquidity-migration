@@ -51,7 +51,8 @@
     "typescript": "^3.9.7"
   },
   "files": [
-    "/contracts"
+    "contracts",
+    "artifacts/contracts"
   ],
   "keywords": [
     "blockchain",
@@ -67,11 +68,11 @@
   "scripts": {
     "clean": "hardhat clean",
     "commit": "git-cz",
-    "compile": "hardhat compile",
+    "compile": "hardhat compile --force",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"./test/**/*.ts\"",
     "deploy": "yarn hardhat run scripts/deploy.ts --network",
     "getUnderlyingTokens": "yarn hardhat run scripts/getUnderlyingTokens.ts",
-    "lint": "yarn run lint:sol && yarn run lint:ts && yarn run prettier:list-different",
+    "lint": "yarn run lint:sol --fix && yarn run lint:ts --fix && yarn run prettier:list-different",
     "lint:sol": "solhint --config ./.solhint.json --max-warnings 0 \"contracts/**/*.sol\"",
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
     "prettier": "prettier --config .prettierrc --write \"**/*.{js,json,md,sol,ts}\"",

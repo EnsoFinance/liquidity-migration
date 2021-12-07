@@ -3,7 +3,7 @@ import { MainnetSigner } from "../types";
 import { Contract, Signer } from "ethers";
 import { EnsoEnvironment } from "@enso/contracts";
 
-import { TOKENSET_HOLDERS, TOKENSET_ISSUANCE_MODULES, WETH } from "./constants";
+import { TOKENSET_HOLDERS, TOKENSET_ISSUANCE_MODULES } from "./constants";
 import {
   SetToken__factory,
   SetToken,
@@ -15,12 +15,14 @@ import {
 export class TokenSetEnvironmentBuilder {
   signer: Signer;
   enso: EnsoEnvironment;
+  adapter?: Contract;
 
-  constructor(signer: Signer, enso: EnsoEnvironment) {
+  constructor(signer: Signer, enso: EnsoEnvironment, adapter?: Contract) {
     this.signer = signer;
     this.enso = enso;
+    this.adapter = adapter;
   }
-  async connect(tokenSetPoolAddress: string): Promise<TokenSetEnvironment> {
+  async connect(tokenSetPoolAddress: string, holders?: string[]): Promise<TokenSetEnvironment> {
     const setBasicIssuanceModule = IBasicIssuanceModule__factory.connect(
       TOKENSET_ISSUANCE_MODULES.BASIC,
       this.signer,
@@ -41,14 +43,16 @@ export class TokenSetEnvironmentBuilder {
 
     const leverageAdapter: string = this.enso?.adapters?.leverage?.contract?.address || ethers.constants.AddressZero;
 
-    const adapter = await tokenSetAdapterFactory.deploy(
-      setBasicIssuanceModule.address,
-      leverageAdapter,
-      generiRouter,
-      signerAddress,
-    );
+    const adapter =
+      this.adapter ??
+      (await tokenSetAdapterFactory.deploy(
+        setBasicIssuanceModule.address,
+        leverageAdapter,
+        generiRouter,
+        signerAddress,
+      ));
 
-    const addresses = TOKENSET_HOLDERS[tokenSetPoolAddress.toLowerCase()];
+    const addresses = holders ?? TOKENSET_HOLDERS[tokenSetPoolAddress.toLowerCase()];
 
     if (addresses === undefined) {
       throw Error(`Failed to find token holder for contract: ${tokenSetPoolAddress} `);
@@ -76,21 +80,21 @@ export class TokenSetEnvironment {
   signer: Signer;
   setBasicIssuanceModule: Contract;
   setDebtIssuanceModule: Contract;
-  tokenSet: Contract;
+  pool: Contract;
   adapter: Contract;
   holders: Signer[];
   constructor(
     signer: Signer,
     setBasicIssuanceModule: Contract,
     setDebtIssuanceModule: Contract,
-    tokenSet: Contract,
+    pool: Contract,
     adapter: Contract,
     holders: Signer[],
   ) {
     this.signer = signer;
     this.setBasicIssuanceModule = setBasicIssuanceModule;
     this.setDebtIssuanceModule = setDebtIssuanceModule;
-    this.tokenSet = tokenSet;
+    this.pool = pool;
     this.adapter = adapter;
     this.holders = holders;
   }

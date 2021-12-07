@@ -1,16 +1,17 @@
 import { ethers } from "hardhat";
 import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { IAdapter, LiquidityMigration, LiquidityMigration__factory } from "../typechain";
+import { IAdapter, LiquidityMigration__factory } from "../typechain";
 import { EnsoEnvironment } from "@enso/contracts";
-import { getBlockTime } from './utils'
+import { getBlockTime } from "./utils";
 
 export enum AcceptedProtocols {
   Indexed,
-  DefiPulseIndex,
   PieDao,
   DHedge,
-  Powerpool
+  Powerpool,
+  TokenSets,
+  IndexCoop,
 }
 
 export type Adapter = {
@@ -32,22 +33,27 @@ export class LiquidityMigrationBuilder {
 
   addAdapters(protocol: AcceptedProtocols[], adapter: IAdapter[]) {
     for (let i = 0; i < protocol.length; i++) {
-      this.adapters.push({
-        protocol: protocol[i],
-        adapter: adapter[i].address
-      })
+      this.addAdapter(protocol[i], adapter[i]);
     }
+    return this;
   }
 
   addAdapter(protocol: AcceptedProtocols, adapter: IAdapter) {
-    this.adapters.push({
-      protocol,
-      adapter: adapter.address,
-    });
+    const match = this.adapters.filter(a => a.adapter == adapter.address || a.protocol == protocol);
+    if (match.length == 0) {
+      this.adapters.push({
+        protocol: protocol,
+        adapter: adapter.address,
+      });
+    } else {
+      console.log("liquidityMigration.ts: Adapter already added: ", protocol);
+    }
   }
 
-  async deploy() {
+  async deploy(): Promise<LiquidityMigration> {
     if (this.adapters.length === 0) throw new Error("No adapters set!");
+
+    if (!this.enso.routers[0].contract) throw Error("Enso environment has no routers");
 
     const LiquidityMigrationFactory = (await ethers.getContractFactory(
       "LiquidityMigration",
@@ -55,19 +61,30 @@ export class LiquidityMigrationBuilder {
 
     const unlock = await getBlockTime(5);
 
-    if (this.enso.routers[0].contract) {
-      this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(
-        this.adapters.map(a => a.adapter),
-        this.enso.routers[0].contract.address,
-        this.enso.platform.strategyFactory.address,
-        this.enso.platform.controller.address,
-        unlock,
-        ethers.constants.MaxUint256,
-        this.signer.address
-      );
-      return this.liquidityMigration;
-    } else {
-      return undefined;
-    }
+    this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(
+      this.adapters.map(a => a.adapter),
+      this.enso.routers[0].contract.address,
+      this.enso.platform.strategyFactory.address,
+      this.enso.platform.controller.address,
+      unlock,
+      ethers.constants.MaxUint256,
+      this.signer.address,
+    );
+
+    if (!this.liquidityMigration) throw Error("Failed to deploy");
+
+    return new LiquidityMigration(this.signer, this.adapters, this.liquidityMigration, this.enso);
+  }
+}
+export class LiquidityMigration {
+  signer: SignerWithAddress;
+  adapters: Adapter[];
+  liquidityMigration: Contract;
+  enso: EnsoEnvironment;
+  constructor(signer: SignerWithAddress, adapters: Adapter[], liquidityMigration: Contract, enso: EnsoEnvironment) {
+    this.signer = signer;
+    this.adapters = adapters;
+    this.liquidityMigration = liquidityMigration;
+    this.enso = enso;
   }
 }
