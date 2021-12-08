@@ -8,6 +8,7 @@ import "../ecosystem/openzeppelin/token/ERC1155/extensions/ERC1155Burnable.sol";
  */
 contract Root1155 is ERC1155Burnable, Ownable {
 
+    bool public uriUpdated;
     uint256 private _currentTokenID = 0;
     mapping (uint256 => address) public creators;
     mapping (uint256 => uint256) public tokenSupply;
@@ -81,6 +82,16 @@ contract Root1155 is ERC1155Burnable, Ownable {
         _mint(_to, _id, _quantity, _data);
         tokenSupply[_id] = tokenSupply[_id] + _quantity;
     }
+
+    function updateUri(string memory newuri) 
+        external
+        onlyOwner
+    {
+        require(!uriUpdated, 'Root1155#updateUri: Already updated.');
+        _setURI(newuri);
+        uriUpdated = true;
+    }
+
 
     /**
     * @dev Returns whether the specified token exists by checking to see if it has a creator
