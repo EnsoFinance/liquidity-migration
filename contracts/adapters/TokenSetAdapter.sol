@@ -45,6 +45,16 @@ contract TokenSetAdapter is AbstractAdapter {
         _leveraged[BTC2X] = true;
     }
 
+    function updateGenericRouter(address _genericRouter) external onlyOwner {
+        require(_genericRouter != genericRouter, "Already exists");
+        genericRouter = _genericRouter;
+    }
+
+    function updateLeverageAdapter(address _leverageAdapter) external onlyOwner {
+        require(_leverageAdapter != leverageAdapter, "Already exists");
+        leverageAdapter = _leverageAdapter;
+    }
+
     function outputTokens(address _lp)
         public
         view
