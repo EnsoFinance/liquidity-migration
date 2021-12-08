@@ -8,15 +8,18 @@ import { getBlockTime } from "../src/utils";
 import * as fs from "fs";
 import deployments from "../deployments.json";
 
+const lockPeriod = 2419200 // 4 weeks
 const monoRepoDeployments = process.env.MONOREPO_DEPLOYMENTS_FILE;
 const network = process.env.HARDHAT_NETWORK ?? "localhost";
 
+const { AddressZero } = hre.ethers.constants
+
 const deployedContracts: any = {
   mainnet: {
-    GenericRouter: "",
-    StrategyProxyFactory: "",
-    StrategyController: "",
-    Leverage2XAdapter: "",
+    GenericRouter: AddressZero,
+    StrategyProxyFactory: AddressZero,
+    StrategyController: AddressZero,
+    Leverage2XAdapter: AddressZero,
     TokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
     TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
     SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
@@ -25,16 +28,16 @@ const deployedContracts: any = {
     GenericRouter: "0xE0a9382c01d6EDfA0c933714b3626435EeF10811",
     StrategyProxyFactory: "0xaF80BB1794B887de4a6816Ab0219692a21e8430e",
     StrategyController: "0x077a70998D5086E6c6D53D9Fb7BCfd8F7fb73AC2",
-    Leverage2XAdapter: "",
+    Leverage2XAdapter: AddressZero,
     TokenSetsBasicIssuanceModule: "0x8a070235a4B9b477655Bf4Eb65a1dB81051B3cC1",
     TokenSetsDebtIssuanceModule: "0xe34031E7F4D8Ba4eFab190ce5f4D8451eD1B6A82",
     SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
   },
   hardhat: {
-    GenericRouter: "",
-    StrategyProxyFactory: "",
-    StrategyController: "",
-    Leverage2XAdapter: "",
+    GenericRouter: AddressZero,
+    StrategyProxyFactory: AddressZero,
+    StrategyController: AddressZero,
+    Leverage2XAdapter: AddressZero,
     TokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
     TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
     SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
@@ -113,7 +116,7 @@ async function main() {
     log("PowerPoolAdapter", powerPoolAdapter.address);
     protocol_addresses[PROTOCOLS.POWERPOOL] = powerPoolAdapter.address;
 
-    const unlock = await getBlockTime(60);
+    const unlock = await getBlockTime(lockPeriod);
 
     const LiquidityMigrationFactory = await hre.ethers.getContractFactory("LiquidityMigration");
     const liquidityMigration = await LiquidityMigrationFactory.deploy(
