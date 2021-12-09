@@ -159,29 +159,24 @@ describe("Integration: Unit tests", function () {
       await erc20.connect(holder).approve(this.liquidityMigration.address, holderBalance);
       await this.liquidityMigration
         .connect(holder)
-        .stake(pool.pool.address, holderBalance.div(2), pool.adapter.address);
-      expect(await this.liquidityMigration.staked(holderAddress, pool.pool.address)).to.equal(holderBalance.div(2));
-      const holderAfterBalance = await erc20.balanceOf(holderAddress);
-
-      if (holderBalance == BigNumber.from(0)){
-         console.log("Balance: ", holderBalance, " \nHolder: ", holderAddress);
-      }
-      // expect(holderAfterBalance).to.be.gt(BigNumber.from(0));
+        .stake(pool.pool.address, holderBalance, pool.adapter.address);
+      expect(await this.liquidityMigration.staked(holderAddress, pool.pool.address)).to.equal(holderBalance);
     }
   });
 
   it("Migrate tokens", async function () {
     for (let i = 0; i < poolsToMigrate.length; i++) {
       const pool = poolsToMigrate[i];
-      if ( // Skip 2X FLI, SciFi
+      if ( // Skip 2X FLI, SciFi (GEL), WEB3 (OHM)
         pool.pool.address !== '0xaa6e8127831c9de45ae56bb1b0d4d4da6e5665bd' &&
         pool.pool.address !== '0x0b498ff89709d3838a063f1dfa463091f9801c2b' &&
-        pool.pool.address !== '0xfdc4a3fc36df16a78edcaf1b837d3acaaedb2cb4'
+        pool.pool.address !== '0xfdc4a3fc36df16a78edcaf1b837d3acaaedb2cb4' &&
+        pool.pool.address !== '0xe8e8486228753E01Dbc222dA262Aa706Bd67e601'
       ) {
         const underlyingTokens = await pool.adapter.outputTokens(pool.pool.address);
         // encode strategy items
         console.log("Pool: ", pool.pool.address);
-        console.log(" \nUnderlying tokens: \n", underlyingTokens);
+        //console.log("Underlying tokens: \n", underlyingTokens);
         let poolAddress
         try {
           // Some PieDao pool hold their tokens in Balancer pools
@@ -189,7 +184,6 @@ describe("Integration: Unit tests", function () {
         } catch (e) {
           poolAddress = pool.pool.address
         }
-        console.log('Pool address: ', poolAddress)
         const strategyItems = await setupStrategyItems(
           this.enso.platform.oracles.ensoOracle,
           ethers.constants.AddressZero, // For real strategies an adapter is needed, but for migration it is not

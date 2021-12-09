@@ -93,9 +93,15 @@ export async function estimateTokens(oracle: Contract, account: string, tokens: 
     const estimates = []
     for (let i = 0; i < tokensAndBalances.length; i++) {
       console.log('Token: ', tokensAndBalances[i].token)
-      const estimate = await oracle.estimateItem(tokensAndBalances[i].balance, tokensAndBalances[i].token)
-      console.log('Estimate: ', estimate.toString())
-      estimates.push(estimate)
+      try {
+        const estimate = await oracle.estimateItem(tokensAndBalances[i].balance, tokensAndBalances[i].token)
+        console.log('Estimate: ', estimate.toString())
+        estimates.push(estimate)
+      } catch (e) {
+        console.log('Estimate failed')
+        estimates.push(BigNumber.from(0))
+      }
+
     }
     */
     const estimates = await Promise.all(tokensAndBalances.map(async (obj) =>
