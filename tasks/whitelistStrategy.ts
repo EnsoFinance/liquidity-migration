@@ -1,6 +1,24 @@
 import { task } from "hardhat/config";
 import { WHITELIST_STRATEGY } from "./task-names";
-export const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
+
+export const getOwner = async (hre: any) => {
+  const network = process.env.HARDHAT_NETWORK ?? hre.network.name;
+  if (network != "localhost") {
+    const [deployer] = await hre.ethers.getSigners();
+    console.log("Deployer: ", deployer.address);
+    console.log("Network: ", network);
+    return deployer.address;
+  } else {
+    const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
+    console.log("Deployer: ", owner);
+    console.log("Network: ", network);
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [owner],
+    });
+    return owner;
+  }
+};
 export const ADAPTER_ABI_FRAGMENT = [
   {
     inputs: [
@@ -40,10 +58,7 @@ task(WHITELIST_STRATEGY, "Whitelist Strategy")
   .addParam("adapterAddress", "Add adapter address")
   .addParam("strategyAddress", "Add strategy address")
   .setAction(async ({ strategyAddress, adapterAddress }, hre) => {
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [owner],
-    });
+    const owner = await getOwner(hre);
     const secondSigner = await hre.ethers.getSigner(owner);
     const { add, isWhitelisted } = await new hre.ethers.Contract(adapterAddress, ADAPTER_ABI_FRAGMENT, secondSigner);
     await add(strategyAddress);

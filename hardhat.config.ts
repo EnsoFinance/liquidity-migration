@@ -20,6 +20,7 @@ import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/addAdapter";
 import "./tasks/addAllAdapters";
+import "./tasks/transferOwnership";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -81,6 +82,7 @@ function getNetworks(): NetworksUserConfig {
     networks.kovan = createTestnetConfig("kovan");
     networks.rinkeby = createTestnetConfig("rinkeby");
     networks.ropsten = createTestnetConfig("ropsten");
+    networks.mainnet = createTestnetConfig("mainnet")
   }
   return networks;
 }
