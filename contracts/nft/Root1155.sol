@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import "../ecosystem/openzeppelin/access/Ownable.sol";
+import "../helpers/Ownable.sol";
 import "../ecosystem/openzeppelin/token/ERC1155/extensions/ERC1155Burnable.sol";
 
 /**
@@ -29,7 +29,14 @@ contract Root1155 is ERC1155Burnable, Ownable {
         _;
     }
 
-    constructor (string memory uri_) ERC1155(uri_) {}
+    constructor (
+        string memory uri_, 
+        address owner_
+    ) 
+        ERC1155(uri_)     
+    {
+        _setOwner(owner_);
+    }
 
     /**
     * @dev Creates a new token type and assigns _initialSupply to an address
