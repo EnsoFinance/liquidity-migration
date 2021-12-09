@@ -209,9 +209,9 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _lp
     )
         internal 
-        
     {
         uint256 _amount = staked[_user][_lp];
+        require(_amount > 0, 'LiquidityMigration#_refund: no stake');
         delete staked[_user][_lp];
         
         IERC20(_lp).safeTransfer(_user, _amount);
