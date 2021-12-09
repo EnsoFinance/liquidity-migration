@@ -9,7 +9,7 @@ import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
-import { setupStrategyItems, encodeStrategyData, estimateTokens } from "../src/utils";
+import { setupStrategyItems, encodeStrategyData, estimateTokens, increaseTime } from "../src/utils";
 import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@enso/contracts";
 import { WETH, SUSD, INITIAL_STATE, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
@@ -156,15 +156,16 @@ describe("Integration: Unit tests", function () {
       expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
       // expect(holderBalance).to.be.gt(BigNumber.from(0));
 
-      await erc20.connect(holder).approve(this.liquidityMigration.address, holderBalance);
+      await erc20.connect(holder).approve(this.liquidityMigration.address, holderBalance.div(2));
       await this.liquidityMigration
         .connect(holder)
-        .stake(pool.pool.address, holderBalance, pool.adapter.address);
-      expect(await this.liquidityMigration.staked(holderAddress, pool.pool.address)).to.equal(holderBalance);
+        .stake(pool.pool.address, holderBalance.div(2), pool.adapter.address);
+      expect(await this.liquidityMigration.staked(holderAddress, pool.pool.address)).to.equal(holderBalance.div(2));
     }
   });
 
   it("Migrate tokens", async function () {
+    await increaseTime(10)
     for (let i = 0; i < poolsToMigrate.length; i++) {
       const pool = poolsToMigrate[i];
       if ( // Skip 2X FLI, SciFi (GEL), WEB3 (OHM)

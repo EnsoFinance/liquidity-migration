@@ -7,7 +7,7 @@ import { IERC20, IERC20__factory, IStrategy__factory, IUniswapV3Router__factory 
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, WETH, DIVISOR, INITIAL_STATE, UNISWAP_V3_ROUTER, DEPOSIT_SLIPPAGE } from "../src/constants";
-import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
+import { setupStrategyItems, estimateTokens, encodeStrategyData, increaseTime } from "../src/utils"
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 
 
@@ -93,6 +93,7 @@ describe("METAVERSE: Unit tests", function () {
   });
 
   it("Should not be able to migrate tokens if the METAVERSE token is not whitelisted in the Token Sets Adapter", async function () {
+    await increaseTime(10)
     const holder2 = await this.metaverse.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract

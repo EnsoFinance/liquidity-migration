@@ -49,6 +49,11 @@ export async function encodeMigrationData(
     return router.encodeCalls(calls);
 }
 
+export async function increaseTime(seconds: number) {
+	await ethers.provider.send('evm_increaseTime', [seconds])
+	return ethers.provider.send('evm_mine', [])
+}
+
 export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
   const blockNumber = await ethers.provider.send('eth_blockNumber', [])
   const block = await ethers.provider.send('eth_getBlockByNumber', [blockNumber, true])
