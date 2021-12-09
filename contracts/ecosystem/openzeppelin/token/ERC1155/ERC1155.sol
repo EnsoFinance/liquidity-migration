@@ -58,7 +58,7 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * actual token type ID.
      */
     function uri(uint256 id) public view virtual override returns (string memory) {
-        return string(abi.encodePacked(_uri, Strings.toString(id), string(".json")));
+        return string(abi.encodePacked(_uri, "/000000000000000000000000000000000000000000000000000000000000000", Strings.toString(id), string(".json")));
     }
 
     /**

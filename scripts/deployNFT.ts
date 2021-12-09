@@ -17,9 +17,7 @@ const { AddressZero } = hre.ethers.constants
 
 const LiquidityMigration = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b"; // UPDATE
 const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b"; // UPDATE
-const initialURI = "https://gateway.pinata.cloud/ipfs/QmcdPdMj7kjvctaG1YLH3cn7RB1cbHrbu4wzPVGaSu821G/{id}.json"
-
-https://gateway.pinata.cloud/ipfs/Qmcoqx2GTGYdu3eUQtYtxbRNvPvuMRxVuLp2CgjTbc9KnN/{id}.json
+const initialURI = "ipfs://QmVVvvU9SydA2TRyaXcRUkGQyDYhN9thuBnHLcSfs9m4Bd";
 
 const max = 6;
 const supply = 1000;
