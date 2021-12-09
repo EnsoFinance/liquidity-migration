@@ -20,6 +20,7 @@ import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/addAdapter";
 import "./tasks/addAllAdapters";
+import "./tasks/transferOwnership";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
