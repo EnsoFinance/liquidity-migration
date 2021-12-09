@@ -48,18 +48,17 @@ describe("ETH_USD_YIELD: Unit tests", function () {
 
     // redeeming the token
     const setBasicIssuanceModule = this.ETHUSDYieldEnv.setBasicIssuanceModule;
-    const addressWhoIsRedeeming = await this.ETHUSDYieldEnv.holders[0].getAddress();
-    const address_toWhom = addressWhoIsRedeeming;
+    const holder = await this.ETHUSDYieldEnv.holders[0].getAddress();
     const tokenBalance = holderBalances[0].balance;
     const tokenContract = IERC20__factory.connect(underlyingTokens[0], this.ETHUSDYieldEnv.holders[0]) as IERC20;
-    const previousUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
+    const previousUnderlyingTokenBalance = await tokenContract.balanceOf(holder);
     const tx = await setBasicIssuanceModule
       .connect(this.ETHUSDYieldEnv.holders[0])
-      .redeem(this.ETHUSDYieldEnv.pool.address, tokenBalance, address_toWhom);
+      .redeem(this.ETHUSDYieldEnv.pool.address, tokenBalance.div(4), holder);
     await tx.wait();
-    const updatedBalance = await this.ETHUSDYieldEnv.pool.balanceOf(address_toWhom);
-    const updatedUnderlyingTokenBalance = await tokenContract.balanceOf(addressWhoIsRedeeming);
-    expect(updatedBalance).to.equal(BigNumber.from(0));
+    const updatedBalance = await this.ETHUSDYieldEnv.pool.balanceOf(holder);
+    const updatedUnderlyingTokenBalance = await tokenContract.balanceOf(holder);
+    expect(updatedBalance.lt(tokenBalance)).to.be.true;
     expect(updatedUnderlyingTokenBalance.gt(previousUnderlyingTokenBalance)).to.be.true;
   });
 

@@ -7,7 +7,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { EnsoBuilder } from "@enso/contracts";
 import { DEPOSIT_SLIPPAGE, INITIAL_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
-import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils";
+import { setupStrategyItems, estimateTokens, encodeStrategyData, increaseTime } from "../src/utils";
 
 describe("PieDao: Unit tests", function () {
   before(async function () {
@@ -78,6 +78,7 @@ describe("PieDao: Unit tests", function () {
     const holder = this.pieDaoEnv.holders[0];
     const holderAddress = await holder.getAddress();
     // Migrate
+    await increaseTime(10)
     await this.liquidityMigration
       .connect(holder)
       ["migrate(address,address,address,uint256)"](pool.address, this.pieDaoEnv.adapter.address, this.strategy.address, DEPOSIT_SLIPPAGE);
