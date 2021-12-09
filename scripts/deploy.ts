@@ -59,7 +59,7 @@ const getOwner = async () => {
     return "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
   }
 };
-const initialURI = "https://token-cdn-domain/{id}.json";
+const initialURI = "ipfs://QmV3nntwvjJdpHfvmbAZ6YxBKdQMvUbdnUUpwoNn9Ckd9P";
 const max = 6;
 const supply = 1000;
 

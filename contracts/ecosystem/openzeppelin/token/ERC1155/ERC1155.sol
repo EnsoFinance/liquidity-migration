@@ -8,6 +8,7 @@ import "./extensions/IERC1155MetadataURI.sol";
 import "../../utils/Address.sol";
 import "../../utils/Context.sol";
 import "../../utils/introspection/ERC165.sol";
+import "../../utils/Strings.sol";
 
 /**
  *
@@ -56,8 +57,8 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * Clients calling this function must replace the `\{id\}` substring with the
      * actual token type ID.
      */
-    function uri(uint256) public view virtual override returns (string memory) {
-        return _uri;
+    function uri(uint256 id) public view virtual override returns (string memory) {
+        return string(abi.encodePacked(_uri, "/000000000000000000000000000000000000000000000000000000000000000", Strings.toString(id), string(".json")));
     }
 
     /**

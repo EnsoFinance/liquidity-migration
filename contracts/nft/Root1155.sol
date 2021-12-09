@@ -1,13 +1,12 @@
 pragma solidity ^0.8.0;
 
 import "../helpers/Ownable.sol";
-import "../ecosystem/openzeppelin/token/ERC1155/extensions/ERC1155Burnable.sol";
+import "../ecosystem/openzeppelin/token/ERC1155/extensions/ERC1155Supply.sol";
 
 /**
  * @title Root1155
  */
-contract Root1155 is ERC1155Burnable, Ownable {
-
+contract Root1155 is ERC1155Supply, Ownable {
     bool public uriUpdated;
     uint256 private _currentTokenID = 0;
     mapping (uint256 => address) public creators;
@@ -30,12 +29,11 @@ contract Root1155 is ERC1155Burnable, Ownable {
     }
 
     constructor (
-        string memory uri_, 
-        address owner_
-    ) 
-        ERC1155(uri_)     
+        string memory uri_
+    )
+        ERC1155(uri_)
     {
-        _setOwner(owner_);
+        _setOwner(msg.sender);
     }
 
     /**
@@ -51,10 +49,10 @@ contract Root1155 is ERC1155Burnable, Ownable {
         uint256 _initialSupply,
         string calldata _uri,
         bytes calldata _data
-    ) 
-        external 
-        onlyOwner 
-        returns(uint256) 
+    )
+        external
+        onlyOwner
+        returns(uint256)
     {
 
         uint256 _id = _currentTokenID;
@@ -82,15 +80,15 @@ contract Root1155 is ERC1155Burnable, Ownable {
         uint256 _id,
         uint256 _quantity,
         bytes memory _data
-    ) 
-        public 
-        onlyCreator(_id) 
+    )
+        public
+        onlyCreator(_id)
     {
         _mint(_to, _id, _quantity, _data);
         tokenSupply[_id] = tokenSupply[_id] + _quantity;
     }
 
-    function updateUri(string memory newuri) 
+    function updateUri(string memory newuri)
         external
         onlyOwner
     {
@@ -105,10 +103,10 @@ contract Root1155 is ERC1155Burnable, Ownable {
     * @param _id uint256 ID of the token to query the existence of
     * @return bool whether the token exists
     */
-    function _exists(uint256 _id) 
-        internal 
-        view 
-        returns (bool) 
+    function _exists(uint256 _id)
+        internal
+        view
+        returns (bool)
     {
         return creators[_id] != address(0);
     }
@@ -116,14 +114,14 @@ contract Root1155 is ERC1155Burnable, Ownable {
     /**
     * @return uint256 for max token ID
     */
-    function getMaxTokenID() 
-        public 
+    function getMaxTokenID()
+        public
         view
         returns(uint256)
     {
         return _currentTokenID;
     }
-    
+
     /**
     * @dev increments the value of _currentTokenID
     */
