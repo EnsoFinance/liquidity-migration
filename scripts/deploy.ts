@@ -59,7 +59,7 @@ const getOwner = async () => {
     return "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
   }
 };
-const initialURI = "https://token-cdn-domain/{id}.json";
+const initialURI = "ipfs://QmV3nntwvjJdpHfvmbAZ6YxBKdQMvUbdnUUpwoNn9Ckd9P";
 const max = 6;
 const supply = 1000;
 
@@ -151,9 +151,11 @@ async function main() {
     for (let i = 0; i <= max; i++) {
       await erc1155.create(claimable.address, supply, initialURI, "0x");
     }
+    await erc1155.transferOwnership(owner)
     log("Claimable", claimable.address);
     await claimable.stateChange(STATE.ACTIVE);
     console.log("State updated: Migrate all the competitors *evil laugh*");
+    await claimable.transferOwnership(owner)
     write2File();
   } else {
     console.log("Network undefined");

@@ -29,13 +29,10 @@ contract Root1155 is ERC1155Supply, Ownable {
     }
 
     constructor (
-        string memory uri_, 
-        address owner_
+        string memory uri_
     ) 
-        ERC1155(uri_)     
-    {
-        _setOwner(owner_);
-    }
+        ERC1155(uri_)
+    {}
 
     /**
     * @dev Creates a new token type and assigns _initialSupply to an address
