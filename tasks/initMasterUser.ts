@@ -170,14 +170,14 @@ export const LP_TOKEN_WHALES = [
     symbol: "HUUB",
     adapter: "TokenSetAdapter",
   },
-  {
-    victim: "tokenSets",
-    walletAddress: "0xBAdb34560712bf98c93E168Bf9343fb627162eDd",
-    lpTokenAddress: "0x72e364F2ABdC788b7E918bc238B21f109Cd634D7",
-    lpTokenName: "Metaverse Index",
-    symbol: "MVI",
-    adapter: "TokenSetAdapter",
-  },
+  // {
+  //   victim: "tokenSets",
+  //   walletAddress: "0xBAdb34560712bf98c93E168Bf9343fb627162eDd",
+  //   lpTokenAddress: "0x72e364F2ABdC788b7E918bc238B21f109Cd634D7",
+  //   lpTokenName: "Metaverse Index",
+  //   symbol: "MVI",
+  //   adapter: "TokenSetAdapter",
+  // },
   {
     victim: "tokenSets",
     walletAddress: "0xaD0C123B819C6c137ed2Cdd009B546cFd7445C2e",
