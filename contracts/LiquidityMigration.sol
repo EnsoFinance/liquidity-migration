@@ -23,6 +23,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     event Staked(address adapter, address strategy, uint256 amount, address account);
     event Migrated(address adapter, address lp, address strategy, address account);
     event Created(address adapter, address lp, address strategy, address account);
+    event Refunded(address lp, uint256 amount, address account);
 
     /**
     * @dev Require adapter registered
@@ -185,6 +186,38 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         }
     }
 
+    function refund(
+        address _user,
+        address _lp
+    )
+        public
+        onlyOwner
+    {
+        _refund(_user, _lp);
+    }
+    
+    function batchRefund(address[] memory _users, address _lp) 
+        public
+        onlyOwner
+    {
+        for (uint256 i = 0; i < _users.length; i++) {
+            _refund(_users[i], _lp);
+        }
+    }
+    function _refund(
+        address _user, 
+        address _lp
+    )
+        internal 
+    {
+        uint256 _amount = staked[_user][_lp];
+        require(_amount > 0, 'LiquidityMigration#_refund: no stake');
+        delete staked[_user][_lp];
+        
+        IERC20(_lp).safeTransfer(_user, _amount);
+        emit Refunded(_lp, _amount, _user);
+    }
+
     function _migrate(
         address _user,
         address _lp,
@@ -284,11 +317,10 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     function updateFactory(address _factory)
         external
         onlyOwner
-        {
-            require(factory != IStrategyProxyFactory(_factory), "LiquidityMigration#updateFactory: already exists");
-            factory = IStrategyProxyFactory(_factory);
-        }
-        
+    {
+        require(factory != IStrategyProxyFactory(_factory), "LiquidityMigration#updateFactory: already exists");
+        factory = IStrategyProxyFactory(_factory);
+    }
 
     function addAdapter(address _adapter)
         external
