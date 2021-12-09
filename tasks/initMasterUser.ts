@@ -10,10 +10,50 @@ const ERC20_ABI_FRAGMENT = [
 export const LP_TOKEN_WHALES = [
   {
     victim: "indexCoop",
+    walletAddress: "0x051135B3395913810Fe2919c0E3ef21bcBCDB061",
+    lpTokenAddress: "0x33d63ba1e57e54779f7ddaeaa7109349344cf5f1",
+    lpTokenName: "DATA Economy Index",
+    symbol: "DATA",
+    adapter: "IndexCoopAdapter",
+  },
+  {
+    victim: "indexCoop",
     walletAddress: "0x96E3d09A600b15341Cc266820106A1d6B4aa58C2",
     lpTokenAddress: "0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b",
     lpTokenName: "DefiPulse Index",
     symbol: "DPI",
+    adapter: "IndexCoopAdapter",
+  },
+  {
+    victim: "indexCoop",
+    walletAddress: "0x6b9dfc960299166df15ab8a85f054c69e2be2353",
+    lpTokenAddress: "0x72e364f2abdc788b7e918bc238b21f109cd634d7",
+    lpTokenName: "Metaverse Index",
+    symbol: "MVI",
+    adapter: "IndexCoopAdapter",
+  },
+  {
+    victim: "indexCoop",
+    walletAddress: "0x65bdef0e45b652e86973c3408c7cd24dda9d844d",
+    lpTokenAddress: "0xaa6e8127831c9de45ae56bb1b0d4d4da6e5665bd",
+    lpTokenName: "ETH 2x Flexible Leverage Index",
+    symbol: "ETH2x-FLI",
+    adapter: "IndexCoopAdapter",
+  },
+  {
+    victim: "indexCoop",
+    walletAddress: "0xf3bb86e1c877b1d1a57f6aa53d0ef73f68079a85",
+    lpTokenAddress: "0x0b498ff89709d3838a063f1dfa463091f9801c2b",
+    lpTokenName: "BTC 2x Flexible Leverage Index",
+    symbol: "BTC2x-FLI",
+    adapter: "IndexCoopAdapter",
+  },
+  {
+    victim: "indexCoop",
+    walletAddress: "0x9e42945623dee3efb68797f4bdd52e6fed5c5601",
+    lpTokenAddress: "0x2af1df3ab0ab157e1e2ad8f88a7d04fbea0c7dc6",
+    lpTokenName: "Bankless BED Index",
+    symbol: "BED",
     adapter: "IndexCoopAdapter",
   },
   {
@@ -56,6 +96,7 @@ export const LP_TOKEN_WHALES = [
     symbol: "YETI",
     adapter: "PowerPoolAdapter",
   },
+  /* Contains piSushi
   {
     victim: "powerpool",
     walletAddress: "0x97283c716f72b6f716d6a1bf6bd7c3fcd840027a",
@@ -64,6 +105,7 @@ export const LP_TOKEN_WHALES = [
     symbol: "ASSY",
     adapter: "PowerPoolAdapter",
   },
+  */
   {
     victim: "powerpool",
     walletAddress: "0x43faf3f8bef053d901c572edc32f055c20efb764",
@@ -82,21 +124,13 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "tokenSets",
-    walletAddress: "0x6b9dfc960299166df15ab8a85f054c69e2be2353",
-    lpTokenAddress: "0x72e364f2abdc788b7e918bc238b21f109cd634d7",
-    lpTokenName: "Metaverse Index",
-    symbol: "MVI",
-    adapter: "TokenSetAdapter",
-  },
-  {
-    victim: "tokenSets",
     walletAddress: "0x6c833b726cd5a6f6f6b3321cc8f444b625199fe2",
     lpTokenAddress: "0xf059afa5239ed6463a00fc06a447c14fe26406e1",
     lpTokenName: "ETH WBTC Yield Farm",
     symbol: "WBTCAPY",
     adapter: "TokenSetAdapter",
   },
-  {
+  { // Contains GEL token (only on UniV3, so naive oracle doesn't work)
     victim: "tokenSets",
     walletAddress: "0xd0b342029c97f2a2e65ac660835354438ac64c2e",
     lpTokenAddress: "0xfdc4a3fc36df16a78edcaf1b837d3acaaedb2cb4",
@@ -106,26 +140,10 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "tokenSets",
-    walletAddress: "0x65bdef0e45b652e86973c3408c7cd24dda9d844d",
-    lpTokenAddress: "0xaa6e8127831c9de45ae56bb1b0d4d4da6e5665bd",
-    lpTokenName: "ETH 2x Flexible Leverage Index",
-    symbol: "ETH2x-FLI",
-    adapter: "TokenSetAdapter",
-  },
-  {
-    victim: "tokenSets",
-    walletAddress: "0xf3bb86e1c877b1d1a57f6aa53d0ef73f68079a85",
-    lpTokenAddress: "0x0b498ff89709d3838a063f1dfa463091f9801c2b",
-    lpTokenName: "BTC 2x Flexible Leverage Index",
-    symbol: "BTC2x-FLI",
-    adapter: "TokenSetAdapter",
-  },
-  {
-    victim: "tokenSets",
-    walletAddress: "0x9e42945623dee3efb68797f4bdd52e6fed5c5601",
-    lpTokenAddress: "0x2af1df3ab0ab157e1e2ad8f88a7d04fbea0c7dc6",
-    lpTokenName: "Bankless BED Index",
-    symbol: "BED",
+    walletAddress: "0xEC3281124d4c2FCA8A88e3076C1E7749CfEcb7F2", // SushiSwap Multisig holds 99.9% of supply but no ETH
+    lpTokenAddress: "0x7b18913D945242A9c313573E6c99064cd940c6aF",
+    lpTokenName: "Sushi DAO House",
+    symbol: "sushiHOUSE",
     adapter: "TokenSetAdapter",
   },
   {
@@ -137,6 +155,63 @@ export const LP_TOKEN_WHALES = [
     adapter: "DHedgeAdapter",
   },
   {
+    victim: "dHedge",
+    walletAddress: "0xFEa2133278A3b35Ad142F91b15B45501B5089FA6",
+    lpTokenAddress: "0x0f4c00139602ab502bc7c1c0e71d6cb72a9fb0e7",
+    lpTokenName: "dHEDGE Top Index",
+    symbol: "DTOP",
+    adapter: "DHedgeAdapter",
+  },
+  {
+    victim: "dHedge",
+    walletAddress: "0x36D3fE4072aa4940963cE4E41Dd26525E14d3ab4",
+    lpTokenAddress: "0xd076b9865feb49A43Aa38c06b0432dF6b6cBCA9E",
+    lpTokenName: "Jesse Livermore Hearts Crypto",
+    symbol: "DHPT",
+    adapter: "DHedgeAdapter",
+  },
+  {
+    victim: "dHedge",
+    walletAddress: "0xBe86F784eb2A34a8E49F4C0BDdb919E6EF099988",
+    lpTokenAddress: "0x3A4851597F36F459b58e65C55c8f3a8710313Fc7",
+    lpTokenName: "SNX Debt Pool Mirror",
+    symbol: "DHPT",
+    adapter: "DHedgeAdapter",
+  },
+  {
+    victim: "dHedge",
+    walletAddress: "0x72bF0778874FC88F3e95ADaEcDD983B2Be665476",
+    lpTokenAddress: "0x391603b1C3b03A0133AD82E91692790e58f73570",
+    lpTokenName: "Guttastemning",
+    symbol: "DHPT",
+    adapter: "DHedgeAdapter",
+  },
+  {
+    victim: "dHedge",
+    walletAddress: "0x0b0e3Ebe78b965Bd0AE25a7C5C1cc8cFF23a07E7",
+    lpTokenAddress: "0x907FeB27f8cc5b003Db7e62dfc2f9B01ce3FADd6",
+    lpTokenName: "Potato_Swap",
+    symbol: "DHPT",
+    adapter: "DHedgeAdapter",
+  },
+  {
+    victim: "dHedge",
+    walletAddress: "0xd18ca6ad07e9D3FF226202c0e22cB4A555B44e74",
+    lpTokenAddress: "0x3781eA00ECBE98d1550806C1213FC7FEb4F88a42",
+    lpTokenName: "Black Lion Fund",
+    symbol: "DHPT",
+    adapter: "DHedgeAdapter",
+  },
+  {
+    victim: "dHedge",
+    walletAddress: "0x444c996b74631763cE0c406Fcbe9Aa13D35f395E",
+    lpTokenAddress: "0x0ac1DBa8252240589266194F9C27a42229E84B19",
+    lpTokenName: "A-DAM Public Fund",
+    symbol: "DHPT",
+    adapter: "DHedgeAdapter",
+  },
+  /* Contains CryptoPunk
+  {
     victim: "pieDao",
     walletAddress: "0x4281579d99d855f2430c95a13720e53a0fcc0549",
     lpTokenAddress: "0x33e18a092a93ff21ad04746c7da12e35d34dc7c4",
@@ -144,6 +219,7 @@ export const LP_TOKEN_WHALES = [
     symbol: "PLAY",
     adapter: "PieDaoAdapter",
   },
+  */
   {
     victim: "pieDao",
     walletAddress: "0xfad4a1f91026e62774a918202572b9be2fdcdb4e",
@@ -152,6 +228,7 @@ export const LP_TOKEN_WHALES = [
     symbol: "USD++",
     adapter: "PieDaoAdapter",
   },
+  /* Contains Aave V1 + xSUSHI
   {
     victim: "pieDao",
     walletAddress: "0x1333be3f438607fed776b23baec4a506f218a1ad",
@@ -160,6 +237,8 @@ export const LP_TOKEN_WHALES = [
     symbol: "YPIE",
     adapter: "PieDaoAdapter",
   },
+  */
+  /* Contains Aave V1 + xSUSHI
   {
     victim: "pieDao",
     walletAddress: "0x115f95c00e8cf2f5c57250caa555a6b4e50b446b",
@@ -168,6 +247,7 @@ export const LP_TOKEN_WHALES = [
     symbol: "DEFI+L",
     adapter: "PieDaoAdapter",
   },
+  */
   {
     victim: "pieDao",
     walletAddress: "0xd68a5ccde1e5273c79cd40711fe4750122cdd865",
@@ -184,6 +264,7 @@ export const LP_TOKEN_WHALES = [
     symbol: "DEFI+S",
     adapter: "PieDaoAdapter",
   },
+  /* Contains DEFI+L and DEFI+S
   {
     victim: "pieDao",
     walletAddress: "0xf78d4b28c975353aa6ae45c31471e8ca8da0ba35",
@@ -192,6 +273,8 @@ export const LP_TOKEN_WHALES = [
     symbol: "DEFI++",
     adapter: "PieDaoAdapter",
   },
+  */
+  /* Contains DEFI++
   {
     victim: "pieDao",
     walletAddress: "0xebfb007ac8e6239baee43d4812e0373783e0d34f",
@@ -200,6 +283,7 @@ export const LP_TOKEN_WHALES = [
     symbol: "BCP",
     adapter: "PieDaoAdapter",
   },
+  */
 ];
 
 task(INIT_MASTER_USER, "Initialises the account of the master user", async (_taskArgs, hre) => {

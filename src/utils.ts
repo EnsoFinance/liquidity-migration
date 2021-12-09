@@ -57,14 +57,15 @@ export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
 
 export async function setupStrategyItems(oracle: Contract, adapter: string, pool: string, underlying: string[]): Promise<StrategyItem[]> {
     const positions = [] as Position[];
-    //let [total, estimates] = await enso.platform.oracles.protocols.uniswapOracle.estimateTotal(pool, underlying);
     const [total, estimates] = await estimateTokens(oracle, pool, underlying)
     for (let i = 0; i < underlying.length; i++) {
       const percentage = new bignumber(estimates[i].toString()).multipliedBy(1000).dividedBy(total.toString()).toFixed(0);
-      positions.push({
+      const position: Position = {
         token: underlying[i],
         percentage: BigNumber.from(percentage),
-      });
+      }
+      if (adapter == ethers.constants.AddressZero) position.adapters = []
+      positions.push(position);
     }
     const totalPercentage = positions.map((pos) => Number(pos.percentage)).reduce((a, b) => a + b)
     if (totalPercentage !== 1000) {
@@ -88,6 +89,15 @@ export async function estimateTokens(oracle: Contract, account: string, tokens: 
           balance: balance
         }
     }))
+    /*
+    const estimates = []
+    for (let i = 0; i < tokensAndBalances.length; i++) {
+      console.log('Token: ', tokensAndBalances[i].token)
+      const estimate = await oracle.estimateItem(tokensAndBalances[i].balance, tokensAndBalances[i].token)
+      console.log('Estimate: ', estimate.toString())
+      estimates.push(estimate)
+    }
+    */
     const estimates = await Promise.all(tokensAndBalances.map(async (obj) =>
         oracle.estimateItem(obj.balance, obj.token)
     ))
