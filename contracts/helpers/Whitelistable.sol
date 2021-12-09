@@ -9,9 +9,6 @@ abstract contract Whitelistable is Ownable {
 
     mapping(address => bool) public whitelisted;
 
-    mapping (address => uint256) internal _count;
-    mapping (address => mapping (address => bool)) internal _underlying;
-
     event Added(address token);
     event Removed(address token);
 
@@ -32,7 +29,6 @@ abstract contract Whitelistable is Ownable {
         onlyOwner
     {
         _add(_token);
-        _addUnderlying(_token);
     }
 
     /**
@@ -45,7 +41,6 @@ abstract contract Whitelistable is Ownable {
     {
         for (uint256 i = 0; i < _tokens.length; i++) {
             _add(_tokens[i]);
-            _addUnderlying(_tokens[i]);
         }
     }
 
@@ -58,7 +53,6 @@ abstract contract Whitelistable is Ownable {
         onlyOwner
     {
         _remove(_token);
-        _removeUnderlying(_token);
     }
 
     /**
@@ -71,7 +65,6 @@ abstract contract Whitelistable is Ownable {
     {
         for (uint256 i = 0; i < _tokens.length; i++) {
             _remove(_tokens[i]);
-            _removeUnderlying(_tokens[i]);
         }
     }
 
@@ -89,7 +82,4 @@ abstract contract Whitelistable is Ownable {
         whitelisted[_token] = false;
         emit Removed(_token);
     }
-
-    function _addUnderlying(address _token) internal virtual;
-    function _removeUnderlying(address _token) internal virtual;
 }

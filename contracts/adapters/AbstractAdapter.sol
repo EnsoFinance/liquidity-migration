@@ -174,37 +174,11 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         return whitelisted[_lp];
     }
 
-    function isUnderlying(address _lp, address _token) external view override returns (bool) {
-        return _underlying[_lp][_token];
-    }
-
-    function numberOfUnderlying(address _lp) external view override returns (uint256) {
-        return _count[_lp];
-    }
-
     function isExchange(address _exchange)
         public
         pure
         returns (bool)
     {
         return(_exchange == SUSHI || _exchange == UNI_V2 || _exchange == UNI_V3);
-    }
-
-    function _addUnderlying(address _lp) internal override {
-        address[] memory underlyingTokens = outputTokens(_lp);
-        for (uint256 i = 0; i < underlyingTokens.length; i++) {
-            address utAddress = underlyingTokens[i];
-            _underlying[_lp][utAddress] = true;
-        }
-        _count[_lp] = underlyingTokens.length;
-    }
-
-    function _removeUnderlying(address _lp) internal override {
-        address[] memory underlyingTokens = outputTokens(_lp);
-        for (uint256 i = 0; i < underlyingTokens.length; i++) {
-            address utAddress = underlyingTokens[i];
-            _underlying[_lp][utAddress] = false;
-        }
-        _count[_lp] = 0;
     }
 }

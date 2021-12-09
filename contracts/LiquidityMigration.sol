@@ -18,6 +18,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     mapping (address => bool) public adapters;
     mapping (address => uint256) public stakedCount;
     mapping (address => mapping (address => uint256)) public staked;
+    mapping (address => bool) private _tempIsUnderlying;
 
 
     event Staked(address adapter, address strategy, uint256 amount, address account);
@@ -195,8 +196,8 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     {
         _refund(_user, _lp);
     }
-    
-    function batchRefund(address[] memory _users, address _lp) 
+
+    function batchRefund(address[] memory _users, address _lp)
         public
         onlyOwner
     {
@@ -205,15 +206,15 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         }
     }
     function _refund(
-        address _user, 
+        address _user,
         address _lp
     )
-        internal 
+        internal
     {
         uint256 _amount = staked[_user][_lp];
         require(_amount > 0, 'LiquidityMigration#_refund: no stake');
         delete staked[_user][_lp];
-        
+
         IERC20(_lp).safeTransfer(_user, _amount);
         emit Refunded(_lp, _amount, _user);
     }
@@ -354,20 +355,28 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         return stakedCount[_adapter];
     }
 
-    function _validateItems(address adapter, address lp, StrategyItem[] memory strategyItems) private view {
+    function _validateItems(address adapter, address lp, StrategyItem[] memory strategyItems) private {
+        address[] memory underlyingTokens = IAdapter(adapter).outputTokens(lp);
+        for (uint i = 0; i < underlyingTokens.length; i++) {
+            _tempIsUnderlying[underlyingTokens[i]] = true;
+        }
         uint256 total = strategyItems.length;
         for (uint i = 0; i < strategyItems.length; i++) {
             // Strategies may have reserve tokens (such as weth) that don't have value
             // So we must be careful not to invalidate a strategy for having them
-            if (!IAdapter(adapter).isUnderlying(lp, strategyItems[i].item)) {
+            if (!_tempIsUnderlying[strategyItems[i].item]) {
                 if (strategyItems[i].percentage == 0) {
                     total--;
                 } else {
                     revert("LiquidityMigration#createStrategy: incorrect length");
                 }
+            } else {
+                // Otherwise just remove the cached bool after we've checked it
+                delete _tempIsUnderlying[strategyItems[i].item];
             }
         }
-        require(total == IAdapter(adapter).numberOfUnderlying(lp), "LiquidityMigration#createStrategy: does not exist");
+        // If there are some cached bools that have not been deleted then this check will cause a revert
+        require(total == underlyingTokens.length, "LiquidityMigration#createStrategy: does not exist");
     }
 
     function _createStrategy(bytes memory data) private returns (address) {

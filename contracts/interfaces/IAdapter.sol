@@ -19,8 +19,4 @@ interface IAdapter {
     function getAmountOut(address _lp, address _exchange, uint256 _amountIn) external returns (uint256);
 
     function isWhitelisted(address _token) external view returns (bool);
-
-    function isUnderlying(address _lp, address _token) external view returns (bool);
-
-    function numberOfUnderlying(address _lp) external view returns (uint256);
 }
