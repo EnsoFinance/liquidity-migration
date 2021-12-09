@@ -81,6 +81,7 @@ function getNetworks(): NetworksUserConfig {
     networks.kovan = createTestnetConfig("kovan");
     networks.rinkeby = createTestnetConfig("rinkeby");
     networks.ropsten = createTestnetConfig("ropsten");
+    networks.mainnet = createTestnetConfig("mainnet")
   }
   return networks;
 }

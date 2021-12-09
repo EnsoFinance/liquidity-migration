@@ -8,11 +8,11 @@ import { getBlockTime } from "../src/utils";
 import * as fs from "fs";
 import deployments from "../deployments.json";
 
-const lockPeriod = 2419200 // 4 weeks
+const lockPeriod = 2419200; // 4 weeks
 const monoRepoDeployments = process.env.MONOREPO_DEPLOYMENTS_FILE;
-const network = process.env.HARDHAT_NETWORK ?? "localhost";
+const network = process.env.HARDHAT_NETWORK ?? hre.network.name;
 
-const { AddressZero } = hre.ethers.constants
+const { AddressZero } = hre.ethers.constants;
 
 const deployedContracts: any = {
   mainnet: {
@@ -47,7 +47,18 @@ const deployedContracts: any = {
 deployedContracts.localhost = deployedContracts.mainnet;
 deployedContracts.localhost.Leverage2XAdapter = "0x57ab1ec28d129707052df4df418d58a2d46d5f51"; // dummy data
 
-const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
+const getOwner = async () => {
+  if (network != "localhost") {
+    const [deployer] = await hre.ethers.getSigners();
+    console.log("Deployer: ", deployer.address);
+    console.log("Network: ", network);
+    return deployer.address;
+  } else {
+    console.log("Deployer: 0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b");
+    console.log("Network: ", network);
+    return "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
+  }
+};
 const initialURI = "https://token-cdn-domain/{id}.json";
 const max = 6;
 const supply = 1000;
@@ -70,31 +81,12 @@ enum STATE {
 async function main() {
   getMonorepoDeployments();
   if (network) {
+    const owner = await getOwner();
     const protocol_addresses = [];
     const TokenSetAdapterFactory = await hre.ethers.getContractFactory("TokenSetAdapter");
     const BalancerAdapterFactory = await hre.ethers.getContractFactory("BalancerAdapter");
     const PieDaoAdapterFactory = await hre.ethers.getContractFactory("PieDaoAdapter");
     const DHedgeAdapterFactory = await hre.ethers.getContractFactory("DHedgeAdapter");
-
-    const tokenSetAdapter = await TokenSetAdapterFactory.deploy(
-      deployedContracts[network].TokenSetsBasicIssuanceModule,
-      deployedContracts[network].Leverage2XAdapter,
-      deployedContracts[network].GenericRouter,
-      owner,
-    );
-    await tokenSetAdapter.deployed();
-    log("TokenSetAdapter", tokenSetAdapter.address);
-    protocol_addresses[PROTOCOLS.TOKENSET] = tokenSetAdapter.address;
-
-    const pieDaoAdapter = await PieDaoAdapterFactory.deploy(owner);
-    await pieDaoAdapter.deployed();
-    log("PieDaoAdapter", pieDaoAdapter.address);
-    protocol_addresses[PROTOCOLS.PIEDAO] = pieDaoAdapter.address;
-
-    const indexedAdapter = await BalancerAdapterFactory.deploy(owner);
-    await indexedAdapter.deployed();
-    log("IndexedAdapter", indexedAdapter.address);
-    protocol_addresses[PROTOCOLS.INDEXED] = indexedAdapter.address;
 
     const indexCoopAdapter = await TokenSetAdapterFactory.deploy(
       deployedContracts[network].TokenSetsBasicIssuanceModule,
@@ -106,15 +98,35 @@ async function main() {
     log("IndexCoopAdapter", indexCoopAdapter.address);
     protocol_addresses[PROTOCOLS.INDEXCOOP] = indexCoopAdapter.address;
 
-    const dHedgeAdapter = await DHedgeAdapterFactory.deploy(owner, deployedContracts[network].SUSD);
-    await dHedgeAdapter.deployed();
-    log("DHedgeAdapter", dHedgeAdapter.address);
-    protocol_addresses[PROTOCOLS.DHEDGE] = dHedgeAdapter.address;
+    const indexedAdapter = await BalancerAdapterFactory.deploy(owner);
+    await indexedAdapter.deployed();
+    log("IndexedAdapter", indexedAdapter.address);
+    protocol_addresses[PROTOCOLS.INDEXED] = indexedAdapter.address;
 
     const powerPoolAdapter = await BalancerAdapterFactory.deploy(owner);
     await powerPoolAdapter.deployed();
     log("PowerPoolAdapter", powerPoolAdapter.address);
     protocol_addresses[PROTOCOLS.POWERPOOL] = powerPoolAdapter.address;
+
+    const tokenSetAdapter = await TokenSetAdapterFactory.deploy(
+      deployedContracts[network].TokenSetsBasicIssuanceModule,
+      deployedContracts[network].Leverage2XAdapter,
+      deployedContracts[network].GenericRouter,
+      owner,
+    );
+    await tokenSetAdapter.deployed();
+    log("TokenSetAdapter", tokenSetAdapter.address);
+    protocol_addresses[PROTOCOLS.TOKENSET] = tokenSetAdapter.address;
+
+    const dHedgeAdapter = await DHedgeAdapterFactory.deploy(owner, deployedContracts[network].SUSD);
+    await dHedgeAdapter.deployed();
+    log("DHedgeAdapter", dHedgeAdapter.address);
+    protocol_addresses[PROTOCOLS.DHEDGE] = dHedgeAdapter.address;
+
+    const pieDaoAdapter = await PieDaoAdapterFactory.deploy(owner);
+    await pieDaoAdapter.deployed();
+    log("PieDaoAdapter", pieDaoAdapter.address);
+    protocol_addresses[PROTOCOLS.PIEDAO] = pieDaoAdapter.address;
 
     const unlock = await getBlockTime(lockPeriod);
 
