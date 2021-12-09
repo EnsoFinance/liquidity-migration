@@ -6,8 +6,9 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { EnsoBuilder } from "@enso/contracts";
+import { it } from "mocha";
 
-describe("LiquidityMigration: Unit tests", function () {
+describe("Liquidity Migration", function () {
   // lets create a strategy and then log its address and related stuff
   before(async function () {
     this.signers = {} as Signers;
