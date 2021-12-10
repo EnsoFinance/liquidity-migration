@@ -7,7 +7,6 @@ import { initial } from "underscore";
 import { TASK_COMPILE_SOLIDITY_LOG_COMPILATION_RESULT } from "hardhat/builtin-tasks/task-names";
 import { ConstructorFragment } from "ethers/lib/utils";
 
-
 describe('claimable', () => {
     let accounts: SignerWithAddress[],
         attacker: SignerWithAddress,
@@ -15,7 +14,7 @@ describe('claimable', () => {
         ERC1155: ContractFactory,
         erc1155: Contract,
         initialURI = 'ipfs://QmV3nntwvjJdpHfvmbAZ6YxBKdQMvUbdnUUpwoNn9Ckd9P',
-
+        newURI = 'ipfs://QmZArRJtqfmXQXyrEWCpdbgaHReHbzHGubb6y91Wm9Pz5w',
         state = [0, 1, 2], // 0 = pending, 1 = active, 2 = closed
         name = 'degen',
         decimals = 18,
@@ -31,10 +30,10 @@ describe('claimable', () => {
         attacker = accounts[10];
 
         ERC1155 = await ethers.getContractFactory("Root1155");
-        erc1155 = await ERC1155.deploy(initialURI, accounts[0].address);
+        erc1155 = await ERC1155.deploy(initialURI);
     });
-    describe('quick', () => {
-        it('fix', async () => {
+    describe('set uri', () => {
+        it('old', async () => {
             await erc1155.create(accounts[0].address, supply, '', "0x")
             await erc1155.create(accounts[0].address, supply, '', "0x")
             await erc1155.create(accounts[0].address, supply, '', "0x")
@@ -43,6 +42,22 @@ describe('claimable', () => {
             await erc1155.create(accounts[0].address, supply, '', "0x")
             await erc1155.create(accounts[0].address, supply, '', "0x")
             console.log(await erc1155.uri(0))
+            console.log(await erc1155.uri(1))
+            console.log(await erc1155.uri(2))
+            console.log(await erc1155.uri(3))
+            console.log(await erc1155.uri(4))
+            console.log(await erc1155.uri(5))
+            console.log(await erc1155.uri(6))
         });
+        it('new', async () => {
+            await erc1155.updateUri(newURI)
+            console.log(await erc1155.uri(0))
+            console.log(await erc1155.uri(1))
+            console.log(await erc1155.uri(2))
+            console.log(await erc1155.uri(3))
+            console.log(await erc1155.uri(4))
+            console.log(await erc1155.uri(5))
+            console.log(await erc1155.uri(6))
+        })
     });
 });
