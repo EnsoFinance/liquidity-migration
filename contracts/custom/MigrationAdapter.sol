@@ -3,7 +3,7 @@ pragma solidity 0.8.2;
 
 import "../adapters/AbstractAdapter.sol";
 
-contract MockAdapter is AbstractAdapter {
+contract MigrationAdapter is AbstractAdapter {
     constructor(address owner_) AbstractAdapter(owner_) {}
 
     function outputTokens(address)
@@ -22,7 +22,9 @@ contract MockAdapter is AbstractAdapter {
         onlyWhitelisted(_lp)
         returns (Call[] memory calls)
     {
-        return new Call[](0);
+        calls = new Call[](1);
+        calls[0] = Call(_lp, new bytes(0));
+        return calls;
     }
 
     function encodeWithdraw(address _lp, uint256)

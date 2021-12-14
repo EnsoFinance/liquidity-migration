@@ -13,7 +13,7 @@ import "./SafeERC20Transfer.sol";
 import "./SignedSafeMath.sol";
 
 // Acts as "generic" address in LiquidityMigration contract
-contract MockController is StrategyTypes, StrategyControllerStorage {
+contract MigrationController is StrategyTypes, StrategyControllerStorage {
   using SafeERC20Transfer for IERC20;
   using SignedSafeMath for int256;
 
