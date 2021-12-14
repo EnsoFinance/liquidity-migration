@@ -1,4 +1,4 @@
-pragma solidity 0.8.2;
+pragma solidity >=0.6.0 <0.9.0;
 
 interface IUniswapV3Router {
     struct ExactInputSingleParams {
