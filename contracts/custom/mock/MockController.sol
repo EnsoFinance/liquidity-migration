@@ -8,9 +8,9 @@ import "@enso/contracts/contracts/interfaces/IStrategyRouter.sol";
 import "@enso/contracts/contracts/interfaces/IOracle.sol";
 import "@enso/contracts/contracts/interfaces/registries/ITokenRegistry.sol";
 import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
-import "../interfaces/IAdapter.sol";
-import "./SafeERC20Transfer.sol";
-import "./SignedSafeMath.sol";
+import "../../interfaces/IAdapter.sol";
+import "../libraries/SafeERC20Transfer.sol";
+import "../libraries/SignedSafeMath.sol";
 
 // Acts as "generic" address in LiquidityMigration contract
 contract MockController is StrategyTypes, StrategyControllerStorage {

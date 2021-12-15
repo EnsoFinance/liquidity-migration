@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: WTFPL
 pragma solidity >=0.6.0 <0.9.0;
 
-import "../ecosystem/openzeppelin/token/ERC20/IERC20.sol";
-import "../ecosystem/openzeppelin/utils/Address.sol";
+import "../../ecosystem/openzeppelin/token/ERC20/IERC20.sol";
+import "../../ecosystem/openzeppelin/utils/Address.sol";
 
 /**
  * @title SafeERC20

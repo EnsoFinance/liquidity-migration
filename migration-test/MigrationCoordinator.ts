@@ -11,10 +11,19 @@ import { FACTORY_REGISTRIES, DEPOSIT_SLIPPAGE, INITIAL_STATE} from "../src/const
 import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
+import deployments from "../deployments.json"
 
 const ownerMultisig = '0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F'
 const dpiPoolAddress = '0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b'
-const indexCoopAdapterAddress = '0x9c9326C521895c78414BD3C2945e47AFC4Ef16cc'
+const indexCoopAdapterAddress = deployments.mainnet.IndexCoopAdapter
+const adapters: string[] = [
+    deployments.mainnet.TokenSetAdapter,
+    deployments.mainnet.PieDaoAdapter,
+    deployments.mainnet.IndexedAdapter,
+    deployments.mainnet.IndexCoopAdapter,
+    deployments.mainnet.DHedgeAdapter,
+    deployments.mainnet.PowerPoolAdapter,
+]
 
 describe("Batch: Unit tests", function () {
   let signers: any,
@@ -24,8 +33,11 @@ describe("Batch: Unit tests", function () {
     dpiUnderlying: any,
     dpiStrategy: any,
     liquidityMigration: any,
-    mockController: any,
-    mockAdapter: any;
+    liquidityMigrationV2: any,
+    migrationController: any,
+    migrationAdapter: any,
+    migrationCoordinator: any,
+    users: any;
 
   const dpi_setup = async function () {
     const TokenSetAdapter = await ethers.getContractFactory('TokenSetAdapter')
@@ -106,71 +118,101 @@ describe("Batch: Unit tests", function () {
     console.log("Oracle: ", enso.platform.oracles.ensoOracle.address)
   });
 
-  it("Should update migration contract", async function () {
-    const MockController = await ethers.getContractFactory('MockController')
-    const mockControllerImplementation = await MockController.connect(signers.admin).deploy(liquidityMigration.address, signers.admin.address)
-    await mockControllerImplementation.deployed()
+  it("Should deploy new liquidity migration contract", async function () {
+    const LiquidityMigrationV2 = await ethers.getContractFactory('LiquidityMigrationV2')
+    liquidityMigrationV2 = await LiquidityMigrationV2.connect(signers.admin).deploy(
+      adapters,
+      ethers.constants.MaxUint256,
+      ethers.constants.MaxUint256
+    )
+    await liquidityMigrationV2.deployed()
+
+    const MigrationAdapter = await ethers.getContractFactory('MigrationAdapter')
+    migrationAdapter = await MigrationAdapter.connect(signers.admin).deploy(signers.admin.address)
+    await migrationAdapter.deployed()
+    // Add all eligible LPs to this adapter's whitelist
+    await migrationAdapter.connect(signers.admin).add(dpiPoolAddress)
+
+    const MigrationController = await ethers.getContractFactory('MigrationController')
+    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(liquidityMigrationV2.address, signers.admin.address)
+    await migrationControllerImplementation.deployed()
     // Upgrade controller to new implementation
-    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(enso.platform.controller.address, mockControllerImplementation.address)
-    mockController = MockController.attach(enso.platform.controller.address)
-
-    const MockAdapter = await ethers.getContractFactory('MockAdapter')
-    mockAdapter = await MockAdapter.connect(signers.admin).deploy(signers.admin.address)
-    await mockAdapter.deployed()
-    await mockAdapter.connect(signers.admin).add(dpiPoolAddress)
-
-    // Switch out real adapter for migration adapter to facilitate migration
-    await liquidityMigration.connect(signers.admin).removeAdapter(indexCoopAdapter.address)
-    await liquidityMigration.connect(signers.admin).addAdapter(mockAdapter.address)
-    // Set controller and generic to controller address, which now implements MockController
-    await liquidityMigration.connect(signers.admin).updateController(enso.platform.controller.address)
-    await liquidityMigration.connect(signers.admin).updateGeneric(enso.platform.controller.address)
-    await liquidityMigration.connect(signers.admin).updateUnlock(await getBlockTime(0))
+    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(
+      enso.platform.controller.address,
+      migrationControllerImplementation.address
+    )
+    migrationController = await MigrationController.attach(enso.platform.controller.address)
+    // Update controller on LMV2
+    await liquidityMigrationV2.connect(signers.admin).updateController(enso.platform.controller.address)
   })
 
-  it("Should batch migrate", async function () {
+  it("Should setup migration coordinator", async function () {
+    // Deploy contract
+    const MigrationCoordinator = await ethers.getContractFactory('MigrationCoordinator')
+    migrationCoordinator = await MigrationCoordinator.connect(signers.admin).deploy(
+       liquidityMigration.address,
+       liquidityMigrationV2.address,
+       migrationAdapter.address
+    )
+    await migrationCoordinator.deployed()
+    // Update coordinator on LMV2
+    await liquidityMigrationV2.connect(signers.admin).updateCoordinator(migrationCoordinator.address)
+    // Transfer ownership of LiquidityMigrationV1
+    await liquidityMigration.connect(signers.admin).transferOwnership(migrationCoordinator.address)
+    // Initiate migration
+    await migrationCoordinator.connect(signers.admin).initiateMigration()
+  })
+
+  it("Should migrate to new LiquidityMigration contract", async function () {
     const eventFilter = liquidityMigration.filters.Staked(null, null, null, null)
     const events = await liquidityMigration.queryFilter(eventFilter)
     const stakers = events.filter((ev: Event) => ev?.args?.strategy.toLowerCase() === dpiPoolAddress.toLowerCase())
                           .filter((ev: Event) => ev?.args?.amount.gt(0))
                           .map((ev: Event) => ev?.args?.account)
 
-    const users = stakers.filter((account: string, index: number) => stakers.indexOf(account) === index)
-                         .slice(0,60)
+    users = stakers.filter((account: string, index: number) => stakers.indexOf(account) === index)
+                         .slice(0,150)
 
     console.log("Num users: ", users.length)
-    /*
-    for ( let i = 0; i < users.length; i++ ) {
-      const stake = await liquidityMigration.staked(users[i], dpiPoolAddress)
-      console.log('Stake: ', stake.toString())
-    }
-    */
-    const lps = Array(users.length).fill(dpiPoolAddress)
-    const adapters = Array(users.length).fill(mockAdapter.address)
-    const strategies = Array(users.length).fill(dpiStrategy.address)
-    const slippage = Array(users.length).fill(0)
-    const tx = await liquidityMigration
+
+    const tx = await migrationCoordinator
       .connect(signers.admin)
-      ["batchMigrate(address[],address[],address[],address[],uint256[])"](
+      .migrateLP(
         users,
-        lps,
-        adapters,
-        strategies,
-        slippage
-      );
+        dpiPoolAddress,
+        indexCoopAdapterAddress
+      )
     const receipt = await tx.wait()
-    console.log('Batch Migrate Gas Used: ', receipt.gasUsed.toString())
-    const [total, ] = await enso.platform.oracles.ensoOracle.estimateStrategy(dpiStrategy.address)
-    // DPI is not part of strategy structure, so it will not be evaluated
-    expect(total).to.equal(ethers.BigNumber.from(0))
-    expect(await dpiPool.balanceOf(dpiStrategy.address)).to.be.gt(ethers.BigNumber.from(0))
+    console.log('Migrate LP Gas Used: ', receipt.gasUsed.toString())
   });
+
+  it("Should set strategy", async function() {
+      await liquidityMigrationV2.setStrategy(dpiPoolAddress, dpiStrategy.address)
+  })
+
+  it("Migrate LP liquidity", async function() {
+      // Unlock new liquidity migration contract and batch migrate
+      await liquidityMigrationV2.connect(signers.admin).updateUnlock(await getBlockTime(0))
+
+      const tx = await liquidityMigrationV2
+        .connect(signers.admin)
+        .batchMigrate(
+          users,
+          dpiPoolAddress
+        )
+      const receipt = await tx.wait()
+      console.log('Batch Migrate Gas Used: ', receipt.gasUsed.toString())
+      const [total, ] = await enso.platform.oracles.ensoOracle.estimateStrategy(dpiStrategy.address)
+      // DPI is not part of strategy structure, so it will not be evaluated
+      expect(total).to.equal(ethers.BigNumber.from(0))
+      expect(await dpiPool.balanceOf(dpiStrategy.address)).to.be.gt(ethers.BigNumber.from(0))
+  })
 
   it("Should finalize migration", async function () {
     // IndexCoopAdapter needs the real GenericRouter address
     await indexCoopAdapter.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)
 
-    const tx = await mockController.connect(signers.admin).finalizeMigration(
+    const tx = await migrationController.connect(signers.admin).finalizeMigration(
       dpiStrategy.address,
       enso.routers[0].contract.address,
       indexCoopAdapter.address, //Note this is the current adapter address, not mock. We will reused the migration encoding
@@ -182,5 +224,20 @@ describe("Batch: Unit tests", function () {
     console.log("Strategy value: ", total.toString())
     expect(total).to.be.gt(ethers.BigNumber.from(0))
     expect(await dpiPool.balanceOf(dpiStrategy.address)).to.equal(ethers.BigNumber.from(0))
+  })
+
+  it("Should claim strategy tokens", async function() {
+    await network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [users[0]],
+    });
+    const user = await ethers.getSigner(users[0]);
+
+    const balanceBefore = await dpiStrategy.balanceOf(user.address)
+    const tx = await liquidityMigrationV2.connect(user).claim(dpiPoolAddress)
+    const receipt = await tx.wait()
+    console.log('Claim Gas Used: ', receipt.gasUsed.toString())
+    const balanceAfter = await dpiStrategy.balanceOf(user.address)
+    expect(balanceAfter).to.be.gt(balanceBefore)
   })
 });
