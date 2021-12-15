@@ -123,7 +123,7 @@ export const UNISWAP_V3_ROUTER: string = "0xE592427A0AEce92De3Edee1F18E0157C0586
 
 export const DIVISOR = 1000;
 
-export const DEPOSIT_SLIPPAGE = BigNumber.from(990);
+export const DEPOSIT_SLIPPAGE = BigNumber.from(950);
 
 export const STRATEGY_STATE: StrategyState = {
   timelock: BigNumber.from(60),
@@ -135,7 +135,7 @@ export const STRATEGY_STATE: StrategyState = {
 
 export const INITIAL_STATE: InitialState = {
   timelock: BigNumber.from(60),  // 1 minute
-  rebalanceThreshold: BigNumber.from(40), // 4%
+  rebalanceThreshold: BigNumber.from(600), // 4%
   rebalanceSlippage: BigNumber.from(997), // 99.7 %
   restructureSlippage: BigNumber.from(995),// 99.5 %
   performanceFee: BigNumber.from(0),

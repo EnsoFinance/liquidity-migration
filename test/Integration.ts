@@ -150,8 +150,9 @@ describe("Integration: Unit tests", function () {
       const holderAddress = await holder.getAddress();
       const holderBalance = await erc20.balanceOf(holderAddress);
 
-      if (holderBalance == BigNumber.from(0)) {
+      if (holderBalance.eq(BigNumber.from(0))) {
         console.log("Balance: ", holderBalance, "  \nHolder: ", holderAddress);
+        throw Error("Need to update holder for pool in tasks/initMasterUser: "+ pool.address);
       }
       expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
       // expect(holderBalance).to.be.gt(BigNumber.from(0));
@@ -214,6 +215,7 @@ describe("Integration: Unit tests", function () {
         // Migrate
         const holder = await pool.holders[0];
         const holderAddress = await holder.getAddress();
+        console.log("Holder address: ", holderAddress);
         await this.liquidityMigration
           .connect(holder)
           ['migrate(address,address,address,uint256)'](

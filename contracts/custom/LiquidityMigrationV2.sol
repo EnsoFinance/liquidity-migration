@@ -20,7 +20,6 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     address public migrationCoordinator;
 
     mapping (address => bool) public adapters; // adapter -> bool
-    mapping (address => uint256) public stakedCount; // adapter -> user count
     mapping (address => uint256) public totalStaked; // lp -> total staked
     mapping (address => address) public strategies; // lp -> enso strategy
     mapping (address => mapping (address => uint256)) public staked; // user -> lp -> stake
@@ -157,7 +156,6 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     {
         staked[user][lp] += amount;
         totalStaked[lp] += amount;
-        stakedCount[adapter] += 1;
         emit Staked(adapter, lp, amount, user);
     }
 
@@ -223,13 +221,5 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         returns(bool)
     {
         return staked[account][lp] > 0;
-    }
-
-    function getStakeCount(address adapter)
-        external
-        view
-        returns(uint256)
-    {
-        return stakedCount[adapter];
     }
 }
