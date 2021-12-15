@@ -7,12 +7,11 @@ import "../../interfaces/IAdapter.sol";
 import "../libraries/SafeERC20Transfer.sol";
 
 interface IMigrationController {
-  function migrate(IStrategy strategy, IERC20 lpToken, uint256 amount ) external;
-
-  function finalizeMigration(
-      IStrategy strategy,
-      IStrategyRouter genericRouter,
-      IAdapter migrationAdapter,
-      IERC20 lpToken
-  ) external;
+    function migrate(
+        IStrategy strategy,
+        IStrategyRouter genericRouter,
+        IERC20 lpToken,
+        IAdapter adapter,
+        uint256 amount
+    ) external;
 }

@@ -3,7 +3,8 @@ import { expect } from "chai";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IERC20__factory, IStrategy__factory } from "../typechain";
+import { IERC20__factory } from "../typechain";
+import Strategy from '@enso/contracts/artifacts/contracts/Strategy.sol/Strategy.json'
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
@@ -44,7 +45,7 @@ describe("Batch: Unit tests", function () {
     indexCoopAdapter = TokenSetAdapter.attach(indexCoopAdapterAddress)
     dpiPool = IERC20__factory.connect(dpiPoolAddress, signers.default)
     dpiUnderlying = await indexCoopAdapter.outputTokens(dpiPoolAddress)
-    dpiStrategy = IStrategy__factory.connect(
+    dpiStrategy = new ethers.Contract(
       await deployStrategy(
         "DPI",
         "DPI",
@@ -56,6 +57,7 @@ describe("Batch: Unit tests", function () {
         ),
         INITIAL_STATE
       ),
+      Strategy.abi,
       signers.default,
     );
     console.log("Strategy: ", dpiStrategy.address)
@@ -142,8 +144,12 @@ describe("Batch: Unit tests", function () {
       migrationControllerImplementation.address
     )
     migrationController = await MigrationController.attach(enso.platform.controller.address)
-    // Update controller on LMV2
+    // Update controller and generic router on LMV2
     await liquidityMigrationV2.connect(signers.admin).updateController(enso.platform.controller.address)
+    await liquidityMigrationV2.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)
+
+    // Update generic router and leverage adapter on indexCoopAdapter
+    await indexCoopAdapter.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)
   })
 
   it("Should setup migration coordinator", async function () {
@@ -196,34 +202,17 @@ describe("Batch: Unit tests", function () {
 
       const tx = await liquidityMigrationV2
         .connect(signers.admin)
-        .batchMigrate(
-          users,
-          dpiPoolAddress
+        .migrateAll(
+          dpiPoolAddress,
+          indexCoopAdapterAddress
         )
       const receipt = await tx.wait()
-      console.log('Batch Migrate Gas Used: ', receipt.gasUsed.toString())
+      console.log('Migrate All Gas Used: ', receipt.gasUsed.toString())
       const [total, ] = await enso.platform.oracles.ensoOracle.estimateStrategy(dpiStrategy.address)
-      // DPI is not part of strategy structure, so it will not be evaluated
-      expect(total).to.equal(ethers.BigNumber.from(0))
-      expect(await dpiPool.balanceOf(dpiStrategy.address)).to.be.gt(ethers.BigNumber.from(0))
-  })
-
-  it("Should finalize migration", async function () {
-    // IndexCoopAdapter needs the real GenericRouter address
-    await indexCoopAdapter.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)
-
-    const tx = await migrationController.connect(signers.admin).finalizeMigration(
-      dpiStrategy.address,
-      enso.routers[0].contract.address,
-      indexCoopAdapter.address, //Note this is the current adapter address, not mock. We will reused the migration encoding
-      dpiPoolAddress
-    )
-    const receipt = await tx.wait()
-    console.log('Finalize Migrate Gas Used: ', receipt.gasUsed.toString())
-    const [total, ] = await enso.platform.oracles.ensoOracle.estimateStrategy(dpiStrategy.address)
-    console.log("Strategy value: ", total.toString())
-    expect(total).to.be.gt(ethers.BigNumber.from(0))
-    expect(await dpiPool.balanceOf(dpiStrategy.address)).to.equal(ethers.BigNumber.from(0))
+      console.log("Strategy value: ", total.toString())
+      expect(total).to.be.gt(ethers.BigNumber.from(0))
+      expect(await dpiPool.balanceOf(dpiStrategy.address)).to.equal(ethers.BigNumber.from(0))
+      console.log("Strategy last token value: ", (await dpiStrategy.getLastTokenValue()).toString())
   })
 
   it("Should claim strategy tokens", async function() {
@@ -239,5 +228,6 @@ describe("Batch: Unit tests", function () {
     console.log('Claim Gas Used: ', receipt.gasUsed.toString())
     const balanceAfter = await dpiStrategy.balanceOf(user.address)
     expect(balanceAfter).to.be.gt(balanceBefore)
+    console.log("User paid token value: ", (await dpiStrategy.getPaidTokenValue(user.address)).toString())
   })
 });

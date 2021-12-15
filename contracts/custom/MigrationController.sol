@@ -35,38 +35,30 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
 
   function migrate(
       IStrategy strategy,
+      IStrategyRouter genericRouter,
       IERC20 lpToken,
+      IAdapter adapter,
       uint256 amount
   ) external override {
-      require(amount > 0, "No amount");
       require(msg.sender == _liquidityMigration, "Wrong sender");
-      require(lpToken.balanceOf(address(this)) >= amount, "Wrong balance");
-      // Transfer tokens to strategy (note, we're only sending `amount`, not the balance)
-      lpToken.safeTransfer(address(strategy), amount);
-      // Mint equivalent amount of strategy tokens
-      strategy.mint(msg.sender, amount);
-  }
-
-  function finalizeMigration(
-      IStrategy strategy,
-      IStrategyRouter genericRouter,
-      IAdapter migrationAdapter,
-      IERC20 lpToken
-  ) external override {
-      require(msg.sender == _ensoManager, "Wrong sender");
-      require(migrationAdapter.isWhitelisted(address(lpToken)), "Not whitelist");
-      uint256 balance = lpToken.balanceOf(address(strategy));
-      require(balance > 0, "Wrong LP");
-      strategy.approveToken(address(lpToken), address(this), balance);
-      lpToken.safeTransferFrom(address(strategy), address(genericRouter), balance);
+      require(strategy.totalSupply() == 0, "Strategy cannot be migrated to");
+      require(amount > 0, "No amount");
+      require(lpToken.balanceOf(address(genericRouter)) >= amount, "Wrong balance"); // Funds should have been sent to GenericRouter
       bytes memory migrationData =
-          abi.encode(migrationAdapter.encodeMigration(
+          abi.encode(adapter.encodeMigration(
             address(genericRouter),
             address(strategy),
             address(lpToken),
-            balance)
-          );
+            amount
+          ));
       genericRouter.deposit(address(strategy), migrationData);
+      // At this point the underlying tokens should be in the Strategy. Estimate strategy value
+      (uint256 total, ) = oracle().estimateStrategy(strategy);
+      // Migration is a one-time function and cannot be called unless Strategy's total
+      // supply is zero. So we can trust that `amount` will be the new total supply
+      strategy.updateTokenValue(total, amount);
+      // Mint equivalent amount of strategy tokens
+      strategy.mint(_liquidityMigration, amount);
   }
 
   function setupStrategy(

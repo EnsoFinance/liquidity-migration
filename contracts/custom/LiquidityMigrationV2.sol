@@ -16,10 +16,12 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     using SafeERC20 for IERC20;
 
     address public controller;
+    address public genericRouter;
     address public migrationCoordinator;
 
     mapping (address => bool) public adapters; // adapter -> bool
     mapping (address => uint256) public stakedCount; // adapter -> user count
+    mapping (address => uint256) public totalStaked; // lp -> total staked
     mapping (address => address) public strategies; // lp -> enso strategy
     mapping (address => mapping (address => uint256)) public staked; // user -> lp -> stake
 
@@ -99,49 +101,46 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         _buyAndStake(lp, msg.value, adapter, exchange, minAmountOut, deadline);
     }
 
-    function batchMigrate(
-        address[] memory users,
-        address lp
+    function migrateAll(
+        address lp,
+        address adapter
     )
         external
         override
         onlyOwner
         onlyUnlocked
+        onlyRegistered(adapter)
+        onlyWhitelisted(adapter, lp)
     {
         address strategy = strategies[lp];
         require(strategy != address(0), "Strategy not initialized");
-        uint256 totalBalance;
-        for (uint256 i = 0; i < users.length; i++) {
-            address user = users[i];
-            uint256 userBalance = staked[user][lp];
-            require(userBalance > 0, "No stake");
-            totalBalance += userBalance;
-            delete staked[user][lp];
-            staked[user][strategy] = userBalance;
-        }
+        uint256 totalStake = totalStaked[lp];
+        delete totalStaked[lp];
         uint256 strategyBalanceBefore = IStrategy(strategy).balanceOf(address(this));
-        IERC20(lp).safeTransfer(controller, totalBalance);
-        IMigrationController(controller).migrate(IStrategy(strategy), IERC20(lp), totalBalance);
+        IERC20(lp).safeTransfer(genericRouter, totalStake);
+        IMigrationController(controller).migrate(IStrategy(strategy), IStrategyRouter(genericRouter), IERC20(lp), IAdapter(adapter), totalStake);
         uint256 strategyBalanceAfter = IStrategy(strategy).balanceOf(address(this));
-        assert((strategyBalanceAfter - strategyBalanceBefore) == totalBalance);
+        assert((strategyBalanceAfter - strategyBalanceBefore) == totalStake);
     }
 
     function withdraw(address lp) external {
+        require(totalStaked[lp] > 0, "Not withdrawable");
         uint256 amount = staked[msg.sender][lp];
         require(amount > 0, "No stake");
         delete staked[msg.sender][lp];
+        totalStaked[lp] -= amount;
 
         IERC20(lp).safeTransfer(msg.sender, amount);
         emit Refunded(lp, amount, msg.sender);
     }
 
     function claim(address lp) external {
-        address strategy = strategies[lp];
-        // If strategy is not set, user should not have any balance staked
-        uint256 amount = staked[msg.sender][strategy];
+        require(totalStaked[lp] == 0, "Not yet migrated");
+        uint256 amount = staked[msg.sender][lp];
         require(amount > 0, "No claim");
-        delete staked[msg.sender][strategy];
+        delete staked[msg.sender][lp];
 
+        address strategy = strategies[lp];
         IERC20(strategy).safeTransfer(msg.sender, amount);
         emit Migrated(address(0), lp, strategy, msg.sender);
     }
@@ -157,6 +156,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         onlyWhitelisted(adapter, lp)
     {
         staked[user][lp] += amount;
+        totalStaked[lp] += amount;
         stakedCount[adapter] += 1;
         emit Staked(adapter, lp, amount, user);
     }
@@ -183,6 +183,14 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     {
         require(controller != newController, "Controller already exists");
         controller = newController;
+    }
+
+    function updateGenericRouter(address newGenericRouter)
+        external
+        onlyOwner
+    {
+        require(genericRouter != newGenericRouter, "GenericRouter already exists");
+        genericRouter = newGenericRouter;
     }
 
     function updateCoordinator(address newCoordinator)
