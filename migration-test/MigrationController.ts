@@ -24,8 +24,8 @@ describe("Batch: Unit tests", function () {
     dpiUnderlying: any,
     dpiStrategy: any,
     liquidityMigration: any,
-    migrationController: any,
-    migrationAdapter: any;
+    mockController: any,
+    mockAdapter: any;
 
   const dpi_setup = async function () {
     const TokenSetAdapter = await ethers.getContractFactory('TokenSetAdapter')
@@ -107,22 +107,22 @@ describe("Batch: Unit tests", function () {
   });
 
   it("Should update migration contract", async function () {
-    const MigrationController = await ethers.getContractFactory('MigrationController')
-    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(liquidityMigration.address, signers.admin.address)
-    await migrationControllerImplementation.deployed()
+    const MockController = await ethers.getContractFactory('MockController')
+    const mockControllerImplementation = await MockController.connect(signers.admin).deploy(liquidityMigration.address, signers.admin.address)
+    await mockControllerImplementation.deployed()
     // Upgrade controller to new implementation
-    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(enso.platform.controller.address, migrationControllerImplementation.address)
-    migrationController = MigrationController.attach(enso.platform.controller.address)
+    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(enso.platform.controller.address, mockControllerImplementation.address)
+    mockController = MockController.attach(enso.platform.controller.address)
 
-    const MigrationAdapter = await ethers.getContractFactory('MigrationAdapter')
-    migrationAdapter = await MigrationAdapter.connect(signers.admin).deploy(signers.admin.address)
-    await migrationAdapter.deployed()
-    await migrationAdapter.connect(signers.admin).add(dpiPoolAddress)
+    const MockAdapter = await ethers.getContractFactory('MockAdapter')
+    mockAdapter = await MockAdapter.connect(signers.admin).deploy(signers.admin.address)
+    await mockAdapter.deployed()
+    await mockAdapter.connect(signers.admin).add(dpiPoolAddress)
 
     // Switch out real adapter for migration adapter to facilitate migration
     await liquidityMigration.connect(signers.admin).removeAdapter(indexCoopAdapter.address)
-    await liquidityMigration.connect(signers.admin).addAdapter(migrationAdapter.address)
-    // Set controller and generic to controller address, which now implements MigrationController
+    await liquidityMigration.connect(signers.admin).addAdapter(mockAdapter.address)
+    // Set controller and generic to controller address, which now implements MockController
     await liquidityMigration.connect(signers.admin).updateController(enso.platform.controller.address)
     await liquidityMigration.connect(signers.admin).updateGeneric(enso.platform.controller.address)
     await liquidityMigration.connect(signers.admin).updateUnlock(await getBlockTime(0))
@@ -146,7 +146,7 @@ describe("Batch: Unit tests", function () {
     }
     */
     const lps = Array(users.length).fill(dpiPoolAddress)
-    const adapters = Array(users.length).fill(migrationAdapter.address)
+    const adapters = Array(users.length).fill(mockAdapter.address)
     const strategies = Array(users.length).fill(dpiStrategy.address)
     const slippage = Array(users.length).fill(0)
     const tx = await liquidityMigration
@@ -170,7 +170,7 @@ describe("Batch: Unit tests", function () {
     // IndexCoopAdapter needs the real GenericRouter address
     await indexCoopAdapter.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)
 
-    const tx = await migrationController.connect(signers.admin).finalizeMigration(
+    const tx = await mockController.connect(signers.admin).finalizeMigration(
       dpiStrategy.address,
       enso.routers[0].contract.address,
       indexCoopAdapter.address, //Note this is the current adapter address, not mock. We will reused the migration encoding

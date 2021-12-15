@@ -3,14 +3,17 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "@enso/contracts/contracts/StrategyControllerStorage.sol";
+import "@enso/contracts/contracts/interfaces/IStrategy.sol";
+import "@enso/contracts/contracts/interfaces/IStrategyRouter.sol";
 import "@enso/contracts/contracts/interfaces/IOracle.sol";
 import "@enso/contracts/contracts/interfaces/registries/ITokenRegistry.sol";
 import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
-import "./libraries/SignedSafeMath.sol";
-import "./interfaces/IMigrationController.sol";
+import "../../interfaces/IAdapter.sol";
+import "../libraries/SafeERC20Transfer.sol";
+import "../libraries/SignedSafeMath.sol";
 
 // Acts as "generic" address in LiquidityMigration contract
-contract MigrationController is IMigrationController, StrategyTypes, StrategyControllerStorage {
+contract MockController is StrategyTypes, StrategyControllerStorage {
   using SafeERC20Transfer for IERC20;
   using SignedSafeMath for int256;
 
@@ -33,18 +36,22 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
       _ensoManager = ensoManager;
   }
 
-  function migrate(
+  function deposit(
       IStrategy strategy,
-      IERC20 lpToken,
-      uint256 amount
-  ) external override {
-      require(amount > 0, "No amount");
+      IStrategyRouter,
+      uint256,
+      uint256,
+      bytes memory data
+  ) external {
       require(msg.sender == _liquidityMigration, "Wrong sender");
-      require(lpToken.balanceOf(address(this)) >= amount, "Wrong balance");
-      // Transfer tokens to strategy (note, we're only sending `amount`, not the balance)
-      lpToken.safeTransfer(address(strategy), amount);
-      // Mint equivalent amount of strategy tokens
-      strategy.mint(msg.sender, amount);
+      (IAdapter.Call[] memory calls) = abi.decode(data, (IAdapter.Call[]));
+      IERC20 lpToken = IERC20(calls[0].target); // MockAdapter encodes lp here
+      // Funds were sent to generic router, which this address is set as in LiquidityMigration
+      uint256 depositBalance = lpToken.balanceOf(address(this));
+      // Transfer tokens to strategy
+      lpToken.safeTransfer(address(strategy), depositBalance);
+      // Mint strategy tokens for an equal amount
+      strategy.mint(msg.sender, depositBalance);
   }
 
   function finalizeMigration(
@@ -52,20 +59,14 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
       IStrategyRouter genericRouter,
       IAdapter migrationAdapter,
       IERC20 lpToken
-  ) external override {
+  ) external {
       require(msg.sender == _ensoManager, "Wrong sender");
-      require(migrationAdapter.isWhitelisted(address(lpToken)), "Not whitelist");
       uint256 balance = lpToken.balanceOf(address(strategy));
       require(balance > 0, "Wrong LP");
       strategy.approveToken(address(lpToken), address(this), balance);
       lpToken.safeTransferFrom(address(strategy), address(genericRouter), balance);
       bytes memory migrationData =
-          abi.encode(migrationAdapter.encodeMigration(
-            address(genericRouter),
-            address(strategy),
-            address(lpToken),
-            balance)
-          );
+          abi.encode(migrationAdapter.encodeMigration(address(genericRouter), address(strategy), address(lpToken), balance));
       genericRouter.deposit(address(strategy), migrationData);
   }
 

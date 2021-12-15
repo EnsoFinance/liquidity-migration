@@ -22,9 +22,7 @@ contract MigrationAdapter is AbstractAdapter {
         onlyWhitelisted(_lp)
         returns (Call[] memory calls)
     {
-        calls = new Call[](1);
-        calls[0] = Call(_lp, new bytes(0));
-        return calls;
+        return new Call[](0);
     }
 
     function encodeWithdraw(address _lp, uint256)
