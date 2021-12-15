@@ -4,5 +4,5 @@ pragma solidity >=0.6.0 <0.9.0;
 interface ILiquidityMigrationV2 {
     function setStake(address user, address lp, address adapter, uint256 amount) external;
 
-    function batchMigrate(address[] memory users, address lp) external;
+    function migrateAll(address lp, address adapter) external;
 }
