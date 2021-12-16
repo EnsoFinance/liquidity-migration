@@ -82,8 +82,8 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
 
     function stake(
         address lp,
-        address adapter,
-        uint256 amount
+        uint256 amount,
+        address adapter
     )
         external
         onlyLocked
