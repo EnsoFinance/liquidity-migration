@@ -61,13 +61,14 @@ export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
 }
 
 export async function setupStrategyItems(oracle: Contract, adapter: string, pool: string, underlying: string[]): Promise<StrategyItem[]> {
-    const positions = [] as Position[];
+    let positions = [] as Position[];
     const [total, estimates] = await estimateTokens(oracle, pool, underlying)
-    // console.log("underlying ", underlying)
-    // console.log("total", total)
-    // console.log("estimates", estimates)
+
     for (let i = 0; i < underlying.length; i++) {
-      const percentage = new bignumber(estimates[i].toString()).multipliedBy(1000).dividedBy(total.toString()).toFixed(0);
+      let percentage = new bignumber(estimates[i].toString()).multipliedBy(1000).dividedBy(total.toString()).toFixed(0);
+      //In case there are funds below our percentage precision. Give it 0.1%
+      if (estimates[i].gt(0) && BigNumber.from(percentage).eq(0)) percentage = '1'
+
       const position: Position = {
         token: underlying[i],
         percentage: BigNumber.from(percentage),
@@ -77,13 +78,17 @@ export async function setupStrategyItems(oracle: Contract, adapter: string, pool
     }
     const totalPercentage = positions.map((pos) => Number(pos.percentage)).reduce((a, b) => a + b)
     if (totalPercentage !== 1000) {
-      const lastPos = positions[positions.length - 1]
+      // Sort positions from largest to smallest
+      positions = positions.sort((a, b) => a.percentage?.gt(b.percentage || '0') ? -1 : 1)
       if (totalPercentage < 1000) {
-          lastPos.percentage = lastPos.percentage ? lastPos.percentage.add(1000 - totalPercentage) : BigNumber.from(0)
+          const position = positions[positions.length - 1]
+          position.percentage = position.percentage?.add(1000 - totalPercentage)
+          positions[positions.length - 1] = position
       } else {
-          lastPos.percentage = lastPos.percentage ? lastPos.percentage.sub(totalPercentage - 1000) : BigNumber.from(0)
+          const position = positions[0]
+          position.percentage = position.percentage?.sub(totalPercentage - 1000)
+          positions[0] = position
       }
-      positions[positions.length - 1] = lastPos
     }
     return prepareStrategy(positions, adapter);
 }
@@ -101,6 +106,7 @@ export async function estimateTokens(oracle: Contract, account: string, tokens: 
     const estimates = []
     for (let i = 0; i < tokensAndBalances.length; i++) {
       console.log('Token: ', tokensAndBalances[i].token)
+      console.log('Balance: ', tokensAndBalances[i].balance.toString())
       try {
         const estimate = await oracle.estimateItem(tokensAndBalances[i].balance, tokensAndBalances[i].token)
         console.log('Estimate: ', estimate.toString())

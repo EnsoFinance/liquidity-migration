@@ -127,6 +127,8 @@ describe("Integration: Unit tests", function () {
     this.liquidityMigration = await setupPools(this.signers.default, this.enso);
 
     // Register tokens
+    // Synth
+    await factory.addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, '0xe1afe1fd76fd88f78cbf599ea1846231b8ba3b6b') //sDEFI
     // Compound
     await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.COMPOUND, '0x70e36f6BF80a52b3B46b3aF8e106CC0ed743E8e4') //cCOMP
     await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.COMPOUND, '0x35A18000230DA775CAc24873d00Ff85BccdeD550') //cUNI
@@ -177,7 +179,7 @@ describe("Integration: Unit tests", function () {
       ) {
         const underlyingTokens = await pool.adapter.outputTokens(pool.pool.address);
         // encode strategy items
-        console.log("Pool: ", pool.pool.address);
+        //console.log("\nPool: ", pool.pool.address);
         //console.log("Underlying tokens: \n", underlyingTokens);
         let poolAddress
         try {
@@ -211,11 +213,13 @@ describe("Integration: Unit tests", function () {
         const receipt = await tx.wait();
         const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
         this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+        //console.log("Items: ", await this.strategy.items())
+        //console.log("Synths: ", await this.strategy.synths());
 
         // Migrate
         const holder = await pool.holders[0];
         const holderAddress = await holder.getAddress();
-        console.log("Holder address: ", holderAddress);
+        //console.log("Holder address: ", holderAddress);
         await this.liquidityMigration
           .connect(holder)
           ['migrate(address,address,address,uint256)'](
@@ -227,8 +231,6 @@ describe("Integration: Unit tests", function () {
         const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, underlyingTokens);
         expect(total).to.gt(0);
         expect(await this.strategy.balanceOf(holderAddress)).to.gt(0);
-        console.log("strategy items: ", await this.strategy.items())
-        console.log("strategy synths: ", await this.strategy.synths());
       }
     }
   });

@@ -58,9 +58,9 @@ export const TOKENSET_HOLDERS: Holders = {
     "0x4C55AE27581b44cD6E014bCED60d67680fc86586",
   ], // ETH_USD_YIELD
   "0x72e364f2abdc788b7e918bc238b21f109cd634d7": [
-    "0x6B9dFC960299166Df15aB8a85f054c69e2BE2353",
     "0xBAdb34560712bf98c93E168Bf9343fb627162eDd",
-    "0xD3D7E517EaC437931cd06672198Ff55fBcc0496D",
+    "0xf3f5C252e8ACd60671f92c7F72cf33661221Ef42",
+    "0x34e4b82C8d1BA17BEdD621a90397A8a301B27D3F"
   ], // Metaverse
   "0xf059afa5239ed6463a00fc06a447c14fe26406e1": [
     "0x0d996171e7883a286ef720030935f72d0bac8219",
@@ -92,8 +92,8 @@ export const TOKENSET_HOLDERS: Holders = {
 export const INDEXED_HOLDERS: Holders = {
   "0x126c121f99e1E211dF2e5f8De2d96Fa36647c855": [
     "0x82df46c9047f3218b4df0589e44f71e21f7800cb",
-    "0xa3CF72dBaf32422f166C733e2474a282B0154e5F",
-    "0x690c7f5b32Bb7E38BE41B0B0160799A2f8E7B073",
+    "0xef764bac8a438e7e498c2e5fccf0f174c3e3f8db",
+    "0x4a532E11BE441033BB64f2fE5bD3DBbC4bBe74a2"
   ], // DEGEN
 };
 
@@ -135,7 +135,7 @@ export const STRATEGY_STATE: StrategyState = {
 
 export const INITIAL_STATE: InitialState = {
   timelock: BigNumber.from(60),  // 1 minute
-  rebalanceThreshold: BigNumber.from(600), // 4%
+  rebalanceThreshold: BigNumber.from(50), // 5%
   rebalanceSlippage: BigNumber.from(997), // 99.7 %
   restructureSlippage: BigNumber.from(995),// 99.5 %
   performanceFee: BigNumber.from(0),
