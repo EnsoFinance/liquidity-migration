@@ -18,7 +18,9 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     address public controller;
     address public genericRouter;
     address public migrationCoordinator;
+    address public emergencyReceiver;
 
+    bool public paused;
     mapping (address => bool) public adapters; // adapter -> bool
     mapping (address => uint256) public stakedCount; // adapter -> user count
     mapping (address => uint256) public totalStaked; // lp -> total staked
@@ -29,6 +31,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     event Migrated(address adapter, address lp, address strategy, address account);
     event Created(address adapter, address lp, address strategy, address account);
     event Refunded(address lp, uint256 amount, address account);
+    event EmergencyMigration(address lp, uint256 amount, address receiver);
 
     /**
     * @dev Require adapter registered
@@ -51,6 +54,16 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         _;
     }
 
+    modifier isPaused() {
+        require(paused);
+        _;
+    }
+
+    modifier notPaused() {
+        require(!paused);
+        _;
+    }
+
     constructor(
         address[] memory adapters_,
         uint256 unlock_,
@@ -63,7 +76,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         }
     }
 
-    function setStrategy(address lp, address strategy) external onlyOwner {
+    function setStrategy(address lp, address strategy) external onlyOwner notPaused {
         require(
             IStrategyController(controller).initialized(strategy),
             "Not enso strategy"
@@ -75,7 +88,17 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         strategies[lp] = strategy;
     }
 
-    function setStake(address user, address lp, address adapter, uint256 amount) external override onlyLocked {
+    function setStake(
+        address user,
+        address lp,
+        address adapter,
+        uint256 amount
+    )
+        external
+        override
+        notPaused
+        onlyLocked
+    {
         require(msg.sender == migrationCoordinator, "Wrong sender");
         _stake(user, lp, adapter, amount);
     }
@@ -86,6 +109,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         address adapter
     )
         external
+        notPaused
         onlyLocked
     {
         require(amount > 0, "No amount");
@@ -102,6 +126,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     )
         external
         payable
+        notPaused
         onlyLocked
     {
         require(msg.value > 0, "No value");
@@ -114,6 +139,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     )
         external
         override
+        notPaused
         onlyOwner
         onlyUnlocked
         onlyRegistered(adapter)
@@ -130,7 +156,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         assert((strategyBalanceAfter - strategyBalanceBefore) == totalStake);
     }
 
-    function withdraw(address lp) external {
+    function withdraw(address lp) external notPaused {
         require(totalStaked[lp] > 0, "Not withdrawable");
         uint256 amount = staked[msg.sender][lp];
         require(amount > 0, "No stake");
@@ -141,7 +167,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         emit Refunded(lp, amount, msg.sender);
     }
 
-    function claim(address lp) external {
+    function claim(address lp) external notPaused {
         require(totalStaked[lp] == 0, "Not yet migrated");
         uint256 amount = staked[msg.sender][lp];
         require(amount > 0, "No claim");
@@ -150,6 +176,22 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         address strategy = strategies[lp];
         IERC20(strategy).safeTransfer(msg.sender, amount);
         emit Migrated(address(0), lp, strategy, msg.sender);
+    }
+
+    function emergencyMigrate(IERC20 lp) external isPaused onlyOwner {
+        require(emergencyReceiver != address(0), "Emergency receiver not set");
+        uint256 balance = lp.balanceOf(address(this));
+        require(balance > 0, "No balance");
+        lp.safeTransfer(emergencyReceiver, balance);
+        emit EmergencyMigration(address(lp), balance, emergencyReceiver);
+    }
+
+    function pause() external notPaused onlyOwner {
+        paused = true;
+    }
+
+    function unpause() external isPaused onlyOwner {
+        paused = false;
     }
 
     function _stake(
@@ -206,6 +248,14 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     {
         require(migrationCoordinator != newCoordinator, "Coordinator already exists");
         migrationCoordinator = newCoordinator;
+    }
+
+    function updateEmergencyReceiver(address newReceiver)
+        external
+        onlyOwner
+    {
+        require(emergencyReceiver != newReceiver, "Receiver already exists");
+        emergencyReceiver = newReceiver;
     }
 
     function addAdapter(address adapter)
