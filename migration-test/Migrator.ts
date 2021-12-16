@@ -16,7 +16,7 @@ const ownerMultisig = '0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F'
 const dpiPoolAddress = '0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b'
 const indexCoopAdapterAddress = '0x9c9326C521895c78414BD3C2945e47AFC4Ef16cc'
 
-describe("Batch: Unit tests", function () {
+describe("Migrator tests: ", function () {
   let signers: any,
     enso: any,
     indexCoopAdapter: any,

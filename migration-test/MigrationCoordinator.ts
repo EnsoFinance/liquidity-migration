@@ -26,7 +26,7 @@ const adapters: string[] = [
     deployments.mainnet.PowerPoolAdapter,
 ]
 
-describe("Batch: Unit tests", function () {
+describe("MigrationCoordinator tests: ", function () {
   let signers: any,
     enso: any,
     indexCoopAdapter: any,

@@ -26,7 +26,7 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "indexCoop",
-    walletAddress: "0x6b9dfc960299166df15ab8a85f054c69e2be2353",
+    walletAddress: "0xBAdb34560712bf98c93E168Bf9343fb627162eDd",
     lpTokenAddress: "0x72e364f2abdc788b7e918bc238b21f109cd634d7",
     lpTokenName: "Metaverse Index",
     symbol: "MVI",
@@ -82,7 +82,7 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "powerpool",
-    walletAddress: "0x406987006b033E796e7E717C1c52ef980F6933ed",
+    walletAddress: "0xe4989e7B39a21089B128908E1603fdC9939DBB78",
     lpTokenAddress: "0x26607aC599266b21d13c7aCF7942c7701a8b699c",
     lpTokenName: "Power Index Pool Token",
     symbol: "PIPT",
@@ -170,14 +170,16 @@ export const LP_TOKEN_WHALES = [
     symbol: "HUUB",
     adapter: "TokenSetAdapter",
   },
+  /*
   {
     victim: "tokenSets",
-    walletAddress: "0xaD0C123B819C6c137ed2Cdd009B546cFd7445C2e",
+    walletAddress: "0xdac8bdeb1e7a6b337af8aabd786f8f1d67505d46",
     lpTokenAddress: "0xa188DA64fc4e212Cda65bD3406e0ce03a5323560",
     lpTokenName: "Tipuana Genesis Fund",
     symbol: "TGF",
     adapter: "TokenSetAdapter",
   },
+  */
   {
     victim: "tokenSets",
     walletAddress: "0xf29E752a44bF6BAE8093B6917a82c118d87880d0",
