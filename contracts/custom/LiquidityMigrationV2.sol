@@ -155,15 +155,12 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         assert((strategyBalanceAfter - strategyBalanceBefore) == totalStake);
     }
 
-    function withdraw(address lp) external notPaused {
-        require(totalStaked[lp] > 0, "Not withdrawable");
-        uint256 amount = staked[msg.sender][lp];
-        require(amount > 0, "No stake");
-        delete staked[msg.sender][lp];
-        totalStaked[lp] -= amount;
+    function refund(address user, address lp) external notPaused onlyOwner {
+        _refund(user, lp);
+    }
 
-        IERC20(lp).safeTransfer(msg.sender, amount);
-        emit Refunded(lp, amount, msg.sender);
+    function withdraw(address lp) external notPaused {
+        _refund(msg.sender, lp);
     }
 
     function claim(address lp) external notPaused {
@@ -222,6 +219,17 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         IAdapter(adapter).buy{value: amount}(lp, exchange, minAmountOut, deadline);
         uint256 amountAdded = IERC20(lp).balanceOf(address(this)) - balanceBefore;
         _stake(msg.sender, lp, adapter, amountAdded);
+    }
+
+    function _refund(address user, address lp) internal {
+        require(totalStaked[lp] > 0, "Not refundable");
+        uint256 amount = staked[user][lp];
+        require(amount > 0, "No stake");
+        delete staked[user][lp];
+        totalStaked[lp] -= amount;
+
+        IERC20(lp).safeTransfer(user, amount);
+        emit Refunded(lp, amount, user);
     }
 
     function updateController(address newController)

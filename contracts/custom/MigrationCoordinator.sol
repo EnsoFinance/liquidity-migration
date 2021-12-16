@@ -72,8 +72,14 @@ contract MigrationCoordinator is Ownable{
         liquidityMigrationV1.updateController(address(0));
     }
 
+    // Allow users to withdraw from LiquidityMigrationV1
     function withdraw(address lp) external {
         liquidityMigrationV1.refund(msg.sender, lp);
+    }
+
+    // Refund wrapper since MigrationCoordinator is now owner of LiquidityMigrationV1
+    function refund(address user, address lp) external onlyOwner {
+      liquidityMigrationV1.refund(user, lp);
     }
 
     function transferLiquidityMigrationOwnership(address newOwner) external onlyOwner {
