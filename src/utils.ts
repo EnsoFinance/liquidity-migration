@@ -1,7 +1,7 @@
 import bignumber from "bignumber.js";
 import { BigNumber, Contract } from "ethers";
 import { ethers } from "hardhat";
-import { Position, Multicall, StrategyItem, InitialState, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import {ITEM_CATEGORY, ESTIMATOR_CATEGORY, Position, Multicall, StrategyItem, InitialState, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
 import { IERC20__factory } from "../typechain";
 
 export enum Networks {
@@ -63,6 +63,9 @@ export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
 export async function setupStrategyItems(oracle: Contract, adapter: string, pool: string, underlying: string[]): Promise<StrategyItem[]> {
     const positions = [] as Position[];
     const [total, estimates] = await estimateTokens(oracle, pool, underlying)
+    // console.log("underlying ", underlying)
+    // console.log("total", total)
+    // console.log("estimates", estimates)
     for (let i = 0; i < underlying.length; i++) {
       const percentage = new bignumber(estimates[i].toString()).multipliedBy(1000).dividedBy(total.toString()).toFixed(0);
       const position: Position = {
@@ -116,4 +119,21 @@ export async function estimateTokens(oracle: Contract, account: string, tokens: 
 
     return [total, estimates]
 
+}
+
+    // Register tokens
+export async function addItemsToRegistry(factory: Contract) {
+    // Compound
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.COMPOUND, '0x70e36f6BF80a52b3B46b3aF8e106CC0ed743E8e4') //cCOMP
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.COMPOUND, '0x35A18000230DA775CAc24873d00Ff85BccdeD550') //cUNI
+    // Curve
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.CURVE, '0x4f3E8F405CF5aFC05D68142F3783bDfE13811522') //usdn3CRV
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.CURVE, '0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a') //BUSD3CRV-f
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.CURVE, '0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA') //LUSD3CRV-f
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.CURVE, '0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6') //USDP/3Crv
+    // YEarn
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.YEARN_V2, '0x3B96d491f067912D18563d56858Ba7d6EC67a6fa') //yvCurve-USDN
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.YEARN_V2, '0x6ede7f19df5df6ef23bd5b9cedb651580bdf56ca') //yvCurve-BUSD
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.YEARN_V2, '0x5fA5B62c8AF877CB37031e0a3B2f34A78e3C56A6') //yvCurve-LUSD
+    await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.YEARN_V2, '0xC4dAf3b5e2A9e93861c3FBDd25f1e943B8D87417') //yvCurve-USDP
 }
