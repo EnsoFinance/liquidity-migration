@@ -46,6 +46,11 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         _;
     }
 
+    modifier onlyLocked() {
+        require(block.timestamp < unlocked, "Unlocked");
+        _;
+    }
+
     constructor(
         address[] memory adapters_,
         uint256 unlock_,
@@ -70,7 +75,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         strategies[lp] = strategy;
     }
 
-    function setStake(address user, address lp, address adapter, uint256 amount) external override {
+    function setStake(address user, address lp, address adapter, uint256 amount) external override onlyLocked {
         require(msg.sender == migrationCoordinator, "Wrong sender");
         _stake(user, lp, adapter, amount);
     }
@@ -81,6 +86,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
         uint256 amount
     )
         external
+        onlyLocked
     {
         require(amount > 0, "No amount");
         IERC20(lp).safeTransferFrom(msg.sender, address(this), amount);
@@ -96,6 +102,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, St
     )
         external
         payable
+        onlyLocked
     {
         require(msg.value > 0, "No value");
         _buyAndStake(lp, msg.value, adapter, exchange, minAmountOut, deadline);
