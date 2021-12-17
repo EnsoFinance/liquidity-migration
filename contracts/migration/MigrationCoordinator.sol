@@ -1,6 +1,7 @@
 pragma solidity 0.8.2;
 
 import "../helpers/Ownable.sol";
+import "./Migrator.sol";
 import "./interfaces/ILiquidityMigrationV2.sol";
 
 interface ILiquidityMigrationV1 {
@@ -29,7 +30,7 @@ interface ILiquidityMigrationV1 {
     function controller() external view returns (address);
 }
 
-contract MigrationCoordinator is Ownable{
+contract MigrationCoordinator is Migrator, Ownable{
     ILiquidityMigrationV1 public immutable liquidityMigrationV1;
     ILiquidityMigrationV2 public immutable liquidityMigrationV2;
     address public immutable migrationAdapter;
@@ -60,12 +61,12 @@ contract MigrationCoordinator is Ownable{
 
     function migrateLP(address[] memory users, address lp, address adapter) external onlyOwner {
         // Set controller to allow migration
-        liquidityMigrationV1.updateController(address(liquidityMigrationV2));
+        liquidityMigrationV1.updateController(address(this));
         // Migrate liquidity for all users passed in array
         for (uint256 i = 0; i < users.length; i++) {
             address user = users[i];
             uint256 staked = liquidityMigrationV1.staked(user, lp);
-            liquidityMigrationV1.migrate(user, lp, migrationAdapter, address(liquidityMigrationV2), 0);
+            liquidityMigrationV1.migrate(user, lp, migrationAdapter, address(this), 0);
             liquidityMigrationV2.setStake(user, lp, adapter, staked);
         }
         // Remove controller to prevent further migration

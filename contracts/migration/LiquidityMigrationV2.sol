@@ -9,10 +9,8 @@ import "../interfaces/IAdapter.sol";
 import "./interfaces/IMigrationController.sol";
 import "./interfaces/ILiquidityMigrationV2.sol";
 import "../helpers/Timelocked.sol";
-import "./Migrator.sol";
 
-
-contract LiquidityMigrationV2 is ILiquidityMigrationV2, Migrator, Timelocked, StrategyTypes {
+contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyTypes {
     using SafeERC20 for IERC20;
 
     address public controller;
