@@ -4,43 +4,44 @@ import { expect } from "chai";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigrationv2";
-import { IERC20__factory, IStrategy__factory, IAdapter} from "../typechain";
+import { IERC20__factory } from "../typechain";
+import Strategy from '@enso/contracts/artifacts/contracts/Strategy.sol/Strategy.json'
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { PieDaoEnvironmentBuilder } from "../src/piedao";
-import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { FACTORY_REGISTRIES, DEPOSIT_SLIPPAGE, INITIAL_STATE} from "../src/constants";
+import { FACTORY_REGISTRIES, INITIAL_STATE } from "../src/constants";
 import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
 
 const ownerMultisig = '0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F'
-const dpiPoolAddress = '0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b'
-const indexCoopAdapterAddress = '0x9c9326C521895c78414BD3C2945e47AFC4Ef16cc'
 
-describe("CurrentContracts test: (migration-tests)", function () {
+describe("LiquidityMigrationV2", function () {
   let signers: any,
     enso: any,
     indexCoopAdapter: any,
+    dpiEnv: any,
+    dpiPool: any,
     dpiUnderlying: any,
     dpiStrategy: any,
     liquidityMigration: any;
 
   const dpi_setup = async function () {
-    const TokenSetAdapter = await ethers.getContractFactory('TokenSetAdapter')
-    indexCoopAdapter = await TokenSetAdapter.attach(indexCoopAdapterAddress)
-    dpiUnderlying = await indexCoopAdapter.outputTokens(dpiPoolAddress)
-    dpiStrategy = IStrategy__factory.connect(
+    dpiEnv = await new TokenSetEnvironmentBuilder(signers.admin, enso).connect(FACTORY_REGISTRIES.DPI.toLowerCase());
+    indexCoopAdapter = dpiEnv.adapter
+    dpiPool = dpiEnv.pool;
+    dpiUnderlying = await indexCoopAdapter.outputTokens(dpiPool.address)
+    dpiStrategy = new ethers.Contract(
       await deployStrategy(
         "DPI",
         "DPI",
         await setupStrategyItems(
           enso.platform.oracles.ensoOracle,
           enso.adapters.uniswap.contract.address,
-          dpiPoolAddress,
+          dpiPool.address,
           dpiUnderlying,
         ),
         INITIAL_STATE
       ),
+      Strategy.abi,
       signers.default,
     );
     console.log("Strategy: ", dpiStrategy.address)
@@ -71,11 +72,8 @@ describe("CurrentContracts test: (migration-tests)", function () {
     });
     signers.admin = await ethers.getSigner(ownerMultisig);
     console.log("Admin: ", signers.admin.address)
+
     enso = await new EnsoBuilder(signers.admin).mainnet().build();
-    const lmBuilder = new LiquidityMigrationBuilder(signers.admin, enso);
-    const TokenSetAdapter = await ethers.getContractFactory("TokenSetAdapter");
-    lmBuilder.addAdapter(AcceptedProtocols.IndexCoop, await TokenSetAdapter.attach(indexCoopAdapterAddress) as IAdapter);
-    liquidityMigration = (await lmBuilder.deploy()).liquidityMigration;
     // KNC not on Uniswap, use Chainlink
     await enso.platform.oracles.registries.chainlinkRegistry
       .connect(signers.admin)
@@ -95,44 +93,94 @@ describe("CurrentContracts test: (migration-tests)", function () {
         ESTIMATOR_CATEGORY.CHAINLINK_ORACLE,
         "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202");
 
-    await dpi_setup();
-
     console.log("Controller: ", enso.platform.controller.address)
     console.log("Router: ", enso.routers[0].contract.address)
     console.log("Oracle: ", enso.platform.oracles.ensoOracle.address)
+
+    await dpi_setup();
+
+    const lmBuilder = new LiquidityMigrationBuilder(signers.admin, enso);
+    lmBuilder.addAdapter(AcceptedProtocols.IndexCoop, indexCoopAdapter);
+    liquidityMigration = (await lmBuilder.deploy()).liquidityMigration;
+
+    await indexCoopAdapter.connect(signers.admin).add(dpiPool.address);
+  });
+
+  it("Buy tokens", async function () {
+    await dpiEnv.adapter
+      .connect(signers.default)
+      .buy(dpiPool.address, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
+
+    const user = await signers.default.getAddress();
+    expect(await dpiPool.balanceOf(user)).to.be.gt(BigNumber.from(0));
+  });
+
+  it("Stake", async function () {
+    const user = await signers.default.getAddress();
+    const dpiBalance = await dpiPool.balanceOf(user);
+
+    await dpiPool.connect(signers.default).approve(liquidityMigration.address, dpiBalance);
+
+    await liquidityMigration
+      .connect(signers.default)
+      .stake(
+        dpiPool.address,
+        dpiBalance,
+        indexCoopAdapter.address,
+      );
+    expect(await liquidityMigration.staked(user, dpiPool.address)).to.be.gt(BigNumber.from(0));
+  });
+
+  it("Buy and Stake", async function () {
+    const amount = ethers.constants.WeiPerEther;
+    const value = BigNumber.from(3).mul(amount);
+    await liquidityMigration
+      .connect(signers.secondary)
+      .buyAndStake(
+        dpiPool.address,
+        indexCoopAdapter.address,
+        UNISWAP_V2_ROUTER,
+        0,
+        ethers.constants.MaxUint256,
+        { value: value },
+      );
+    const user = await signers.secondary.getAddress();
+    expect(await liquidityMigration.staked(user, dpiPool.address)).to.be.gt(BigNumber.from(0));
   });
 
   it("Should update migration contract", async function () {
-    await indexCoopAdapter.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)
+    // Upgrade StrategyController to MigrationController
+    const MigrationController = await ethers.getContractFactory('MigrationController')
+    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(liquidityMigration.address, signers.admin.address)
+    await migrationControllerImplementation.deployed()
+    // Upgrade controller to new implementation
+    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(
+      enso.platform.controller.address,
+      migrationControllerImplementation.address
+    )
+
     await liquidityMigration.connect(signers.admin).updateController(enso.platform.controller.address)
-    await liquidityMigration.connect(signers.admin).updateGeneric(enso.routers[0].contract.address)
+    await liquidityMigration.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)
     await liquidityMigration.connect(signers.admin).updateUnlock(await getBlockTime(0))
   })
 
-  it("Should batch migrate", async function () {
+  it("Should migrate all LP users", async function () {
     const eventFilter = liquidityMigration.filters.Staked(null, null, null, null)
     const events = await liquidityMigration.queryFilter(eventFilter)
-    const stakers = events.filter((ev: Event) => ev?.args?.strategy.toLowerCase() === dpiPoolAddress.toLowerCase())
+    const stakers = events.filter((ev: Event) => ev?.args?.strategy.toLowerCase() === dpiPool.address.toLowerCase())
                         .filter((ev: Event) => ev?.args?.amount.gt(0))
                         .map((ev: Event) => ev?.args?.account)
 
     const users = stakers.filter((account: string, index: number) => stakers.indexOf(account) === index)
-                         .slice(0,5)
 
     console.log("Num users: ", users.length)
 
-    const lps = Array(users.length).fill(dpiPoolAddress)
-    const adapters = Array(users.length).fill(indexCoopAdapter.address)
-    const strategies = Array(users.length).fill(dpiStrategy.address)
-    const slippage = Array(users.length).fill(0)
+    await liquidityMigration.connect(signers.admin).setStrategy(dpiPool.address, dpiStrategy.address)
     const tx = await liquidityMigration
       .connect(signers.admin)
-      ["batchMigrate(address[],address[],address[],address[],uint256[])"](
-        users,
-        lps,
-        adapters,
-        strategies,
-        slippage
+      .migrateAll(
+        dpiPool.address,
+        indexCoopAdapter.address
       );
     const receipt = await tx.wait()
     console.log('Migrate Gas Used: ', receipt.gasUsed.toString())

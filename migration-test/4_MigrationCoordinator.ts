@@ -6,11 +6,9 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20__factory } from "../typechain";
 import Strategy from '@enso/contracts/artifacts/contracts/Strategy.sol/Strategy.json'
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { PieDaoEnvironmentBuilder } from "../src/piedao";
-import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { FACTORY_REGISTRIES, DEPOSIT_SLIPPAGE, INITIAL_STATE} from "../src/constants";
+import { INITIAL_STATE } from "../src/constants";
 import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
-import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
+import { WETH, SUSD } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
 import deployments from "../deployments.json"
 
@@ -35,7 +33,6 @@ describe("MigrationCoordinator tests: ", function () {
     dpiStrategy: any,
     liquidityMigration: any,
     liquidityMigrationV2: any,
-    migrationController: any,
     migrationAdapter: any,
     migrationCoordinator: any,
     users: any;
@@ -143,7 +140,6 @@ describe("MigrationCoordinator tests: ", function () {
       enso.platform.controller.address,
       migrationControllerImplementation.address
     )
-    migrationController = await MigrationController.attach(enso.platform.controller.address)
     // Update controller and generic router on LMV2
     await liquidityMigrationV2.connect(signers.admin).updateController(enso.platform.controller.address)
     await liquidityMigrationV2.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)

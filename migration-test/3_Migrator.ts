@@ -5,11 +5,9 @@ import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { PieDaoEnvironmentBuilder } from "../src/piedao";
-import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { FACTORY_REGISTRIES, DEPOSIT_SLIPPAGE, INITIAL_STATE} from "../src/constants";
+import { INITIAL_STATE } from "../src/constants";
 import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
-import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
+import { WETH, SUSD } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
 
 const ownerMultisig = '0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F'

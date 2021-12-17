@@ -62,7 +62,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
   }
 
   function setupStrategy(
-      address creator_,
+      address manager_,
       address strategy_,
       InitialState memory state_,
       address,
@@ -72,7 +72,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
       _setStrategyLock(strategy);
       require(msg.value == 0, "No deposits");
       require(msg.sender == _factory, "Not factory");
-      require(creator_ == _ensoManager, "Not enso");
+      require(manager_ == _ensoManager, "Not enso");
       _setInitialState(strategy_, state_);
       _removeStrategyLock(strategy);
   }

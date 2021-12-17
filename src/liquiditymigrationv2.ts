@@ -57,7 +57,7 @@ export class LiquidityMigrationBuilder {
       "LiquidityMigrationV2",
     )) as LiquidityMigrationV2__factory;
 
-    const unlock = await getBlockTime(5);
+    const unlock = await getBlockTime(10);
 
     this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(
       this.adapters.map(a => a.adapter),
