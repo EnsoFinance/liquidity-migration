@@ -52,12 +52,12 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyType
     }
 
     modifier isPaused() {
-        require(paused);
+        require(paused, "Not paused");
         _;
     }
 
     modifier notPaused() {
-        require(!paused);
+        require(!paused, "Paused");
         _;
     }
 

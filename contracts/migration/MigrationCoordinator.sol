@@ -65,8 +65,11 @@ contract MigrationCoordinator is Migrator, Ownable{
         // Migrate liquidity for all users passed in array
         for (uint256 i = 0; i < users.length; i++) {
             address user = users[i];
+            // Get the staked amount as it gets deleted during migration
             uint256 staked = liquidityMigrationV1.staked(user, lp);
+            // Migrate the LP tokens
             liquidityMigrationV1.migrate(user, lp, migrationAdapter, address(this), 0);
+            // Update the staked amount on the new contract
             liquidityMigrationV2.setStake(user, lp, adapter, staked);
         }
         // Remove controller to prevent further migration
