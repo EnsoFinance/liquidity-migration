@@ -29,6 +29,9 @@ describe("LiquidityMigrationV2", function () {
     indexCoopAdapter = dpiEnv.adapter
     dpiPool = dpiEnv.pool;
     dpiUnderlying = await indexCoopAdapter.outputTokens(dpiPool.address)
+  };
+
+  const dpiStrategy_setup = async function () {
     dpiStrategy = new ethers.Contract(
       await deployStrategy(
         "DPI",
@@ -42,14 +45,14 @@ describe("LiquidityMigrationV2", function () {
         INITIAL_STATE
       ),
       Strategy.abi,
-      signers.default,
+      signers.admin,
     );
     console.log("Strategy: ", dpiStrategy.address)
-  };
+  }
 
   const deployStrategy = async (name: string, symbol: string, items: StrategyItem[], state: InitialState) => {
     const tx = await enso.platform.strategyFactory.createStrategy(
-      signers.default.address,
+      signers.admin.address,
       name,
       symbol,
       items,
@@ -97,13 +100,25 @@ describe("LiquidityMigrationV2", function () {
     console.log("Router: ", enso.routers[0].contract.address)
     console.log("Oracle: ", enso.platform.oracles.ensoOracle.address)
 
-    await dpi_setup();
+    await dpi_setup()
 
     const lmBuilder = new LiquidityMigrationBuilder(signers.admin, enso);
     lmBuilder.addAdapter(AcceptedProtocols.IndexCoop, indexCoopAdapter);
     liquidityMigration = (await lmBuilder.deploy()).liquidityMigration;
 
     await indexCoopAdapter.connect(signers.admin).add(dpiPool.address);
+
+    // Upgrade StrategyController to MigrationController
+    const MigrationController = await ethers.getContractFactory('MigrationController')
+    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(liquidityMigration.address, signers.admin.address)
+    await migrationControllerImplementation.deployed()
+    // Upgrade controller to new implementation
+    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(
+      enso.platform.controller.address,
+      migrationControllerImplementation.address
+    )
+
+    await dpiStrategy_setup()
   });
 
   it("Buy tokens", async function () {
@@ -149,16 +164,6 @@ describe("LiquidityMigrationV2", function () {
   });
 
   it("Should update migration contract", async function () {
-    // Upgrade StrategyController to MigrationController
-    const MigrationController = await ethers.getContractFactory('MigrationController')
-    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(liquidityMigration.address, signers.admin.address)
-    await migrationControllerImplementation.deployed()
-    // Upgrade controller to new implementation
-    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(
-      enso.platform.controller.address,
-      migrationControllerImplementation.address
-    )
-
     await liquidityMigration.connect(signers.admin).updateController(enso.platform.controller.address)
     await liquidityMigration.connect(signers.admin).updateGenericRouter(enso.routers[0].contract.address)
     await liquidityMigration.connect(signers.admin).updateUnlock(await getBlockTime(0))
