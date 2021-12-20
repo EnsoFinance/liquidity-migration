@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: WTFPL
-
 import "../helpers/Timelocked.sol";
+pragma solidity >=0.8.0;
 
-pragma solidity 0.8.2;
+
 
 
 contract mockFundHolder is Timelocked {
