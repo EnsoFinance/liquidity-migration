@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.2;
+pragma solidity >=0.8.0;
 
 import "../adapters/AbstractAdapter.sol";
 
@@ -19,7 +19,6 @@ contract MigrationAdapter is AbstractAdapter {
         public
         override
         view
-        onlyWhitelisted(_lp)
         returns (Call[] memory calls)
     {
         return new Call[](0);
@@ -29,7 +28,6 @@ contract MigrationAdapter is AbstractAdapter {
         public
         override
         view
-        onlyWhitelisted(_lp)
         returns (Call[] memory calls)
     {
         return new Call[](0);

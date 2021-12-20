@@ -1,4 +1,4 @@
-pragma solidity 0.8.2;
+pragma solidity >=0.8.0;
 
 import "@enso/contracts/contracts/interfaces/IStrategy.sol";
 import "@enso/contracts/contracts/interfaces/IStrategyRouter.sol";
