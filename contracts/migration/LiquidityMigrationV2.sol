@@ -108,6 +108,8 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyType
         external
         notPaused
         onlyLocked
+        onlyRegistered(adapter)
+        onlyWhitelisted(adapter, lp)
     {
         require(amount > 0, "No amount");
         IERC20(lp).safeTransferFrom(msg.sender, address(this), amount);
@@ -195,8 +197,6 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyType
         uint256 amount
     )
         internal
-        onlyRegistered(adapter)
-        onlyWhitelisted(adapter, lp)
     {
         staked[user][lp] += amount;
         totalStaked[lp] += amount;
