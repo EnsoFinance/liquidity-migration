@@ -391,18 +391,6 @@ describe("V2 Migration: ", function () {
     expect(await liquidityMigrationV2.paused()).to.equal(true)
   })
 
-  it("Should claim strategy tokens", async function() {
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [users[0]],
-    });
-    const user = await ethers.getSigner(users[0]);
-    await expect(
-        liquidityMigrationV2.connect(user)
-                            .claim(dpiPool.address)
-    ).to.be.revertedWith('Paused')
-  })
-
   it('Should fail to emergency transfer: not owner', async function() {
     await expect(
         liquidityMigrationV2.connect(signers.default)

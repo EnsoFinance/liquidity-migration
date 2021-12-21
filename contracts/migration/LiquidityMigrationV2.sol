@@ -153,15 +153,15 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyType
         assert((strategyBalanceAfter - strategyBalanceBefore) == totalStake);
     }
 
-    function refund(address user, address lp) external notPaused onlyOwner {
+    function refund(address user, address lp) external onlyOwner {
         _refund(user, lp);
     }
 
-    function withdraw(address lp) external notPaused {
+    function withdraw(address lp) external {
         _refund(msg.sender, lp);
     }
 
-    function claim(address lp) external notPaused {
+    function claim(address lp) external {
         require(totalStaked[lp] == 0, "Not yet migrated");
         uint256 amount = staked[msg.sender][lp];
         require(amount > 0, "No claim");
