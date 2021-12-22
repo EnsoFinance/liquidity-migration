@@ -24,21 +24,27 @@ task(TRANSFER_OWNERSHIP, "Transfer ownership to new wallet")
     });
     switch (response.value) {
       case true:
-        await Promise.all(Object.keys(deployment).map(async (key) => {
-            // @ts-ignore
-            const value = deployment[key]
-            if (value) {
-              //@ts-ignore
-              const ownable = Ownable__factory.connect(value, signer);
-              const currentOwner = await ownable.owner();
-              console.log(`${key} Current Owner: `, currentOwner);
-              if (currentOwner && currentOwner!= signer.address) throw Error("Not owner");
-              const tx = await ownable.transferOwnership(to);
-              await tx.wait();
-              console.log("Success!")
-              console.log(`${key} New Owner: `, await ownable.owner());
+        const keys = Object.keys(deployment);
+        for (let i = 0; i < keys.length; i++) {
+          // @ts-ignore
+          const value = deployment[keys[i]]
+          if (value) {
+            //@ts-ignore
+            const ownable = Ownable__factory.connect(value, signer);
+            const currentOwner = await ownable.owner();
+            console.log(`\n${keys[i]} Current Owner: `, currentOwner);
+            if (currentOwner && currentOwner == signer.address) {
+                console.log("Transferring ownership...")
+                const tx = await ownable.transferOwnership(to);
+                await tx.wait();
+                console.log("Success!")
+                console.log(`${keys[i]} New Owner: `, await ownable.owner());
+            } else {
+                console.log("Not owner")
             }
-        }))
+
+          }
+        }
         break;
       case false:
         console.log("Exiting....No owner change");

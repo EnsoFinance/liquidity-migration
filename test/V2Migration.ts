@@ -222,7 +222,7 @@ describe("V2 Migration: ", function () {
   })
 
   it("Should migrate to new LiquidityMigration contract", async function () {
-    const balanceBefore = await dpiPool.balanceOf(liquidityMigration.address)
+    const balanceBefore = await dpiPool.balanceOf(liquidityMigrationV2.address)
     users = dpiStakers.slice(0,150)
 
     console.log("Num users: ", users.length)
@@ -236,8 +236,8 @@ describe("V2 Migration: ", function () {
       )
     const receipt = await tx.wait()
     console.log('Migrate LP Gas Used: ', receipt.gasUsed.toString())
-    const balanceAfter = await dpiPool.balanceOf(liquidityMigration.address)
-    expect(balanceAfter.lt(balanceBefore)).to.equal(true)
+    const balanceAfter = await dpiPool.balanceOf(liquidityMigrationV2.address)
+    expect(balanceAfter.gt(balanceBefore)).to.equal(true)
   });
 
   it("Should withdraw lp tokens via LMV2", async function() {
