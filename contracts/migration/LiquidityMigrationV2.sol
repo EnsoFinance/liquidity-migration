@@ -127,6 +127,8 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyType
         payable
         notPaused
         onlyLocked
+        onlyRegistered(adapter)
+        onlyWhitelisted(adapter, lp)
     {
         require(msg.value > 0, "No value");
         _buyAndStake(lp, msg.value, adapter, exchange, minAmountOut, deadline);
