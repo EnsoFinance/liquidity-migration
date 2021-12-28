@@ -109,11 +109,24 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyType
         notPaused
         onlyLocked
         onlyRegistered(adapter)
-        onlyWhitelisted(adapter, lp)
     {
-        require(amount > 0, "No amount");
-        IERC20(lp).safeTransferFrom(msg.sender, address(this), amount);
-        _stake(msg.sender, lp, adapter, amount);
+        _transferFromAndStake(lp, adapter, amount);
+    }
+
+    function batchStake(
+        address[] memory lps,
+        uint256[] memory amounts,
+        address adapter
+    )
+        external
+        notPaused
+        onlyLocked
+        onlyRegistered(adapter)
+    {
+        require(lps.length == amounts.length, "Incorrect arrays");
+        for (uint256 i = 0; i < lps.length; i++) {
+            _transferFromAndStake(lps[i], adapter, amounts[i]);
+        }
     }
 
     function buyAndStake(
@@ -203,6 +216,19 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyType
         staked[user][lp] += amount;
         totalStaked[lp] += amount;
         emit Staked(adapter, lp, amount, user);
+    }
+
+    function _transferFromAndStake(
+        address lp,
+        address adapter,
+        uint256 amount
+    )
+        internal
+        onlyWhitelisted(adapter, lp)
+    {
+        require(amount > 0, "No amount");
+        IERC20(lp).safeTransferFrom(msg.sender, address(this), amount);
+        _stake(msg.sender, lp, adapter, amount);
     }
 
     function _buyAndStake(
