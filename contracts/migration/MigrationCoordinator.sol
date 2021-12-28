@@ -38,19 +38,27 @@ contract MigrationCoordinator is Migrator, Ownable{
     ILiquidityMigrationV1 public immutable liquidityMigrationV1;
     ILiquidityMigrationV2 public immutable liquidityMigrationV2;
     address public immutable migrationAdapter;
+    address public migrator;
+
+    modifier onlyMigrator() {
+        require(msg.sender == migrator, "Not migrator");
+        _;
+    }
 
     constructor(
+        address owner_
         address liquidityMigrationV1_,
         address liquidityMigrationV2_,
         address migrationAdapter_
     ) public {
-        _setOwner(msg.sender);
+        _setOwner(owner_);
+        migrator = msg.sender
         liquidityMigrationV1 = ILiquidityMigrationV1(liquidityMigrationV1_);
         liquidityMigrationV2 = ILiquidityMigrationV2(liquidityMigrationV2_);
         migrationAdapter = migrationAdapter_;
     }
 
-    function initiateMigration(address[] memory adapters) external onlyOwner {
+    function initiateMigration(address[] memory adapters) external onlyMigrator {
         // Remove current adapters to prevent further staking
         for (uint256 i = 0; i < adapters.length; i++) {
             liquidityMigrationV1.removeAdapter(adapters[i]);
@@ -65,7 +73,7 @@ contract MigrationCoordinator is Migrator, Ownable{
         liquidityMigrationV1.updateUnlock(block.timestamp);
     }
 
-    function migrateLP(address[] memory users, address lp, address adapter) external onlyOwner {
+    function migrateLP(address[] memory users, address lp, address adapter) external onlyMigrator {
         // Set controller to allow migration
         liquidityMigrationV1.updateController(address(this));
         // Set adapter to allow migration
@@ -102,6 +110,14 @@ contract MigrationCoordinator is Migrator, Ownable{
 
     function removeAdapter(address adapter) external onlyOwner {
       liquidityMigrationV1.removeAdapter(adapter);
+    }
+
+    function updateMigrator(address newMigrator)
+        external
+        onlyOwner
+    {
+        require(migrator != newMigrator, "Already exists");
+        migrator = newMigrator;
     }
 
     function transferLiquidityMigrationOwnership(address newOwner) external onlyOwner {

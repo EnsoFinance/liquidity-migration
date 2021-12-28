@@ -47,7 +47,9 @@ const deployedContracts: any = {
 deployedContracts.localhost = deployedContracts.mainnet;
 deployedContracts.localhost.Leverage2XAdapter = "0x57ab1ec28d129707052df4df418d58a2d46d5f51"; // dummy data
 
-const getOwner = async () => {
+const treasury = "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F"
+
+const getDeployer = async () => {
   if (network != "localhost") {
     const [deployer] = await hre.ethers.getSigners();
     console.log("Deployer: ", deployer.address);
@@ -78,7 +80,7 @@ enum STATE {
 async function main() {
   getMonorepoDeployments();
   if (network) {
-    const owner = await getOwner();
+    const deployer = await getDeployer();
     const protocol_addresses = [];
     // @ts-ignore
     protocol_addresses[PROTOCOLS.INDEXCOOP] = deployments[network]['IndexCoopAdapter']
@@ -108,22 +110,23 @@ async function main() {
     log("LiquidityMigrationV2", liquidityMigrationV2.address);
 
     const MigrationAdapterFactory = await hre.ethers.getContractFactory('MigrationAdapter')
-    const migrationAdapter = await MigrationAdapterFactory.deploy(owner)
+    const migrationAdapter = await MigrationAdapterFactory.deploy(deployer)
     await migrationAdapter.deployed()
     log("MigrationAdapter", migrationAdapter.address);
 
     const MigrationCoordinatorFactory = await hre.ethers.getContractFactory('MigrationCoordinator')
     const migrationCoordinator = await MigrationCoordinatorFactory.deploy(
-       liquidityMigrationAddress,
-       liquidityMigrationV2.address,
-       migrationAdapter.address
+      treasury,
+      liquidityMigrationAddress,
+      liquidityMigrationV2.address,
+      migrationAdapter.address
     )
     await migrationCoordinator.deployed()
     log("MigrationCoordinator", migrationCoordinator.address);
     // Update coordinator on LMV2
     await liquidityMigrationV2.updateCoordinator(migrationCoordinator.address)
     // Transfer ownership of LMV2
-    await liquidityMigrationV2.transferOwnership(owner)
+    await liquidityMigrationV2.transferOwnership(treasury)
 
     /* TODO
      * 1) Add all LPs to MigrationAdapter

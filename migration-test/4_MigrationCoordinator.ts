@@ -152,9 +152,10 @@ describe("MigrationCoordinator tests: ", function () {
     // Deploy contract
     const MigrationCoordinator = await ethers.getContractFactory('MigrationCoordinator')
     migrationCoordinator = await MigrationCoordinator.connect(signers.admin).deploy(
-       liquidityMigration.address,
-       liquidityMigrationV2.address,
-       migrationAdapter.address
+      signers.admin.address,
+      liquidityMigration.address,
+      liquidityMigrationV2.address,
+      migrationAdapter.address
     )
     await migrationCoordinator.deployed()
     // Update coordinator on LMV2
