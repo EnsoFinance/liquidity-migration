@@ -35,6 +35,7 @@ describe("MigrationCoordinator tests: ", function () {
     liquidityMigrationV2: any,
     migrationAdapter: any,
     migrationCoordinator: any,
+    stakers: any,
     users: any;
 
   const dpi_setup = async function () {
@@ -85,7 +86,6 @@ describe("MigrationCoordinator tests: ", function () {
       params: [ownerMultisig],
     });
     signers.admin = await ethers.getSigner(ownerMultisig);
-    console.log("Admin: ", signers.admin.address)
 
     const LiquidityMigration = await ethers.getContractFactory('LiquidityMigration')
     liquidityMigration = LiquidityMigration.attach('0x0092DECCA5E2f26466289011ad41465763BeA4cE')
@@ -162,18 +162,18 @@ describe("MigrationCoordinator tests: ", function () {
     // Transfer ownership of LiquidityMigrationV1
     await liquidityMigration.connect(signers.admin).transferOwnership(migrationCoordinator.address)
     // Initiate migration
-    await migrationCoordinator.connect(signers.admin).initiateMigration()
+    await migrationCoordinator.connect(signers.admin).initiateMigration([indexCoopAdapterAddress])
   })
 
   it("Should migrate to new LiquidityMigration contract", async function () {
     const eventFilter = liquidityMigration.filters.Staked(null, null, null, null)
     const events = await liquidityMigration.queryFilter(eventFilter)
-    const stakers = events.filter((ev: Event) => ev?.args?.strategy.toLowerCase() === dpiPoolAddress.toLowerCase())
+    stakers = events.filter((ev: Event) => ev?.args?.strategy.toLowerCase() === dpiPoolAddress.toLowerCase())
                           .filter((ev: Event) => ev?.args?.amount.gt(0))
                           .map((ev: Event) => ev?.args?.account)
 
-    users = stakers.filter((account: string, index: number) => stakers.indexOf(account) === index)
-                         .slice(0,150)
+    stakers = stakers.filter((account: string, index: number) => stakers.indexOf(account) === index)
+    users = stakers.slice(0,150)
 
     console.log("Num users: ", users.length)
 
@@ -187,6 +187,47 @@ describe("MigrationCoordinator tests: ", function () {
     const receipt = await tx.wait()
     console.log('Migrate LP Gas Used: ', receipt.gasUsed.toString())
   });
+
+  it("Should fail to remove adapter", async function() {
+    await expect(
+      migrationCoordinator
+        .connect(signers.admin)
+        .removeAdapter(indexCoopAdapterAddress)
+    ).to.be.revertedWith("LiquidityMigration#updateAdapter: does not exist")
+  })
+
+
+  it("Should fail to add adapter", async function() {
+    await expect(
+      migrationCoordinator
+        .connect(signers.default)
+        .addAdapter(indexCoopAdapterAddress)
+    ).to.be.revertedWith("Ownable: caller is not the owner")
+  })
+
+  it("Should add adapter", async function () {
+    await migrationCoordinator
+      .connect(signers.admin)
+      .addAdapter(indexCoopAdapterAddress)
+
+    expect(await liquidityMigration.adapters(indexCoopAdapterAddress)).to.equal(true)
+  })
+
+  it("Should fail to remove adapter", async function() {
+    await expect(
+      migrationCoordinator
+        .connect(signers.default)
+        .removeAdapter(indexCoopAdapterAddress)
+    ).to.be.revertedWith("Ownable: caller is not the owner")
+  })
+
+  it("Should remove adapter", async function () {
+    await migrationCoordinator
+      .connect(signers.admin)
+      .removeAdapter(indexCoopAdapterAddress)
+
+    expect(await liquidityMigration.adapters(indexCoopAdapterAddress)).to.equal(false)
+  })
 
   it("Should set strategy", async function() {
       await liquidityMigrationV2.setStrategy(dpiPoolAddress, dpiStrategy.address)

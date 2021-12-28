@@ -10,6 +10,7 @@ import { TOKENSET_HOLDERS, INITIAL_STATE } from "../src/constants";
 import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { WETH, SUSD } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
+import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 import deployments from "../deployments.json"
 
 const ownerMultisig = '0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F'
@@ -176,10 +177,30 @@ describe("V2 Migration: ", function () {
     // Transfer ownership of LiquidityMigrationV1
     await liquidityMigration.connect(signers.admin).transferOwnership(migrationCoordinator.address)
     // Initiate migration
-    await migrationCoordinator.connect(signers.admin).initiateMigration()
+    await migrationCoordinator.connect(signers.admin).initiateMigration(adapters)
 
     expect(await liquidityMigration.controller()).to.equal(ethers.constants.AddressZero)
     expect(await liquidityMigration.generic()).to.equal(liquidityMigrationV2.address)
+  })
+
+  it('Should fail to stake on V1', async function() {
+    await network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [LP_TOKEN_WHALES[0].walletAddress],
+    });
+    const user = await ethers.getSigner(LP_TOKEN_WHALES[0].walletAddress);
+    const lpPool = IERC20__factory.connect(LP_TOKEN_WHALES[0].lpTokenAddress, user)
+    await lpPool.approve(liquidityMigration.address, 1)
+    await expect(
+        liquidityMigration
+          .connect(user)
+          .stake(lpPool.address, 1, indexCoopAdapterAddress)
+    ).to.be.revertedWith('Claimable#onlyState: not registered adapter')
+    await expect(
+        liquidityMigration
+          .connect(user)
+          .stake(lpPool.address, 1, migrationAdapter.address)
+    ).to.be.revertedWith('Claimable#onlyState: not registered adapter')
   })
 
   it("Should withdraw lp tokens via coordinator", async function() {

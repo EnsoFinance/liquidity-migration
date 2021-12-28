@@ -19,6 +19,8 @@ interface ILiquidityMigrationV1 {
 
     function addAdapter(address adapter) external;
 
+    function removeAdapter(address adapter) external;
+
     function updateController(address newController) external;
 
     function updateGeneric(address newGeneric) external;
@@ -48,9 +50,11 @@ contract MigrationCoordinator is Migrator, Ownable{
         migrationAdapter = migrationAdapter_;
     }
 
-    function initiateMigration() external onlyOwner {
-        // This adapter does nothing, just returns empty Call[] array
-        liquidityMigrationV1.addAdapter(migrationAdapter);
+    function initiateMigration(address[] memory adapters) external onlyOwner {
+        // Remove current adapters to prevent further staking
+        for (uint256 i = 0; i < adapters.length; i++) {
+            liquidityMigrationV1.removeAdapter(adapters[i]);
+        }
         // Generic receives funds, we want LiquidityMigrationV2 to receive the funds
         liquidityMigrationV1.updateGeneric(address(liquidityMigrationV2));
         // If controller is not zero address, set to zero address
@@ -64,6 +68,8 @@ contract MigrationCoordinator is Migrator, Ownable{
     function migrateLP(address[] memory users, address lp, address adapter) external onlyOwner {
         // Set controller to allow migration
         liquidityMigrationV1.updateController(address(this));
+        // Set adapter to allow migration
+        liquidityMigrationV1.addAdapter(migrationAdapter);
         // Migrate liquidity for all users passed in array
         for (uint256 i = 0; i < users.length; i++) {
             address user = users[i];
@@ -76,6 +82,8 @@ contract MigrationCoordinator is Migrator, Ownable{
         }
         // Remove controller to prevent further migration
         liquidityMigrationV1.updateController(address(0));
+        // Remove adapter to prevent further staking
+        liquidityMigrationV1.removeAdapter(migrationAdapter);
     }
 
     // Allow users to withdraw from LiquidityMigrationV1
@@ -86,6 +94,14 @@ contract MigrationCoordinator is Migrator, Ownable{
     // Refund wrapper since MigrationCoordinator is now owner of LiquidityMigrationV1
     function refund(address user, address lp) external onlyOwner {
       liquidityMigrationV1.refund(user, lp);
+    }
+
+    function addAdapter(address adapter) external onlyOwner {
+      liquidityMigrationV1.addAdapter(adapter);
+    }
+
+    function removeAdapter(address adapter) external onlyOwner {
+      liquidityMigrationV1.removeAdapter(adapter);
     }
 
     function transferLiquidityMigrationOwnership(address newOwner) external onlyOwner {
