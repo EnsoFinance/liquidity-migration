@@ -190,7 +190,7 @@ export const LP_TOKEN_WHALES = [
   },
   { // Contains OHM token (only on UniV3, so naive oracle doesn't work)
     victim: "tokenSets",
-    walletAddress: "0xEB80077D98A5f4407AFe29CDa0293D3f8A55805C",
+    walletAddress: "0x396F18Ddc7587487D76286A2Df224691d4d9157D",
     lpTokenAddress: "0xe8e8486228753E01Dbc222dA262Aa706Bd67e601",
     lpTokenName: "Arch Ethereum Web3",
     symbol: "WEB3",
