@@ -301,6 +301,70 @@ describe("V2 Migration: ", function () {
     ).to.be.revertedWith('Ownable: caller is not the owner')
   })
 
+  it("Should fail to remove adapter", async function() {
+    await expect(
+      migrationCoordinator
+        .connect(signers.admin)
+        .removeAdapter(indexCoopAdapterAddress)
+    ).to.be.revertedWith("LiquidityMigration#updateAdapter: does not exist")
+  })
+
+  it("Should fail to add adapter", async function() {
+    await expect(
+      migrationCoordinator
+        .connect(signers.default)
+        .addAdapter(indexCoopAdapterAddress)
+    ).to.be.revertedWith("Ownable: caller is not the owner")
+  })
+
+  it("Should add adapter", async function () {
+    await migrationCoordinator
+      .connect(signers.admin)
+      .addAdapter(indexCoopAdapterAddress)
+
+    expect(await liquidityMigration.adapters(indexCoopAdapterAddress)).to.equal(true)
+  })
+
+  it("Should fail to remove adapter", async function() {
+    await expect(
+      migrationCoordinator
+        .connect(signers.default)
+        .removeAdapter(indexCoopAdapterAddress)
+    ).to.be.revertedWith("Ownable: caller is not the owner")
+  })
+
+  it("Should remove adapter", async function () {
+    await migrationCoordinator
+      .connect(signers.admin)
+      .removeAdapter(indexCoopAdapterAddress)
+
+    expect(await liquidityMigration.adapters(indexCoopAdapterAddress)).to.equal(false)
+  })
+
+  it("Should fail to update migrator: not owner", async function() {
+    await expect(
+      migrationCoordinator
+        .connect(signers.default)
+        .updateMigrator(signers.default.address)
+    ).to.be.revertedWith("Ownable: caller is not the owner")
+  })
+
+  it("Should fail to update migrator: already exists", async function() {
+    await expect(
+      migrationCoordinator
+        .connect(signers.admin)
+        .updateMigrator(signers.admin.address)
+    ).to.be.revertedWith("Already exists")
+  })
+
+  it("Should update migrator", async function() {
+    await migrationCoordinator
+      .connect(signers.admin)
+      .updateMigrator(signers.default.address)
+
+    expect(await migrationCoordinator.migrator()).to.equal(signers.default.address)
+  })
+
   it("Should set strategy", async function() {
       await liquidityMigrationV2.setStrategy(dpiPool.address, dpiStrategy.address)
   })
