@@ -11,6 +11,7 @@ import { FACTORY_REGISTRIES, INITIAL_STATE } from "../src/constants";
 import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
+import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 
 const ownerMultisig = '0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F'
 
@@ -162,6 +163,39 @@ describe("LiquidityMigrationV2", function () {
     const user = await signers.secondary.getAddress();
     expect(await liquidityMigration.staked(user, dpiPool.address)).to.be.gt(BigNumber.from(0));
   });
+
+  it("Batch stake", async function() {
+    const lp1 = LP_TOKEN_WHALES[2].lpTokenAddress
+    const lp2 = LP_TOKEN_WHALES[3].lpTokenAddress
+
+    // Add to whitelist
+    await indexCoopAdapter.connect(signers.admin).add(lp1)
+    await indexCoopAdapter.connect(signers.admin).add(lp2)
+
+    await indexCoopAdapter
+      .connect(signers.default)
+      .buy(lp1, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
+    await indexCoopAdapter
+      .connect(signers.default)
+      .buy(lp2, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
+
+    const lp1Token = IERC20__factory.connect(lp1, signers.default)
+    const lp1Balance = await lp1Token.balanceOf(signers.default.address)
+    await lp1Token.approve(liquidityMigration.address, lp1Balance)
+    const lp2Token = IERC20__factory.connect(lp2, signers.default)
+    const lp2Balance = await lp1Token.balanceOf(signers.default.address)
+    await lp2Token.approve(liquidityMigration.address, lp2Balance)
+
+    await liquidityMigration
+      .connect(signers.default)
+      .batchStake(
+        [lp1, lp2],
+        [lp1Balance, lp2Balance],
+        indexCoopAdapter.address,
+      );
+    expect(await liquidityMigration.staked(signers.default.address, lp1)).to.be.gt(BigNumber.from(0));
+    expect(await liquidityMigration.staked(signers.default.address, lp2)).to.be.gt(BigNumber.from(0));
+  })
 
   it("Should update migration contract", async function () {
     await liquidityMigration.connect(signers.admin).updateController(enso.platform.controller.address)

@@ -46,13 +46,13 @@ contract MigrationCoordinator is Migrator, Ownable{
     }
 
     constructor(
-        address owner_
+        address owner_,
         address liquidityMigrationV1_,
         address liquidityMigrationV2_,
         address migrationAdapter_
     ) public {
         _setOwner(owner_);
-        migrator = msg.sender
+        migrator = msg.sender;
         liquidityMigrationV1 = ILiquidityMigrationV1(liquidityMigrationV1_);
         liquidityMigrationV2 = ILiquidityMigrationV2(liquidityMigrationV2_);
         migrationAdapter = migrationAdapter_;
