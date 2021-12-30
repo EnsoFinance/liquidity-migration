@@ -1,4 +1,5 @@
 import { task } from "hardhat/config";
+import { MASTER_USER } from "./initMasterUser";
 import { WHITELIST_STRATEGY } from "./task-names";
 
 export const getOwner = async (hre: any) => {
@@ -9,7 +10,7 @@ export const getOwner = async (hre: any) => {
     console.log("Network: ", network);
     return deployer.address;
   } else {
-    const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b";
+    const owner = MASTER_USER;
     console.log("Deployer: ", owner);
     console.log("Network: ", network);
     await hre.network.provider.request({
