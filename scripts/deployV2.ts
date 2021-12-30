@@ -7,62 +7,13 @@ import hre from "hardhat";
 import { getBlockTime } from "../src/utils";
 import * as fs from "fs";
 import deployments from "../deployments.json";
-import { MASTER_USER } from "../tasks/initMasterUser";
+import { getOwner } from "../tasks/whitelistStrategy";
 
 const unlock = 1643112000; // Jan 25 2022
 const modify = 1643112000;
-const monoRepoDeployments = process.env.MONOREPO_DEPLOYMENTS_FILE;
-const network = process.env.HARDHAT_NETWORK ?? hre.network.name;
-
-const { AddressZero } = hre.ethers.constants;
-
-const deployedContracts: any = {
-  mainnet: {
-    GenericRouter: AddressZero,
-    StrategyProxyFactory: AddressZero,
-    StrategyController: AddressZero,
-    Leverage2XAdapter: AddressZero,
-    TokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
-    TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
-    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
-  },
-  kovan: {
-    GenericRouter: "0xE0a9382c01d6EDfA0c933714b3626435EeF10811",
-    StrategyProxyFactory: "0xaF80BB1794B887de4a6816Ab0219692a21e8430e",
-    StrategyController: "0x077a70998D5086E6c6D53D9Fb7BCfd8F7fb73AC2",
-    Leverage2XAdapter: AddressZero,
-    TokenSetsBasicIssuanceModule: "0x8a070235a4B9b477655Bf4Eb65a1dB81051B3cC1",
-    TokenSetsDebtIssuanceModule: "0xe34031E7F4D8Ba4eFab190ce5f4D8451eD1B6A82",
-    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
-  },
-  hardhat: {
-    GenericRouter: AddressZero,
-    StrategyProxyFactory: AddressZero,
-    StrategyController: AddressZero,
-    Leverage2XAdapter: AddressZero,
-    TokenSetsBasicIssuanceModule: "0xd8EF3cACe8b4907117a45B0b125c68560532F94D",
-    TokenSetsDebtIssuanceModule: "0x39f024d621367c044bace2bf0fb15fb3612ecb92",
-    SUSD: "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
-  },
-};
-
-deployedContracts.localhost = deployedContracts.mainnet;
-deployedContracts.localhost.Leverage2XAdapter = "0x57ab1ec28d129707052df4df418d58a2d46d5f51"; // dummy data
-
 const treasury = "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F";
 
-const getDeployer = async () => {
-  if (network != "localhost") {
-    const [deployer] = await hre.ethers.getSigners();
-    console.log("Deployer: ", deployer.address);
-    console.log("Network: ", network);
-    return deployer.address;
-  } else {
-    console.log("Deployer: " + MASTER_USER);
-    console.log("Network: ", network);
-    return MASTER_USER;
-  }
-};
+const network = process.env.HARDHAT_NETWORK ?? hre.network.name;
 
 enum PROTOCOLS {
   TOKENSET,
@@ -73,44 +24,35 @@ enum PROTOCOLS {
   POWERPOOL,
 }
 
-enum STATE {
-  PENDING,
-  ACTIVE,
-  CLOSED,
-}
-
 async function main() {
-  getMonorepoDeployments();
   if (network) {
-    const deployer = await getDeployer();
-    const protocol_addresses = [];
+    const deployer = await getOwner(hre);
+    const signer = await hre.ethers.getSigner(deployer);
+
     // @ts-ignore
-    protocol_addresses[PROTOCOLS.INDEXCOOP] = deployments[network]["IndexCoopAdapter"];
-    // @ts-ignore
-    protocol_addresses[PROTOCOLS.INDEXED] = deployments[network]["IndexedAdapter"];
-    // @ts-ignore
-    protocol_addresses[PROTOCOLS.POWERPOOL] = deployments[network]["PowerPoolAdapter"];
-    // @ts-ignore
-    protocol_addresses[PROTOCOLS.TOKENSET] = deployments[network]["TokenSetAdapter"];
-    // @ts-ignore
-    protocol_addresses[PROTOCOLS.DHEDGE] = deployments[network]["DHedgeAdapter"];
-    // @ts-ignore
-    protocol_addresses[PROTOCOLS.PIEDAO] = deployments[network]["PieDaoAdapter"];
-    // @ts-ignore
-    const liquidityMigrationAddress = deployments[network]["LiquidityMigration"];
+    const deploymentAddresses = deployments[network];
+    const liquidityMigrationAddress = deploymentAddresses["LiquidityMigration"];
+
+    const adapters = [];
+    adapters[PROTOCOLS.INDEXCOOP] = deploymentAddresses["IndexCoopAdapter"];
+    adapters[PROTOCOLS.INDEXED] = deploymentAddresses["IndexedAdapter"];
+    adapters[PROTOCOLS.POWERPOOL] = deploymentAddresses["PowerPoolAdapter"];
+    adapters[PROTOCOLS.TOKENSET] = deploymentAddresses["TokenSetAdapter"];
+    adapters[PROTOCOLS.DHEDGE] = deploymentAddresses["DHedgeAdapter"];
+    adapters[PROTOCOLS.PIEDAO] = deploymentAddresses["PieDaoAdapter"];
 
     const LiquidityMigrationV2Factory = await hre.ethers.getContractFactory("LiquidityMigrationV2");
-    const liquidityMigrationV2 = await LiquidityMigrationV2Factory.deploy(protocol_addresses, unlock, modify);
+    const liquidityMigrationV2 = await LiquidityMigrationV2Factory.connect(signer).deploy(adapters, unlock, modify);
     await liquidityMigrationV2.deployed();
     log("LiquidityMigrationV2", liquidityMigrationV2.address);
 
     const MigrationAdapterFactory = await hre.ethers.getContractFactory("MigrationAdapter");
-    const migrationAdapter = await MigrationAdapterFactory.deploy(deployer);
+    const migrationAdapter = await MigrationAdapterFactory.connect(signer).deploy(deployer);
     await migrationAdapter.deployed();
     log("MigrationAdapter", migrationAdapter.address);
 
     const MigrationCoordinatorFactory = await hre.ethers.getContractFactory("MigrationCoordinator");
-    const migrationCoordinator = await MigrationCoordinatorFactory.deploy(
+    const migrationCoordinator = await MigrationCoordinatorFactory.connect(signer).deploy(
       treasury,
       liquidityMigrationAddress,
       liquidityMigrationV2.address,
@@ -119,9 +61,9 @@ async function main() {
     await migrationCoordinator.deployed();
     log("MigrationCoordinator", migrationCoordinator.address);
     // Update coordinator on LMV2
-    await liquidityMigrationV2.updateCoordinator(migrationCoordinator.address);
+    await liquidityMigrationV2.connect(signer).updateCoordinator(migrationCoordinator.address);
     // Transfer ownership of LMV2
-    await liquidityMigrationV2.transferOwnership(treasury);
+    await liquidityMigrationV2.connect(signer).transferOwnership(treasury);
 
     /* TODO
      * 1) Add all LPs to MigrationAdapter
@@ -135,20 +77,6 @@ async function main() {
     console.log("Network undefined");
   }
 }
-
-const getMonorepoDeployments = () => {
-  if (monoRepoDeployments) {
-    try {
-      const file = fs.readFileSync(monoRepoDeployments, "utf8");
-      if (file) {
-        const monorepoContracts = JSON.parse(file);
-        deployedContracts[network] = { ...deployedContracts[network], ...monorepoContracts[network] };
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-};
 
 const contracts: any = {};
 const log = (contractTitle: string, address: string) => {
