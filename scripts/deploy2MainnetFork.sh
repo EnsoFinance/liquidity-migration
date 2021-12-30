@@ -2,6 +2,7 @@
 # shellcheck disable=SC2164
 cd /home/ubuntu/liquidity-migration
 yarn
+TS_NODE_TRANSPILE_ONLY=1 yarn hardhat typechain
 yarn hardhat addOwnerFunds --network localhost
 yarn deploy-v2 localhost
 yarn hardhat setupMigration --network localhost
