@@ -8,7 +8,8 @@ import { getBlockTime } from "../src/utils";
 import * as fs from "fs";
 import deployments from "../deployments.json";
 
-const lockPeriod = 2419200; // 4 weeks
+const unlock = 1643112000; // Jan 25 2022
+const modify = 1643112000;
 const monoRepoDeployments = process.env.MONOREPO_DEPLOYMENTS_FILE;
 const network = process.env.HARDHAT_NETWORK ?? hre.network.name;
 
@@ -96,9 +97,6 @@ async function main() {
     protocol_addresses[PROTOCOLS.PIEDAO] = deployments[network]['PieDaoAdapter']
     // @ts-ignore
     const liquidityMigrationAddress = deployments[network]['LiquidityMigration']
-
-    const unlock = await getBlockTime(lockPeriod);
-    const modify = unlock.sub(1);
 
     const LiquidityMigrationV2Factory = await hre.ethers.getContractFactory("LiquidityMigrationV2");
     const liquidityMigrationV2 = await LiquidityMigrationV2Factory.deploy(

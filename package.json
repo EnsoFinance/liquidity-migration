@@ -72,6 +72,7 @@
     "compile": "hardhat compile --force",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"./test/**/*.ts\"",
     "deploy": "yarn hardhat run scripts/deploy.ts --network",
+    "deploy-v2": "yarn hardhat run scripts/deployV2.ts --network",
     "getUnderlyingTokens": "yarn hardhat run scripts/getUnderlyingTokens.ts",
     "lint": "yarn run lint:sol --fix && yarn run lint:ts --fix && yarn run prettier:list-different",
     "lint:sol": "solhint --config ./.solhint.json --max-warnings 0 \"contracts/**/*.sol\"",

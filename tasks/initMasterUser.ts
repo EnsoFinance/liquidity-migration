@@ -74,7 +74,7 @@ export const LP_TOKEN_WHALES = [
   },
   {
     victim: "indexed",
-    walletAddress: "0x4777AdCBd3e811b95ad256f6Ae953FF0B5288010",
+    walletAddress: "0x55119a68D5e8a28A345475B2f33d4C92a619e60d",
     lpTokenAddress: "0x68bB81B3F67f7AAb5fd1390ECB0B8e1a806F2465",
     lpTokenName: "NFT Platform Index",
     symbol: "NFTP",
@@ -182,7 +182,7 @@ export const LP_TOKEN_WHALES = [
   */
   {
     victim: "tokenSets",
-    walletAddress: "0xf29E752a44bF6BAE8093B6917a82c118d87880d0",
+    walletAddress: "0x5D3d94dDC4bfE72019C0750dC4a55B175A8777fB",
     lpTokenAddress: "0xBbA8120b355bC70E771F28e151a141A126843CdF",
     lpTokenName: "Cage Meme Index",
     symbol: "CMI",
@@ -345,10 +345,18 @@ task(INIT_MASTER_USER, "Initialises the account of the master user", async (_tas
     const signer = await hre.ethers.getSigner(walletAddress);
     const contract = new hre.ethers.Contract(lpTokenAddress, ERC20_ABI_FRAGMENT, signer);
     const balance = await contract.balanceOf(walletAddress);
-    await contract.transfer(MASTER_USER, balance);
-    await hre.network.provider.request({
-      method: "hardhat_stopImpersonatingAccount",
-      params: [walletAddress],
-    });
+    try {
+      await contract.transfer(MASTER_USER, balance);
+      await hre.network.provider.request({
+        method: "hardhat_stopImpersonatingAccount",
+        params: [walletAddress],
+      });
+    } catch(e) {
+      console.log("Transfer error: ", walletAddress)
+      await hre.network.provider.request({
+        method: "hardhat_stopImpersonatingAccount",
+        params: [walletAddress],
+      });
+    }
   }
 });
