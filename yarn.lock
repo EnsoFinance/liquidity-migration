@@ -299,7 +299,7 @@
 
 "@enso/contracts@git+ssh://git@github.com:EnsoFinance/contracts-temp.git":
   version "0.2.1"
-  resolved "git+ssh://git@github.com:EnsoFinance/contracts-temp.git#4486f26e1408bf407a9a58d99b2c6c3c265c9b34"
+  resolved "git+ssh://git@github.com:EnsoFinance/contracts-temp.git#2b4fc03781fec8549dd635acbdad26febd03a8a0"
   dependencies:
     "@0xsequence/token-directory" "1.1.13"
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"

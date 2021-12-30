@@ -148,10 +148,10 @@ describe("V2 Migration: ", function () {
     await migrationAdapter.connect(signers.admin).add(dpiPoolAddress)
 
     const MigrationController = await ethers.getContractFactory('MigrationController')
-    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(liquidityMigrationV2.address, signers.admin.address)
+    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(enso.platform.strategyFactory.address, liquidityMigrationV2.address, signers.admin.address)
     await migrationControllerImplementation.deployed()
     // Upgrade controller to new implementation
-    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(
+    await enso.platform.administration.platformProxyAdmin.connect(signers.admin).upgrade(
       enso.platform.controller.address,
       migrationControllerImplementation.address
     )

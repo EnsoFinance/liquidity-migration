@@ -111,10 +111,10 @@ describe("LiquidityMigrationV2", function () {
 
     // Upgrade StrategyController to MigrationController
     const MigrationController = await ethers.getContractFactory('MigrationController')
-    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(liquidityMigration.address, signers.admin.address)
+    const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(enso.platform.strategyFactory.address, liquidityMigration.address, signers.admin.address)
     await migrationControllerImplementation.deployed()
     // Upgrade controller to new implementation
-    await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(
+    await enso.platform.administration.platformProxyAdmin.connect(signers.admin).upgrade(
       enso.platform.controller.address,
       migrationControllerImplementation.address
     )

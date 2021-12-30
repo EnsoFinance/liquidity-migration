@@ -20,6 +20,7 @@ contract MockController is StrategyTypes, StrategyControllerStorage {
   uint256 private constant DIVISOR = 1000;
   int256 private constant PERCENTAGE_BOUND = 10000; // Max 10x leverage
 
+  address public immutable factory;
   address internal immutable _liquidityMigration;
   address internal immutable _ensoManager;
 
@@ -31,9 +32,10 @@ contract MockController is StrategyTypes, StrategyControllerStorage {
   event StrategyOpen(address indexed strategy, uint256 performanceFee);
   event StrategySet(address indexed strategy);
 
-  constructor(address liquidityMigration, address ensoManager) public {
-      _liquidityMigration = liquidityMigration;
-      _ensoManager = ensoManager;
+  constructor(address factory_, address liquidityMigration_, address ensoManager_) public {
+      factory = factory_;
+      _liquidityMigration = liquidityMigration_;
+      _ensoManager = ensoManager_;
   }
 
   function deposit(
@@ -80,7 +82,7 @@ contract MockController is StrategyTypes, StrategyControllerStorage {
       IStrategy strategy = IStrategy(strategy_);
       _setStrategyLock(strategy);
       require(msg.value == 0, "No deposits");
-      require(msg.sender == _factory, "Not factory");
+      require(msg.sender == factory, "Not factory");
       require(creator_ == _ensoManager, "Not enso");
       _setInitialState(strategy_, state_);
       _removeStrategyLock(strategy);

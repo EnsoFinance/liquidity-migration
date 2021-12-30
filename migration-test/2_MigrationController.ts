@@ -106,7 +106,7 @@ describe("MigrationController tests: ", function () {
 
   it("Should update migration contract", async function () {
     const MockController = await ethers.getContractFactory('MockController')
-    const mockControllerImplementation = await MockController.connect(signers.admin).deploy(liquidityMigration.address, signers.admin.address)
+    const mockControllerImplementation = await MockController.connect(signers.admin).deploy(enso.platform.strategyFactory.address, liquidityMigration.address, signers.admin.address)
     await mockControllerImplementation.deployed()
     // Upgrade controller to new implementation
     await enso.platform.administration.controllerAdmin.connect(signers.admin).upgrade(enso.platform.controller.address, mockControllerImplementation.address)
