@@ -26,8 +26,12 @@ enum PROTOCOLS {
 
 async function main() {
   if (network) {
+
     const deployer = await getOwner(hre);
     const signer = await hre.ethers.getSigner(deployer);
+
+    const estimatedGasPrice = await signer.getGasPrice()
+    const gasPrice = estimatedGasPrice.add(estimatedGasPrice.div(10))
 
     // @ts-ignore
     const deploymentAddresses = deployments[network];
@@ -42,12 +46,12 @@ async function main() {
     adapters[PROTOCOLS.PIEDAO] = deploymentAddresses["PieDaoAdapter"];
 
     const LiquidityMigrationV2Factory = await hre.ethers.getContractFactory("LiquidityMigrationV2");
-    const liquidityMigrationV2 = await LiquidityMigrationV2Factory.connect(signer).deploy(adapters, unlock, modify);
+    const liquidityMigrationV2 = await LiquidityMigrationV2Factory.connect(signer).deploy(adapters, unlock, modify, { gasPrice: gasPrice });
     await liquidityMigrationV2.deployed();
     log("LiquidityMigrationV2", liquidityMigrationV2.address);
 
     const MigrationAdapterFactory = await hre.ethers.getContractFactory("MigrationAdapter");
-    const migrationAdapter = await MigrationAdapterFactory.connect(signer).deploy(deployer);
+    const migrationAdapter = await MigrationAdapterFactory.connect(signer).deploy(deployer, { gasPrice: gasPrice });
     await migrationAdapter.deployed();
     log("MigrationAdapter", migrationAdapter.address);
 
@@ -57,13 +61,14 @@ async function main() {
       liquidityMigrationAddress,
       liquidityMigrationV2.address,
       migrationAdapter.address,
+      { gasPrice: gasPrice }
     );
     await migrationCoordinator.deployed();
     log("MigrationCoordinator", migrationCoordinator.address);
     // Update coordinator on LMV2
-    await liquidityMigrationV2.connect(signer).updateCoordinator(migrationCoordinator.address);
+    await liquidityMigrationV2.connect(signer).updateCoordinator(migrationCoordinator.address, { gasPrice: gasPrice });
     // Transfer ownership of LMV2
-    await liquidityMigrationV2.connect(signer).transferOwnership(treasury);
+    await liquidityMigrationV2.connect(signer).transferOwnership(treasury, { gasPrice: gasPrice });
 
     /* TODO
      * 1) Add all LPs to MigrationAdapter
