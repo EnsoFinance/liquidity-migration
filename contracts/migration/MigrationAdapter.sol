@@ -15,7 +15,7 @@ contract MigrationAdapter is AbstractAdapter {
         return new address[](0);
     }
 
-    function encodeMigration(address, address, address _lp, uint256)
+    function encodeMigration(address, address, address, uint256)
         public
         override
         view
@@ -24,7 +24,7 @@ contract MigrationAdapter is AbstractAdapter {
         return new Call[](0);
     }
 
-    function encodeWithdraw(address _lp, uint256)
+    function encodeWithdraw(address, uint256)
         public
         override
         view

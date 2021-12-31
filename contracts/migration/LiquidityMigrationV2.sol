@@ -2,15 +2,12 @@
 pragma solidity >=0.8.0;
 
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
-import "@enso/contracts/contracts/interfaces/IStrategyProxyFactory.sol";
-import "@enso/contracts/contracts/interfaces/IStrategyController.sol";
-import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
 import "../interfaces/IAdapter.sol";
 import "./interfaces/IMigrationController.sol";
 import "./interfaces/ILiquidityMigrationV2.sol";
 import "../helpers/Timelocked.sol";
 
-contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyTypes {
+contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
     using SafeERC20 for IERC20;
 
     address public controller;
@@ -75,7 +72,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked, StrategyType
 
     function setStrategy(address lp, address strategy) external onlyOwner notPaused {
         require(
-            IStrategyController(controller).initialized(strategy),
+            IMigrationController(controller).initialized(strategy),
             "Not enso strategy"
         );
         if (strategies[lp] != address(0)) {
