@@ -14,4 +14,6 @@ interface IMigrationController {
         IAdapter adapter,
         uint256 amount
     ) external;
+
+    function initialized(address strategy) external view returns (bool);
 }

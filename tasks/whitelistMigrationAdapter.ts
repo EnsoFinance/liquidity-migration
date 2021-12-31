@@ -15,10 +15,14 @@ task(WHITELIST_MIGRATION_ADAPTER, "Whitelist all strategies on migration adapter
     for (const { lpTokenAddress } of LP_TOKEN_WHALES) {
       try {
           const signer = await hre.ethers.getSigner(owner);
+
           const adapter = await hre.ethers.getContractAt("AbstractAdapter", deployedAdapter, signer )
           const isWhitelisted = await adapter.isWhitelisted(lpTokenAddress);
           if (!isWhitelisted) {
-            await adapter.add(lpTokenAddress);
+            const estimatedGasPrice = await signer.getGasPrice()
+            const gasPrice = estimatedGasPrice.add(estimatedGasPrice.div(10))
+
+            await adapter.add(lpTokenAddress, { gasPrice: gasPrice });
             console.log("Added strategy ", lpTokenAddress, " to adapter ", deployedAdapter);
           } else {
             console.log("Lp already added: ", lpTokenAddress)

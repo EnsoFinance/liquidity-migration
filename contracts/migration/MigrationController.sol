@@ -112,7 +112,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
       return true;
   }
 
-  function initialized(address strategy) external view returns (bool) {
+  function initialized(address strategy) external view override returns (bool) {
       return _initialized[strategy] > 0;
   }
 

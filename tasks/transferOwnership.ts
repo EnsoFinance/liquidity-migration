@@ -35,7 +35,10 @@ task(TRANSFER_OWNERSHIP, "Transfer ownership to new wallet")
             console.log(`\n${keys[i]} Current Owner: `, currentOwner);
             if (currentOwner && currentOwner == signer.address) {
                 console.log("Transferring ownership...")
-                const tx = await ownable.transferOwnership(to);
+                const estimatedGasPrice = await signer.getGasPrice()
+                const gasPrice = estimatedGasPrice.add(estimatedGasPrice.div(10))
+                
+                const tx = await ownable.transferOwnership(to, { gasPrice: gasPrice });
                 await tx.wait();
                 console.log("Success!")
                 console.log(`${keys[i]} New Owner: `, await ownable.owner());
