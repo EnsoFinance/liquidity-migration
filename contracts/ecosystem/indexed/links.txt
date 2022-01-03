@@ -1,1 +1,0 @@
-https://docs.indexed.finance/smart-contracts/deployments

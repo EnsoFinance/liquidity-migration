@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: WTFPL
-
-pragma solidity ^0.8.0;
+pragma solidity >=0.6.0 <0.9.0;
 
 import "../ecosystem/openzeppelin/token/ERC1155/IERC1155.sol";
 

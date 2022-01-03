@@ -14,10 +14,9 @@ module.exports = {
   onIstanbulComplete: async function (_config) {
     // We need to do this because solcover generates bespoke artifacts.
     shell.rm("-rf", "./artifacts");
-    shell.rm("-rf", "./typechain");
   },
   providerOptions: {
     mnemonic,
   },
-  skipFiles: ["ecosystem", "mocks", "test"],
+  skipFiles: ["ecosystem", "mocks", "test", "migration/mock", "migration/MigrationAdapter.sol"],
 };

@@ -299,7 +299,7 @@
 
 "@enso/contracts@git+ssh://git@github.com:EnsoFinance/contracts-temp.git":
   version "0.2.1"
-  resolved "git+ssh://git@github.com:EnsoFinance/contracts-temp.git#4486f26e1408bf407a9a58d99b2c6c3c265c9b34"
+  resolved "git+ssh://git@github.com:EnsoFinance/contracts-temp.git#2b4fc03781fec8549dd635acbdad26febd03a8a0"
   dependencies:
     "@0xsequence/token-directory" "1.1.13"
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"
@@ -911,6 +911,19 @@
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-ethers/-/hardhat-ethers-2.0.3.tgz#06e20a57274f6ce3148132910e723948a711edf1"
   integrity sha512-IJ0gBotVtO7YyLZyHNgbxzskUtFok+JkRlKPo8YELqj1ms9XL6Qm3vsfsGdZr22wnJeVEF5TQPotKuwQk21Dag==
+
+"@nomiclabs/hardhat-etherscan@^2.1.8":
+  version "2.1.8"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-etherscan/-/hardhat-etherscan-2.1.8.tgz#e206275e96962cd15e5ba9148b44388bc922d8c2"
+  integrity sha512-0+rj0SsZotVOcTLyDOxnOc3Gulo8upo0rsw/h+gBPcmtj91YqYJNhdARHoBxOhhE8z+5IUQPx+Dii04lXT14PA==
+  dependencies:
+    "@ethersproject/abi" "^5.1.2"
+    "@ethersproject/address" "^5.0.2"
+    cbor "^5.0.2"
+    debug "^4.1.1"
+    fs-extra "^7.0.1"
+    node-fetch "^2.6.0"
+    semver "^6.3.0"
 
 "@nomiclabs/hardhat-waffle@^2.0.1", "@nomiclabs/hardhat-waffle@~2.0.1":
   version "2.0.1"
@@ -3137,7 +3150,7 @@ caseless@^0.12.0, caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cbor@^5.1.0:
+cbor@^5.0.2, cbor@^5.1.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/cbor/-/cbor-5.2.0.tgz#4cca67783ccd6de7b50ab4ed62636712f287a67c"
   integrity sha512-5IMhi9e1QU76ppa5/ajP1BmMWZ2FHkhAhjeVKQ/EFCgYSEaeVaoGtL7cxJskf9oCCk+XjzaIdc3IuU/dbA/o2A==

@@ -193,7 +193,7 @@ describe("DPI: Unit tests", function () {
     const holder3BalanceAfter = await this.DPIEnv.pool.balanceOf(holder3Address);
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
     // Migrate
-    await this.liquidityMigration
+    const tx = await this.liquidityMigration
       .connect(holder3)
       ['migrate(address,address,address,uint256)'](
         this.DPIEnv.pool.address,
@@ -201,6 +201,8 @@ describe("DPI: Unit tests", function () {
         this.strategy.address,
         DEPOSIT_SLIPPAGE
       );
+    const receipt = await tx.wait()
+    console.log('Migrate Gas Used: ', receipt.gasUsed.toString())
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, await this.DPIEnv.pool.getComponents());
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);

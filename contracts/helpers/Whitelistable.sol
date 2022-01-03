@@ -1,9 +1,6 @@
 import "../helpers/Ownable.sol";
-
-
 // SPDX-License-Identifier: WTFPL
-
-pragma solidity 0.8.2;
+pragma solidity >=0.8.0;
 
 abstract contract Whitelistable is Ownable {
 

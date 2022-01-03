@@ -6,6 +6,7 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-etherscan";
 import "hardhat-gas-reporter";
 import "@typechain/hardhat";
 import "hardhat-etherscan-abi";
@@ -15,12 +16,14 @@ import "./tasks/whitelistStrategy";
 import "./tasks/checkAdapter";
 import "./tasks/addOwnerFunds";
 import "./tasks/initMasterUser";
+import "./tasks/whitelistMigrationAdapter";
 import "./tasks/whitelistAllStrategies";
 import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/addAdapter";
 import "./tasks/addAllAdapters";
 import "./tasks/transferOwnership";
+import "./tasks/setupMigration";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -74,7 +77,7 @@ function getNetworks(): NetworksUserConfig {
     if (archiveNode)
       networks.hardhat.forking = {
         url: archiveNode,
-        blockNumber: 13671540,
+        blockNumber: 13901475,
       };
   }
   if (mnemonic && infuraApiKey) {

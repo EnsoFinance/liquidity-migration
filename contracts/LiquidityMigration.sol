@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.2;
+pragma solidity >=0.8.0;
 
 import { SafeERC20, IERC20 } from "./ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IAdapter.sol";

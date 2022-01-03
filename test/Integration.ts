@@ -127,6 +127,8 @@ describe("Integration: Unit tests", function () {
     this.liquidityMigration = await setupPools(this.signers.default, this.enso);
 
     // Register tokens
+    // Synth
+    await factory.addItemToRegistry(ITEM_CATEGORY.SYNTH, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, '0xe1afe1fd76fd88f78cbf599ea1846231b8ba3b6b') //sDEFI
     // Compound
     await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.COMPOUND, '0x70e36f6BF80a52b3B46b3aF8e106CC0ed743E8e4') //cCOMP
     await factory.addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.COMPOUND, '0x35A18000230DA775CAc24873d00Ff85BccdeD550') //cUNI
@@ -150,8 +152,9 @@ describe("Integration: Unit tests", function () {
       const holderAddress = await holder.getAddress();
       const holderBalance = await erc20.balanceOf(holderAddress);
 
-      if (holderBalance == BigNumber.from(0)) {
+      if (holderBalance.eq(BigNumber.from(0))) {
         console.log("Balance: ", holderBalance, "  \nHolder: ", holderAddress);
+        throw Error("Need to update holder for pool in tasks/initMasterUser: "+ pool.address);
       }
       expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
       // expect(holderBalance).to.be.gt(BigNumber.from(0));
@@ -176,7 +179,7 @@ describe("Integration: Unit tests", function () {
       ) {
         const underlyingTokens = await pool.adapter.outputTokens(pool.pool.address);
         // encode strategy items
-        console.log("Pool: ", pool.pool.address);
+        //console.log("\nPool: ", pool.pool.address);
         //console.log("Underlying tokens: \n", underlyingTokens);
         let poolAddress
         try {
@@ -210,10 +213,13 @@ describe("Integration: Unit tests", function () {
         const receipt = await tx.wait();
         const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
         this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+        //console.log("Items: ", await this.strategy.items())
+        //console.log("Synths: ", await this.strategy.synths());
 
         // Migrate
         const holder = await pool.holders[0];
         const holderAddress = await holder.getAddress();
+        //console.log("Holder address: ", holderAddress);
         await this.liquidityMigration
           .connect(holder)
           ['migrate(address,address,address,uint256)'](
