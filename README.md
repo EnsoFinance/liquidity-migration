@@ -1,5 +1,7 @@
 # Liquidity Migrations
 
+https://docs.enso.finance/docs/smart-contracts/vampire-attack/liquidity-migration#contract-addresses : full list of deployed addresses.
+
 ## Usage
 
 ### Pre Requisites
@@ -43,7 +45,7 @@ $ yarn lint:ts
 ```
 
 ### Test
-
+_As we're referencing a private repo, you may not be able to test._
 Run the Mocha tests:
 
 ```sh
