@@ -6,7 +6,7 @@
 import hre from "hardhat";
 import * as fs from "fs";
 import deployments from "../deployments.json";
-import migrations from "../out/above_threshold.json"
+import migrations from "../out/above_threshold/above_15_threshold.json"
 import { MigrationCoordinator__factory } from "../typechain";
 const { BigNumber } = hre.ethers
 
@@ -106,7 +106,7 @@ const write2File = () => {
     null,
     2,
   );
-  fs.writeFileSync("./out/above_threshold.json", data);
+  fs.writeFileSync("./out/above_threshold/above_15_threshold.json", data);
 };
 
 // We recommend this pattern to be able to use async/await everywhere
