@@ -6,7 +6,6 @@
     "node": ">=0.10"
   },
   "dependencies": {
-    "@enso/contracts": "git+ssh://git@github.com:EnsoFinance/contracts-temp.git",
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
     "@typechain/hardhat": "^1.0.1",
     "builder-pattern": "^1.3.0",
@@ -16,6 +15,7 @@
   "devDependencies": {
     "@commitlint/cli": "^9.1.2",
     "@commitlint/config-conventional": "^9.1.2",
+    "@enso/contracts": "git+ssh://git@github.com:EnsoFinance/v1-core",
     "@ethersproject/abstract-signer": "^5.0.6",
     "@ethersproject/bignumber": "^5.0.8",
     "@nomiclabs/hardhat-ethers": "^2.0.1",
