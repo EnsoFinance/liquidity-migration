@@ -6,12 +6,12 @@
 import hre from "hardhat";
 import * as fs from "fs";
 import deployments from "../deployments.json";
-import migrations from "../out/above_threshold/above_15_threshold.json"
+import migrations from "../out/above_threshold/above_10_threshold.json"
 import { MigrationCoordinator__factory } from "../typechain";
-const { BigNumber } = hre.ethers
+const { provider, BigNumber } = hre.ethers
 
-const MAX_LENGTH = 200
-const MAX_GAS_PRICE = BigNumber.from('75000000000') // 75 gWEI
+const MAX_LENGTH = 150
+const MAX_GAS_PRICE = BigNumber.from('85000000000') // 85 gWEI
 //const MAX_GAS_PRICE = BigNumber.from('240000000000') // 240 gWEI
 
 const network = process.env.HARDHAT_NETWORK ?? hre.network.name;
@@ -60,17 +60,25 @@ async function main() {
             while (users.length > 0) {
                 let subset = users.length > MAX_LENGTH ? users.slice(0,MAX_LENGTH) : users
                 console.log("\nUsers migrating: ", subset.length);
-                const gasPrice = await waitForLowGas(signer);
-                const tx = await migrationCoordinator.migrateLP(subset, migrationData["lp"], migrationData["adapter"], { gasPrice: gasPrice });
+                const tip = await waitForLowGas(signer);
+                const tx = await migrationCoordinator.migrateLP(
+                  subset,
+                  migrationData["lp"],
+                  migrationData["adapter"],
+                  {
+                    maxPriorityFeePerGas: tip,
+                    maxFeePerGas: MAX_GAS_PRICE
+                  }
+                );
                 console.log("Migrated!");
+                users = users.slice(subset.length, users.length)
+                migrations[0]["users"] = users
+                write2File() // Save to document
                 const receipt = await tx.wait()
                 const gasUsed = receipt.gasUsed;
                 console.log("Gas used: ", gasUsed.toString())
                 totalGas = totalGas.add(gasUsed)
                 console.log("Total gas: ", totalGas.toString())
-                users = users.slice(subset.length, users.length)
-                migrations[0]["users"] = users
-                write2File() // Save to document
             }
             migrations.shift() // Remove item from array
             write2File() // Save to document
@@ -85,19 +93,42 @@ async function main() {
 
 const waitForLowGas = async (signer: any) => {
   return new Promise<any>(async (resolve) => {
-    const estimatedGasPrice = await signer.getGasPrice()
-    let gasPrice = estimatedGasPrice.add(estimatedGasPrice.div(10)) // Pay 10% over current price
-    console.log("Gas price: ", gasPrice.toString())
-    if (gasPrice.gt(MAX_GAS_PRICE)) {
-        console.log("Gas too high. Waiting 60 seconds...");
+    const blockNumber = await provider.getBlockNumber()
+    const [ block, feeData ] = await Promise.all([
+      provider.getBlock(blockNumber),
+      signer.getFeeData()
+    ])
+    const expectedBaseFee = getExpectedBaseFee(block)
+    // Pay 10% over expected tip
+    let tip = feeData.maxPriorityFeePerGas.add(feeData.maxPriorityFeePerGas.div(10))
+    const estimatedGasPrice = expectedBaseFee.add(tip)
+    console.log("Expected Base Fee: ", expectedBaseFee.toString())
+    console.log("Estimated Gas Price: ", estimatedGasPrice.toString())
+    if (estimatedGasPrice.gt(MAX_GAS_PRICE)) {
+        console.log("Gas too high. Waiting 15 seconds...");
         setTimeout(async () => {
-          gasPrice = await waitForLowGas(signer);
-          resolve(gasPrice);
+          tip = await waitForLowGas(signer);
+          resolve(tip);
         }, 60000);
     } else {
-        resolve(gasPrice);
+        resolve(tip);
     }
   });
+}
+
+const getExpectedBaseFee = (block: any) => {
+  let expectedBaseFee = BigNumber.from('0')
+  if (block.baseFeePerGas) {
+    const target = block.gasLimit.div(2)
+    if (block.gasUsed.gt(target)) {
+        const diff = block.gasUsed.sub(target);
+        expectedBaseFee = block.baseFeePerGas.add(block.baseFeePerGas.mul(1000).div(8).mul(diff).div(target).div(1000))
+    } else {
+        const diff = target.sub(block.gasUsed);
+        expectedBaseFee = block.baseFeePerGas.sub(block.baseFeePerGas.mul(1000).div(8).mul(diff).div(target).div(1000))
+    }
+  }
+  return expectedBaseFee
 }
 
 const write2File = () => {
@@ -106,7 +137,7 @@ const write2File = () => {
     null,
     2,
   );
-  fs.writeFileSync("./out/above_threshold/above_15_threshold.json", data);
+  fs.writeFileSync("./out/above_threshold/above_10_threshold.json", data);
 };
 
 // We recommend this pattern to be able to use async/await everywhere
