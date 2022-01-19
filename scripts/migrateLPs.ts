@@ -61,15 +61,26 @@ async function main() {
                 let subset = users.length > MAX_LENGTH ? users.slice(0,MAX_LENGTH) : users
                 console.log("\nUsers migrating: ", subset.length);
                 const tip = await waitForLowGas(signer);
-                const tx = await migrationCoordinator.migrateLP(
-                  subset,
-                  migrationData["lp"],
-                  migrationData["adapter"],
-                  {
-                    maxPriorityFeePerGas: tip,
-                    maxFeePerGas: MAX_GAS_PRICE
-                  }
-                );
+                let tx;
+                try {
+                    tx = await migrationCoordinator.migrateLP(
+                      subset,
+                      migrationData["lp"],
+                      migrationData["adapter"],
+                      {
+                        maxPriorityFeePerGas: tip,
+                        maxFeePerGas: MAX_GAS_PRICE
+                      }
+                    );
+                } catch (e) {
+                    if (e.toString().includes('max fee per gas less than block base fee')) {
+                      //try again
+                      console.log(e);
+                      continue;
+                    } else {
+                      throw new Error(e);
+                    }
+                }
                 console.log("Migrated!");
                 users = users.slice(subset.length, users.length)
                 migrations[0]["users"] = users
@@ -94,14 +105,23 @@ async function main() {
 const waitForLowGas = async (signer: any) => {
   return new Promise<any>(async (resolve) => {
     const blockNumber = await provider.getBlockNumber()
+    console.log("Next Block: ", blockNumber + 1)
     const [ block, feeData ] = await Promise.all([
       provider.getBlock(blockNumber),
       signer.getFeeData()
     ])
     const expectedBaseFee = getExpectedBaseFee(block)
+    if (expectedBaseFee.eq('0')) {
+        console.log("Bad block. Waiting 15 seconds...");
+        setTimeout(async () => {
+          tip = await waitForLowGas(signer);
+          resolve(tip);
+        }, 15000);
+    }
     // Pay 10% over expected tip
     let tip = feeData.maxPriorityFeePerGas.add(feeData.maxPriorityFeePerGas.div(10))
     const estimatedGasPrice = expectedBaseFee.add(tip)
+
     console.log("Expected Base Fee: ", expectedBaseFee.toString())
     console.log("Estimated Gas Price: ", estimatedGasPrice.toString())
     if (estimatedGasPrice.gt(MAX_GAS_PRICE)) {
@@ -109,7 +129,7 @@ const waitForLowGas = async (signer: any) => {
         setTimeout(async () => {
           tip = await waitForLowGas(signer);
           resolve(tip);
-        }, 60000);
+        }, 15000);
     } else {
         resolve(tip);
     }
@@ -118,7 +138,7 @@ const waitForLowGas = async (signer: any) => {
 
 const getExpectedBaseFee = (block: any) => {
   let expectedBaseFee = BigNumber.from('0')
-  if (block.baseFeePerGas) {
+  if (block?.baseFeePerGas) {
     const target = block.gasLimit.div(2)
     if (block.gasUsed.gt(target)) {
         const diff = block.gasUsed.sub(target);
