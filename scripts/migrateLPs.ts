@@ -10,7 +10,7 @@ import migrations from "../out/above_threshold/above_10_threshold.json"
 import { MigrationCoordinator__factory } from "../typechain";
 const { provider, BigNumber } = hre.ethers
 
-const MAX_LENGTH = 150
+const MAX_LENGTH = 200
 const MAX_GAS_PRICE = BigNumber.from('85000000000') // 85 gWEI
 //const MAX_GAS_PRICE = BigNumber.from('240000000000') // 240 gWEI
 
