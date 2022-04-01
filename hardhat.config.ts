@@ -22,8 +22,6 @@ import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/addAdapter";
 import "./tasks/addAllAdapters";
-import "./tasks/transferOwnership";
-import "./tasks/setupMigration";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
