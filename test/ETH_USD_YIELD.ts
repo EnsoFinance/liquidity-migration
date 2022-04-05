@@ -6,8 +6,8 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { DEPOSIT_SLIPPAGE, FACTORY_REGISTRIES, INITIAL_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
-import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
-import { EnsoBuilder} from "@enso/contracts";
+import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils";
+import { EnsoBuilder } from "@enso/contracts";
 
 describe("ETH_USD_YIELD: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -40,7 +40,9 @@ describe("ETH_USD_YIELD: Unit tests", function () {
         holder: await this.ETHUSDYieldEnv.holders[i].getAddress(),
         balance: await this.ETHUSDYieldEnv.pool.balanceOf(await this.ETHUSDYieldEnv.holders[i].getAddress()),
       };
-      expect(await this.ETHUSDYieldEnv.pool.balanceOf(await this.ETHUSDYieldEnv.holders[i].getAddress())).to.be.gt(BigNumber.from(0));
+      expect(await this.ETHUSDYieldEnv.pool.balanceOf(await this.ETHUSDYieldEnv.holders[i].getAddress())).to.be.gt(
+        BigNumber.from(0),
+      );
     }
 
     // getting the underlying tokens
@@ -63,9 +65,7 @@ describe("ETH_USD_YIELD: Unit tests", function () {
   });
 
   it("Token holder should be able to stake LP token", async function () {
-    const tx = await this.ETHUSDYieldEnv.adapter
-      .connect(this.signers.default)
-      .add(FACTORY_REGISTRIES.ETH_USD_YIELD);
+    const tx = await this.ETHUSDYieldEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
     const holder2 = await this.ETHUSDYieldEnv.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -97,28 +97,25 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     const amount = await this.liquidityMigration.staked(holder2Address, this.ETHUSDYieldEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
 
-    const tx = await this.ETHUSDYieldEnv.adapter
-      .connect(this.signers.default)
-      .remove(FACTORY_REGISTRIES.ETH_USD_YIELD);
+    const tx = await this.ETHUSDYieldEnv.adapter.connect(this.signers.default).remove(FACTORY_REGISTRIES.ETH_USD_YIELD);
     await tx.wait();
     // Migrate
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address,uint256)'](
+        ["migrate(address,address,address,uint256)"](
           this.ETHUSDYieldEnv.pool.address,
           this.ETHUSDYieldEnv.adapter.address,
           ethers.constants.AddressZero,
-          DEPOSIT_SLIPPAGE
+          DEPOSIT_SLIPPAGE,
         ),
     ).to.be.reverted;
   });
 
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the ETH_USD_YIELD Token as a whitelisted token
-    await expect(
-      this.ETHUSDYieldEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.ETH_USD_YIELD)
-    ).to.be.reverted;
+    await expect(this.ETHUSDYieldEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.ETH_USD_YIELD)).to.be
+      .reverted;
   });
 
   it("Getting the output token list", async function () {
@@ -134,38 +131,43 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     const holder3Address = await holder3.getAddress();
 
     // Setup migration calls using Adapter contract
-    await expect(this.ETHUSDYieldEnv.adapter.encodeWithdraw(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
+    await expect(this.ETHUSDYieldEnv.adapter.encodeWithdraw(holder3Address, BigNumber.from(100))).to.be.revertedWith(
+      "Whitelistable#onlyWhitelisted: not whitelisted lp",
+    );
   });
 
   it("Create strategy", async function () {
-      // adding the ETH_USD_YIELD Token as a whitelisted token
-      let tx = await this.ETHUSDYieldEnv.adapter
-        .connect(this.signers.default)
-        .add(FACTORY_REGISTRIES.ETH_USD_YIELD);
-      await tx.wait();
+    // adding the ETH_USD_YIELD Token as a whitelisted token
+    let tx = await this.ETHUSDYieldEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.ETH_USD_YIELD);
+    await tx.wait();
 
-      // getting the underlying tokens from ETH_USD_YIELD
-      const underlyingTokens = await this.ETHUSDYieldEnv.pool.getComponents();
-      // deploy strategy
-      const strategyData = encodeStrategyData(
-        this.signers.default.address,
-        "ETH_USD_YIELD",
-        "ETH_USD_YIELD",
-        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.ETHUSDYieldEnv.pool.address, underlyingTokens),
-        INITIAL_STATE,
-        ethers.constants.AddressZero,
-        '0x'
-      )
-      tx = await this.liquidityMigration.createStrategy(
+    // getting the underlying tokens from ETH_USD_YIELD
+    const underlyingTokens = await this.ETHUSDYieldEnv.pool.getComponents();
+    // deploy strategy
+    const strategyData = encodeStrategyData(
+      this.signers.default.address,
+      "ETH_USD_YIELD",
+      "ETH_USD_YIELD",
+      await setupStrategyItems(
+        this.enso.platform.oracles.ensoOracle,
+        this.enso.adapters.uniswap.contract.address,
         this.ETHUSDYieldEnv.pool.address,
-        this.ETHUSDYieldEnv.adapter.address,
-        strategyData
-      );
-      const receipt = await tx.wait();
-      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
-      console.log("Strategy address: ", strategyAddress);
-      this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
-  })
+        underlyingTokens,
+      ),
+      INITIAL_STATE,
+      ethers.constants.AddressZero,
+      "0x",
+    );
+    tx = await this.liquidityMigration.createStrategy(
+      this.ETHUSDYieldEnv.pool.address,
+      this.ETHUSDYieldEnv.adapter.address,
+      strategyData,
+    );
+    const receipt = await tx.wait();
+    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+    console.log("Strategy address: ", strategyAddress);
+    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+  });
 
   it("Should migrate tokens to strategy", async function () {
     const routerContract = this.enso.routers[0].contract;
@@ -187,26 +189,33 @@ describe("ETH_USD_YIELD: Unit tests", function () {
     // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address,uint256)'](
+      ["migrate(address,address,address,uint256)"](
         this.ETHUSDYieldEnv.pool.address,
         this.ETHUSDYieldEnv.adapter.address,
         this.strategy.address,
-        DEPOSIT_SLIPPAGE
+        DEPOSIT_SLIPPAGE,
       );
-    const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, await this.ETHUSDYieldEnv.pool.getComponents());
+    const [total] = await estimateTokens(
+      this.enso.platform.oracles.ensoOracle,
+      this.strategy.address,
+      await this.ETHUSDYieldEnv.pool.getComponents(),
+    );
     expect(total).to.be.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.be.gt(0);
   });
 
   it("Should fail to buy and stake: token not on exchange", async function () {
-    await expect(this.liquidityMigration.connect(this.signers.default).buyAndStake(
-      this.ETHUSDYieldEnv.pool.address,
-      this.ETHUSDYieldEnv.adapter.address,
-      UNISWAP_V3_ROUTER,
-      0,
-      ethers.constants.MaxUint256,
-      {value: ethers.constants.WeiPerEther}
-    )).to.be.reverted
-  })
-
+    await expect(
+      this.liquidityMigration
+        .connect(this.signers.default)
+        .buyAndStake(
+          this.ETHUSDYieldEnv.pool.address,
+          this.ETHUSDYieldEnv.adapter.address,
+          UNISWAP_V3_ROUTER,
+          0,
+          ethers.constants.MaxUint256,
+          { value: ethers.constants.WeiPerEther },
+        ),
+    ).to.be.reverted;
+  });
 });

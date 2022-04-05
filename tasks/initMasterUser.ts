@@ -130,7 +130,8 @@ export const LP_TOKEN_WHALES = [
     symbol: "WBTCAPY",
     adapter: "TokenSetAdapter",
   },
-  { // Contains GEL token (only on UniV3, so naive oracle doesn't work)
+  {
+    // Contains GEL token (only on UniV3, so naive oracle doesn't work)
     victim: "tokenSets",
     walletAddress: "0xd0b342029c97f2a2e65ac660835354438ac64c2e",
     lpTokenAddress: "0xfdc4a3fc36df16a78edcaf1b837d3acaaedb2cb4",
@@ -188,7 +189,8 @@ export const LP_TOKEN_WHALES = [
     symbol: "CMI",
     adapter: "TokenSetAdapter",
   },
-  { // Contains OHM token (only on UniV3, so naive oracle doesn't work)
+  {
+    // Contains OHM token (only on UniV3, so naive oracle doesn't work)
     victim: "tokenSets",
     walletAddress: "0x396F18Ddc7587487D76286A2Df224691d4d9157D",
     lpTokenAddress: "0xe8e8486228753E01Dbc222dA262Aa706Bd67e601",
@@ -351,8 +353,8 @@ task(INIT_MASTER_USER, "Initialises the account of the master user", async (_tas
         method: "hardhat_stopImpersonatingAccount",
         params: [walletAddress],
       });
-    } catch(e) {
-      console.log("Transfer error: ", walletAddress)
+    } catch (e) {
+      console.log("Transfer error: ", walletAddress);
       await hre.network.provider.request({
         method: "hardhat_stopImpersonatingAccount",
         params: [walletAddress],

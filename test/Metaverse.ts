@@ -6,11 +6,17 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20, IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, WETH, DIVISOR, INITIAL_STATE, UNISWAP_V3_ROUTER, DEPOSIT_SLIPPAGE } from "../src/constants";
-import { setupStrategyItems, estimateTokens, encodeStrategyData, increaseTime } from "../src/utils"
+import {
+  FACTORY_REGISTRIES,
+  TOKENSET_ISSUANCE_MODULES,
+  WETH,
+  DIVISOR,
+  INITIAL_STATE,
+  UNISWAP_V3_ROUTER,
+  DEPOSIT_SLIPPAGE,
+} from "../src/constants";
+import { setupStrategyItems, estimateTokens, encodeStrategyData, increaseTime } from "../src/utils";
 import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
-
-
 
 describe("METAVERSE: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -49,7 +55,10 @@ describe("METAVERSE: Unit tests", function () {
         holder: await this.metaverse.holders[i].getAddress(),
         balance: await this.metaverse.pool.balanceOf(await this.metaverse.holders[i].getAddress()),
       };
-      expect(await this.metaverse.pool.balanceOf(await this.metaverse.holders[i].getAddress())).to.be.gt(BigNumber.from(0), "Holder: " + holderBalances[i].holder);
+      expect(await this.metaverse.pool.balanceOf(await this.metaverse.holders[i].getAddress())).to.be.gt(
+        BigNumber.from(0),
+        "Holder: " + holderBalances[i].holder,
+      );
     }
 
     // getting the underlying tokens
@@ -72,9 +81,7 @@ describe("METAVERSE: Unit tests", function () {
   });
 
   it("Token holder should be able to stake LP token", async function () {
-    const tx = await this.metaverse.adapter
-      .connect(this.signers.default)
-      .add(FACTORY_REGISTRIES.METAVERSE);
+    const tx = await this.metaverse.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.METAVERSE);
     await tx.wait();
     const holder2 = await this.metaverse.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -93,7 +100,7 @@ describe("METAVERSE: Unit tests", function () {
   });
 
   it("Should not be able to migrate tokens if the METAVERSE token is not whitelisted in the Token Sets Adapter", async function () {
-    await increaseTime(10)
+    await increaseTime(10);
     const holder2 = await this.metaverse.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
@@ -106,28 +113,24 @@ describe("METAVERSE: Unit tests", function () {
     const amount = await this.liquidityMigration.staked(holder2Address, this.metaverse.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
 
-    const tx = await this.metaverse.adapter
-      .connect(this.signers.default)
-      .remove(FACTORY_REGISTRIES.METAVERSE);
+    const tx = await this.metaverse.adapter.connect(this.signers.default).remove(FACTORY_REGISTRIES.METAVERSE);
     await tx.wait();
     // Migrate
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address,uint256)'](
+        ["migrate(address,address,address,uint256)"](
           this.metaverse.pool.address,
           this.metaverse.adapter.address,
           ethers.constants.AddressZero,
-          DEPOSIT_SLIPPAGE
+          DEPOSIT_SLIPPAGE,
         ),
     ).to.be.reverted;
   });
 
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the METAVERSE Token as a whitelisted token
-    await expect(
-      this.metaverse.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.METAVERSE)
-    ).to.be.reverted;
+    await expect(this.metaverse.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.METAVERSE)).to.be.reverted;
   });
 
   it("Getting the output token list", async function () {
@@ -142,38 +145,43 @@ describe("METAVERSE: Unit tests", function () {
     const holder3Address = await holder3.getAddress();
 
     // Setup migration calls using Adapter contract
-    await expect(this.metaverse.adapter.encodeWithdraw(holder3Address, BigNumber.from(100))).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
+    await expect(this.metaverse.adapter.encodeWithdraw(holder3Address, BigNumber.from(100))).to.be.revertedWith(
+      "Whitelistable#onlyWhitelisted: not whitelisted lp",
+    );
   });
 
   it("Create strategy", async function () {
-      // adding the METAVERSE Token as a whitelisted token
-      let tx = await this.metaverse.adapter
-        .connect(this.signers.default)
-        .add(FACTORY_REGISTRIES.METAVERSE);
-      await tx.wait();
+    // adding the METAVERSE Token as a whitelisted token
+    let tx = await this.metaverse.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.METAVERSE);
+    await tx.wait();
 
-      // getting the underlying tokens from METAVERSE
-      const underlyingTokens = await this.metaverse.pool.getComponents();
-      // deploy strategy
-      const strategyData = encodeStrategyData(
-        this.signers.default.address,
-        "METAVERSE",
-        "METAVERSE",
-        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.metaverse.pool.address, underlyingTokens),
-        INITIAL_STATE,
-        ethers.constants.AddressZero,
-        '0x'
-      )
-      tx = await this.liquidityMigration.createStrategy(
+    // getting the underlying tokens from METAVERSE
+    const underlyingTokens = await this.metaverse.pool.getComponents();
+    // deploy strategy
+    const strategyData = encodeStrategyData(
+      this.signers.default.address,
+      "METAVERSE",
+      "METAVERSE",
+      await setupStrategyItems(
+        this.enso.platform.oracles.ensoOracle,
+        this.enso.adapters.uniswap.contract.address,
         this.metaverse.pool.address,
-        this.metaverse.adapter.address,
-        strategyData
-      );
-      const receipt = await tx.wait();
-      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
-      console.log("Strategy address: ", strategyAddress);
-      this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
-  })
+        underlyingTokens,
+      ),
+      INITIAL_STATE,
+      ethers.constants.AddressZero,
+      "0x",
+    );
+    tx = await this.liquidityMigration.createStrategy(
+      this.metaverse.pool.address,
+      this.metaverse.adapter.address,
+      strategyData,
+    );
+    const receipt = await tx.wait();
+    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+    console.log("Strategy address: ", strategyAddress);
+    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+  });
 
   it("Should migrate tokens to strategy", async function () {
     const holder3 = await this.metaverse.holders[2];
@@ -194,26 +202,31 @@ describe("METAVERSE: Unit tests", function () {
     // Migrate
     await this.liquidityMigration
       .connect(holder3)
-      ['migrate(address,address,address,uint256)'](
+      ["migrate(address,address,address,uint256)"](
         this.metaverse.pool.address,
         this.metaverse.adapter.address,
         this.strategy.address,
-        DEPOSIT_SLIPPAGE
+        DEPOSIT_SLIPPAGE,
       );
-    const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, await this.metaverse.pool.getComponents());
+    const [total] = await estimateTokens(
+      this.enso.platform.oracles.ensoOracle,
+      this.strategy.address,
+      await this.metaverse.pool.getComponents(),
+    );
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
 
   it("Should buy and stake", async function () {
-    await this.liquidityMigration.connect(this.signers.default).buyAndStake(
-      this.metaverse.pool.address,
-      this.metaverse.adapter.address,
-      UNISWAP_V3_ROUTER,
-      0,
-      ethers.constants.MaxUint256,
-      {value: ethers.constants.WeiPerEther}
-    )
-  })
-
+    await this.liquidityMigration
+      .connect(this.signers.default)
+      .buyAndStake(
+        this.metaverse.pool.address,
+        this.metaverse.adapter.address,
+        UNISWAP_V3_ROUTER,
+        0,
+        ethers.constants.MaxUint256,
+        { value: ethers.constants.WeiPerEther },
+      );
+  });
 });

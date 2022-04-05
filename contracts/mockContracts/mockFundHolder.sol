@@ -2,23 +2,18 @@
 import "../helpers/Timelocked.sol";
 pragma solidity >=0.8.0;
 
-
-
-
 contract mockFundHolder is Timelocked {
-
     uint256 public totalBalance;
-    mapping (address => uint256) public addressBalance;
+    mapping(address => uint256) public addressBalance;
 
-    constructor() 
-    Timelocked(block.timestamp+3000, block.timestamp+1500, msg.sender) {}
+    constructor() Timelocked(block.timestamp + 3000, block.timestamp + 1500, msg.sender) {}
 
-    function depositETH() payable public {
+    function depositETH() public payable {
         addressBalance[msg.sender] += msg.value;
         totalBalance += msg.value;
     }
 
-    function withdraw(uint amount) public onlyUnlocked {
+    function withdraw(uint256 amount) public onlyUnlocked {
         require(addressBalance[msg.sender] >= amount, "ReqAmount greater than deposited");
         addressBalance[msg.sender] -= amount;
         totalBalance -= amount;

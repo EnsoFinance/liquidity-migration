@@ -15,11 +15,10 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     address public controller;
     IStrategyProxyFactory public factory;
 
-    mapping (address => bool) public adapters;
-    mapping (address => uint256) public stakedCount;
-    mapping (address => mapping (address => uint256)) public staked;
-    mapping (address => bool) private _tempIsUnderlying;
-
+    mapping(address => bool) public adapters;
+    mapping(address => uint256) public stakedCount;
+    mapping(address => mapping(address => uint256)) public staked;
+    mapping(address => bool) private _tempIsUnderlying;
 
     event Staked(address adapter, address strategy, uint256 amount, address account);
     event Migrated(address adapter, address lp, address strategy, address account);
@@ -27,16 +26,16 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
     event Refunded(address lp, uint256 amount, address account);
 
     /**
-    * @dev Require adapter registered
-    */
+     * @dev Require adapter registered
+     */
     modifier onlyRegistered(address _adapter) {
         require(adapters[_adapter], "Claimable#onlyState: not registered adapter");
         _;
     }
 
     /**
-    * @dev Require adapter allows lp
-    */
+     * @dev Require adapter allows lp
+     */
     modifier onlyWhitelisted(address _adapter, address _lp) {
         require(IAdapter(_adapter).isWhitelisted(_lp), "Claimable#onlyState: not whitelisted strategy");
         _;
@@ -50,9 +49,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         uint256 _unlock,
         uint256 _modify,
         address _owner
-    )
-        Timelocked(_unlock, _modify, _owner)
-    {
+    ) Timelocked(_unlock, _modify, _owner) {
         for (uint256 i = 0; i < adapters_.length; i++) {
             adapters[adapters_[i]] = true;
         }
@@ -65,9 +62,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _lp,
         uint256 _amount,
         address _adapter
-    )
-        public
-    {
+    ) public {
         IERC20(_lp).safeTransferFrom(msg.sender, address(this), _amount);
         _stake(_lp, _amount, _adapter);
     }
@@ -78,10 +73,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _exchange,
         uint256 _minAmountOut,
         uint256 _deadline
-    )
-        external
-        payable
-    {
+    ) external payable {
         _buyAndStake(_lp, msg.value, _adapter, _exchange, _minAmountOut, _deadline);
     }
 
@@ -89,9 +81,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _lp,
         uint256[] memory _amount,
         address[] memory _adapter
-    )
-        external
-    {
+    ) external {
         require(_lp.length == _amount.length, "LiquidityMigration#batchStake: not same length");
         require(_amount.length == _adapter.length, "LiquidityMigration#batchStake: not same length");
 
@@ -107,10 +97,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _exchange,
         uint256[] memory _minAmountOut,
         uint256 _deadline
-    )
-        external
-        payable
-    {
+    ) external payable {
         require(_amount.length == _lp.length, "LiquidityMigration#batchBuyAndStake: not same length");
         require(_adapter.length == _lp.length, "LiquidityMigration#batchBuyAndStake: not same length");
         require(_exchange.length == _lp.length, "LiquidityMigration#batchBuyAndStake: not same length");
@@ -129,10 +116,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _adapter,
         IStrategy _strategy,
         uint256 _slippage
-    )
-        external
-        onlyUnlocked
-    {
+    ) external onlyUnlocked {
         _migrate(msg.sender, _lp, _adapter, _strategy, _slippage);
     }
 
@@ -142,11 +126,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _adapter,
         IStrategy _strategy,
         uint256 _slippage
-    )
-        external
-        onlyOwner
-        onlyUnlocked
-    {
+    ) external onlyOwner onlyUnlocked {
         _migrate(_user, _lp, _adapter, _strategy, _slippage);
     }
 
@@ -155,10 +135,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _adapter,
         IStrategy[] memory _strategy,
         uint256[] memory _slippage
-    )
-        external
-        onlyUnlocked
-    {
+    ) external onlyUnlocked {
         require(_lp.length == _adapter.length);
         require(_adapter.length == _strategy.length);
 
@@ -173,11 +150,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address[] memory _adapter,
         IStrategy[] memory _strategy,
         uint256[] memory _slippage
-    )
-        external
-        onlyOwner
-        onlyUnlocked
-    {
+    ) external onlyOwner onlyUnlocked {
         require(_user.length == _lp.length);
         require(_lp.length == _adapter.length);
         require(_adapter.length == _strategy.length);
@@ -187,32 +160,19 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         }
     }
 
-    function refund(
-        address _user,
-        address _lp
-    )
-        public
-        onlyOwner
-    {
+    function refund(address _user, address _lp) public onlyOwner {
         _refund(_user, _lp);
     }
 
-    function batchRefund(address[] memory _users, address _lp)
-        public
-        onlyOwner
-    {
+    function batchRefund(address[] memory _users, address _lp) public onlyOwner {
         for (uint256 i = 0; i < _users.length; i++) {
             _refund(_users[i], _lp);
         }
     }
-    function _refund(
-        address _user,
-        address _lp
-    )
-        internal
-    {
+
+    function _refund(address _user, address _lp) internal {
         uint256 _amount = staked[_user][_lp];
-        require(_amount > 0, 'LiquidityMigration#_refund: no stake');
+        require(_amount > 0, "LiquidityMigration#_refund: no stake");
         delete staked[_user][_lp];
 
         IERC20(_lp).safeTransfer(_user, _amount);
@@ -225,11 +185,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _adapter,
         IStrategy _strategy,
         uint256 _slippage
-    )
-        internal
-        onlyRegistered(_adapter)
-        onlyWhitelisted(_adapter, _lp)
-    {
+    ) internal onlyRegistered(_adapter) onlyWhitelisted(_adapter, _lp) {
         require(
             IStrategyController(controller).initialized(address(_strategy)),
             "LiquidityMigration#_migrate: not enso strategy"
@@ -242,8 +198,9 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         IERC20(_lp).safeTransfer(generic, _stakeAmount);
 
         uint256 _before = _strategy.balanceOf(address(this));
-        bytes memory migrationData =
-            abi.encode(IAdapter(_adapter).encodeMigration(generic, address(_strategy), _lp, _stakeAmount));
+        bytes memory migrationData = abi.encode(
+            IAdapter(_adapter).encodeMigration(generic, address(_strategy), _lp, _stakeAmount)
+        );
         IStrategyController(controller).deposit(_strategy, IStrategyRouter(generic), 0, _slippage, migrationData);
         uint256 _after = _strategy.balanceOf(address(this));
 
@@ -255,11 +212,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _lp,
         uint256 _amount,
         address _adapter
-    )
-        internal
-        onlyRegistered(_adapter)
-        onlyWhitelisted(_adapter, _lp)
-    {
+    ) internal onlyRegistered(_adapter) onlyWhitelisted(_adapter, _lp) {
         staked[msg.sender][_lp] += _amount;
         stakedCount[_adapter] += 1;
         emit Staked(_adapter, _lp, _amount, msg.sender);
@@ -272,11 +225,9 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _exchange,
         uint256 _minAmountOut,
         uint256 _deadline
-    )
-        internal
-    {
+    ) internal {
         uint256 balanceBefore = IERC20(_lp).balanceOf(address(this));
-        IAdapter(_adapter).buy{value: _amount}(_lp, _exchange, _minAmountOut, _deadline);
+        IAdapter(_adapter).buy{ value: _amount }(_lp, _exchange, _minAmountOut, _deadline);
         uint256 amountAdded = IERC20(_lp).balanceOf(address(this)) - balanceBefore;
         _stake(_lp, amountAdded, _adapter);
     }
@@ -285,12 +236,8 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         address _lp,
         address _adapter,
         bytes calldata data
-    )
-        public
-        onlyRegistered(_adapter)
-        onlyWhitelisted(_adapter, _lp)
-    {
-        ( , , , StrategyItem[] memory strategyItems, , , ) = abi.decode(
+    ) public onlyRegistered(_adapter) onlyWhitelisted(_adapter, _lp) {
+        (, , , StrategyItem[] memory strategyItems, , , ) = abi.decode(
             data,
             (address, string, string, StrategyItem[], InitialState, address, bytes)
         );
@@ -299,69 +246,50 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         emit Created(_adapter, _lp, strategy, msg.sender);
     }
 
-    function updateController(address _controller)
-        external
-        onlyOwner
-    {
+    function updateController(address _controller) external onlyOwner {
         require(controller != _controller, "LiquidityMigration#updateController: already exists");
         controller = _controller;
     }
 
-    function updateGeneric(address _generic)
-        external
-        onlyOwner
-    {
+    function updateGeneric(address _generic) external onlyOwner {
         require(generic != _generic, "LiquidityMigration#updateGeneric: already exists");
         generic = _generic;
     }
 
-    function updateFactory(address _factory)
-        external
-        onlyOwner
-    {
+    function updateFactory(address _factory) external onlyOwner {
         require(factory != IStrategyProxyFactory(_factory), "LiquidityMigration#updateFactory: already exists");
         factory = IStrategyProxyFactory(_factory);
     }
 
-    function addAdapter(address _adapter)
-        external
-        onlyOwner
-    {
+    function addAdapter(address _adapter) external onlyOwner {
         require(!adapters[_adapter], "LiquidityMigration#updateAdapter: already exists");
         adapters[_adapter] = true;
     }
 
-    function removeAdapter(address _adapter)
-        external
-        onlyOwner
-    {
+    function removeAdapter(address _adapter) external onlyOwner {
         require(adapters[_adapter], "LiquidityMigration#updateAdapter: does not exist");
         adapters[_adapter] = false;
     }
 
-    function hasStaked(address _account, address _lp)
-        external
-        view
-        returns(bool)
-    {
+    function hasStaked(address _account, address _lp) external view returns (bool) {
         return staked[_account][_lp] > 0;
     }
 
-    function getStakeCount(address _adapter)
-        external
-        view
-        returns(uint256)
-    {
+    function getStakeCount(address _adapter) external view returns (uint256) {
         return stakedCount[_adapter];
     }
 
-    function _validateItems(address adapter, address lp, StrategyItem[] memory strategyItems) private {
+    function _validateItems(
+        address adapter,
+        address lp,
+        StrategyItem[] memory strategyItems
+    ) private {
         address[] memory underlyingTokens = IAdapter(adapter).outputTokens(lp);
-        for (uint i = 0; i < underlyingTokens.length; i++) {
+        for (uint256 i = 0; i < underlyingTokens.length; i++) {
             _tempIsUnderlying[underlyingTokens[i]] = true;
         }
         uint256 total = strategyItems.length;
-        for (uint i = 0; i < strategyItems.length; i++) {
+        for (uint256 i = 0; i < strategyItems.length; i++) {
             // Strategies may have reserve tokens (such as weth) that don't have value
             // So we must be careful not to invalidate a strategy for having them
             if (!_tempIsUnderlying[strategyItems[i].item]) {
@@ -388,18 +316,7 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
             InitialState memory strategyState,
             address router,
             bytes memory depositData
-        ) = abi.decode(
-            data,
-            (address, string, string, StrategyItem[], InitialState, address, bytes)
-        );
-        return factory.createStrategy(
-            manager,
-            name,
-            symbol,
-            strategyItems,
-            strategyState,
-            router,
-            depositData
-        );
+        ) = abi.decode(data, (address, string, string, StrategyItem[], InitialState, address, bytes));
+        return factory.createStrategy(manager, name, symbol, strategyItems, strategyState, router, depositData);
     }
 }

@@ -32,8 +32,8 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
     address public constant QUOTER = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
 
     /**
-    * @dev Require exchange registered
-    */
+     * @dev Require exchange registered
+     */
     modifier onlyExchange(address _exchange) {
         require(isExchange(_exchange), "AbstractAdapter#buy: should be exchanges");
         _;
@@ -43,35 +43,23 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         _setOwner(owner_);
     }
 
-    function outputTokens(address _lp)
-        public
-        view
-        override
-        virtual
-        returns (address[] memory outputs);
+    function outputTokens(address _lp) public view virtual override returns (address[] memory outputs);
 
-    function encodeMigration(address _genericRouter, address _strategy, address _lp, uint256 _amount)
-        public
-        override
-        virtual
-        view
-        returns (Call[] memory calls);
+    function encodeMigration(
+        address _genericRouter,
+        address _strategy,
+        address _lp,
+        uint256 _amount
+    ) public view virtual override returns (Call[] memory calls);
 
-    function encodeWithdraw(address _lp, uint256 _amount)
-        public
-        override
-        virtual
-        view
-        returns (Call[] memory calls);
+    function encodeWithdraw(address _lp, uint256 _amount) public view virtual override returns (Call[] memory calls);
 
-    function buy(address _lp, address _exchange, uint256 _minAmountOut, uint256 _deadline)
-        public
-        override
-        virtual
-        payable
-        onlyExchange(_exchange)
-        onlyWhitelisted(_lp)
-    {
+    function buy(
+        address _lp,
+        address _exchange,
+        uint256 _minAmountOut,
+        uint256 _deadline
+    ) public payable virtual override onlyExchange(_exchange) onlyWhitelisted(_lp) {
         if (_exchange == UNI_V3) {
             _buyV3(_lp, _minAmountOut, _deadline);
         } else {
@@ -83,14 +71,7 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         address _lp,
         address _exchange,
         uint256 _amountIn
-    )
-        external
-        override
-        virtual
-        onlyExchange(_exchange)
-        onlyWhitelisted(_lp)
-        returns (uint256)
-    {
+    ) external virtual override onlyExchange(_exchange) onlyWhitelisted(_lp) returns (uint256) {
         if (_exchange == UNI_V3) {
             return _getV3(_lp, _amountIn);
         } else {
@@ -103,13 +84,11 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         address _exchange,
         uint256 _minAmountOut,
         uint256 _deadline
-    )
-        internal
-    {
+    ) internal {
         address[] memory path = new address[](2);
         path[0] = WETH;
         path[1] = _lp;
-        IUniswapV2Router(_exchange).swapExactETHForTokens{value: msg.value}(
+        IUniswapV2Router(_exchange).swapExactETHForTokens{ value: msg.value }(
             _minAmountOut,
             path,
             msg.sender,
@@ -121,64 +100,36 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
         address _lp,
         uint256 _minAmountOut,
         uint256 _deadline
-    )
-        internal
-    {
-        IUniswapV3Router(UNI_V3).exactInputSingle{value: msg.value}(IUniswapV3Router.ExactInputSingleParams(
-          WETH,
-          _lp,
-          3000,
-          msg.sender,
-          _deadline,
-          msg.value,
-          _minAmountOut,
-          0
-        ));
+    ) internal {
+        IUniswapV3Router(UNI_V3).exactInputSingle{ value: msg.value }(
+            IUniswapV3Router.ExactInputSingleParams(WETH, _lp, 3000, msg.sender, _deadline, msg.value, _minAmountOut, 0)
+        );
     }
 
-    function _getV2(address _lp, address _exchange, uint256 _amountIn)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getV2(
+        address _lp,
+        address _exchange,
+        uint256 _amountIn
+    ) internal view returns (uint256) {
         address[] memory path = new address[](2);
         path[0] = WETH;
         path[1] = _lp;
         return IUniswapV2Router(_exchange).getAmountsOut(_amountIn, path)[1];
     }
 
-    function _getV3(address _lp, uint256 _amountIn)
-        internal
-        returns (uint256)
-    {
-
-        return IQuoter(QUOTER).quoteExactInputSingle(
-            WETH,
-            _lp,
-            3000,
-            _amountIn,
-            0
-        );
+    function _getV3(address _lp, uint256 _amountIn) internal returns (uint256) {
+        return IQuoter(QUOTER).quoteExactInputSingle(WETH, _lp, 3000, _amountIn, 0);
     }
 
     /**
-    * @param _lp to view pool token
-    * @return if token in whitelist
-    */
-    function isWhitelisted(address _lp)
-        public
-        view
-        override
-        returns(bool)
-    {
+     * @param _lp to view pool token
+     * @return if token in whitelist
+     */
+    function isWhitelisted(address _lp) public view override returns (bool) {
         return whitelisted[_lp];
     }
 
-    function isExchange(address _exchange)
-        public
-        pure
-        returns (bool)
-    {
-        return(_exchange == SUSHI || _exchange == UNI_V2 || _exchange == UNI_V3);
+    function isExchange(address _exchange) public pure returns (bool) {
+        return (_exchange == SUSHI || _exchange == UNI_V2 || _exchange == UNI_V3);
     }
 }

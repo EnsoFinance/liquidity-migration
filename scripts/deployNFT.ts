@@ -8,12 +8,11 @@ import { getBlockTime } from "../src/utils";
 import * as fs from "fs";
 import deployments from "../deployments.json";
 
-const lockPeriod = 2419200 // 4 weeks
+const lockPeriod = 2419200; // 4 weeks
 const monoRepoDeployments = process.env.MONOREPO_DEPLOYMENTS_FILE;
 const network = process.env.HARDHAT_NETWORK ?? "localhost";
 
-const { AddressZero } = hre.ethers.constants
-
+const { AddressZero } = hre.ethers.constants;
 
 const LiquidityMigration = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b"; // UPDATE
 const owner = "0x0c58B57E2e0675eDcb2c7c0f713320763Fc9A77b"; // UPDATE
@@ -21,14 +20,7 @@ const initialURI = "ipfs://QmVVvvU9SydA2TRyaXcRUkGQyDYhN9thuBnHLcSfs9m4Bd";
 
 const max = 6;
 const supply = 1000;
-const protocol_addresses = [
-    '0x',
-    '0x',
-    '0x',
-    '0x',
-    '0x',
-    '0x'
-]
+const protocol_addresses = ["0x", "0x", "0x", "0x", "0x", "0x"];
 
 enum PROTOCOLS {
   TOKENSET,
@@ -56,19 +48,19 @@ enum STATE {
 */
 
 async function main() {
-    const ERC1155Factory = await hre.ethers.getContractFactory("Root1155");
-    const erc1155 = await ERC1155Factory.deploy(initialURI);
-    log("ERC1155", erc1155.address);
+  const ERC1155Factory = await hre.ethers.getContractFactory("Root1155");
+  const erc1155 = await ERC1155Factory.deploy(initialURI);
+  log("ERC1155", erc1155.address);
 
-    // const Claimable = await hre.ethers.getContractFactory("Claimable");
-    // const claimable = await Claimable.deploy(LiquidityMigration, erc1155.address, max, protocol_addresses);
-    // for (let i = 0; i <= max; i++) {
-    //   await erc1155.create(claimable.address, supply, initialURI, "0x");
-    // }
-    // log("Claimable", claimable.address);
-    // await claimable.stateChange(STATE.ACTIVE);
-    // console.log("State updated: Migrate all the competitors *evil laugh*");
-    // write2File();
+  // const Claimable = await hre.ethers.getContractFactory("Claimable");
+  // const claimable = await Claimable.deploy(LiquidityMigration, erc1155.address, max, protocol_addresses);
+  // for (let i = 0; i <= max; i++) {
+  //   await erc1155.create(claimable.address, supply, initialURI, "0x");
+  // }
+  // log("Claimable", claimable.address);
+  // await claimable.stateChange(STATE.ACTIVE);
+  // console.log("State updated: Migrate all the competitors *evil laugh*");
+  // write2File();
 }
 const contracts: any = {};
 const log = (contractTitle: string, address: string) => {
@@ -89,7 +81,5 @@ main()
     console.error(error);
     process.exit(1);
   });
-
-
 
 // 0000000000000000000000000000000000000000000000000000000000000001

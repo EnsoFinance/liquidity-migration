@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 import { ADD_ADAPTER } from "./task-names";
-import { getOwner } from "./whitelistStrategy"
+import { getOwner } from "./whitelistStrategy";
 
 export const MIGRATION_ABI_FRAGMENT = [
   {

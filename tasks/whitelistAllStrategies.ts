@@ -16,13 +16,13 @@ task(WHITELIST_ALL_STRATEGIES, "Whitelist all whale strategies", async (_taskArg
         const deployedAdapter = deployments[network][adapter];
         if (deployedAdapter) {
           const signer = await hre.ethers.getSigner(owner);
-          const adapter = await hre.ethers.getContractAt("AbstractAdapter", deployedAdapter, signer )
+          const adapter = await hre.ethers.getContractAt("AbstractAdapter", deployedAdapter, signer);
           const isWhitelisted = await adapter.isWhitelisted(lpTokenAddress);
           if (!isWhitelisted) {
-          await adapter.add(lpTokenAddress);
-          console.log("Added strategy ", lpTokenAddress, " to adapter ", deployedAdapter);
+            await adapter.add(lpTokenAddress);
+            console.log("Added strategy ", lpTokenAddress, " to adapter ", deployedAdapter);
           } else {
-            console.log("Lp already added: ", lpTokenAddress)
+            console.log("Lp already added: ", lpTokenAddress);
           }
         }
       }

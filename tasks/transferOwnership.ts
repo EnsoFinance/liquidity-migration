@@ -4,7 +4,6 @@ import { getOwner } from "./whitelistStrategy";
 import deployments from "../deployments.json";
 const prompts = require("prompts");
 
-
 task(TRANSFER_OWNERSHIP, "Transfer ownership to new wallet")
   .addParam("to", "address to transfer ownership to")
   .setAction(async ({ to }, hre) => {
@@ -12,7 +11,7 @@ task(TRANSFER_OWNERSHIP, "Transfer ownership to new wallet")
     const owner = await getOwner(hre);
     const signer = await hre.ethers.getSigner(owner);
     // @ts-ignore
-    const deployment = deployments[network]
+    const deployment = deployments[network];
     const response = await prompts({
       type: "toggle",
       name: "value",
@@ -26,25 +25,24 @@ task(TRANSFER_OWNERSHIP, "Transfer ownership to new wallet")
         const keys = Object.keys(deployment);
         for (let i = 0; i < keys.length; i++) {
           // @ts-ignore
-          const ownableAddr = deployment[keys[i]]
+          const ownableAddr = deployment[keys[i]];
           if (ownableAddr) {
-            const ownableFactory = await hre.ethers.getContractFactory("Ownable", signer);            ;
+            const ownableFactory = await hre.ethers.getContractFactory("Ownable", signer);
             const ownable = ownableFactory.attach(ownableAddr);
             const currentOwner = await ownable.owner();
             console.log(`\n${keys[i]} Current Owner: `, currentOwner);
             if (currentOwner && currentOwner == signer.address) {
-                console.log("Transferring ownership...")
-                const estimatedGasPrice = await signer.getGasPrice()
-                const gasPrice = estimatedGasPrice.add(estimatedGasPrice.div(10))
-                
-                const tx = await ownable.transferOwnership(to, { gasPrice: gasPrice });
-                await tx.wait();
-                console.log("Success!")
-                console.log(`${keys[i]} New Owner: `, await ownable.owner());
-            } else {
-                console.log("Not owner")
-            }
+              console.log("Transferring ownership...");
+              const estimatedGasPrice = await signer.getGasPrice();
+              const gasPrice = estimatedGasPrice.add(estimatedGasPrice.div(10));
 
+              const tx = await ownable.transferOwnership(to, { gasPrice: gasPrice });
+              await tx.wait();
+              console.log("Success!");
+              console.log(`${keys[i]} New Owner: `, await ownable.owner());
+            } else {
+              console.log("Not owner");
+            }
           }
         }
         break;

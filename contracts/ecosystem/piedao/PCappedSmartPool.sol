@@ -610,7 +610,7 @@ contract ReentryProtection {
         uint256 lockCounter;
     }
 
-    modifier noReentry {
+    modifier noReentry() {
         // Use counter to only write to storage once
         lrps().lockCounter++;
         uint256 lockValue = lrps().lockCounter;

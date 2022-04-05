@@ -3,7 +3,6 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 interface IBasketFacet {
-
     event TokenAdded(address indexed _token);
     event TokenRemoved(address indexed _token);
     event EntryFeeSet(uint256 fee);
@@ -29,7 +28,7 @@ interface IBasketFacet {
         @notice Get the entry fee
         @return Current entry fee
     */
-    function getEntryFee() external view returns(uint256);
+    function getEntryFee() external view returns (uint256);
 
     /**
         @notice Set the exit fee paid when exiting
@@ -41,7 +40,7 @@ interface IBasketFacet {
         @notice Get the exit fee
         @return Current exit fee
     */
-    function getExitFee() external view returns(uint256);
+    function getExitFee() external view returns (uint256);
 
     /**
         @notice Set the annualized fee. Often referred to as streaming fee
@@ -53,7 +52,7 @@ interface IBasketFacet {
         @notice Get the annualized fee.
         @return Current annualized fee.
     */
-    function getAnnualizedFee() external view returns(uint256);
+    function getAnnualizedFee() external view returns (uint256);
 
     /**
         @notice Set the address receiving the fees.
@@ -64,7 +63,7 @@ interface IBasketFacet {
         @notice Get the fee benificiary
         @return The current fee beneficiary
     */
-    function getFeeBeneficiary() external view returns(address);
+    function getFeeBeneficiary() external view returns (address);
 
     /**
         @notice Set the fee beneficiaries share of the entry fee
@@ -76,7 +75,7 @@ interface IBasketFacet {
         @notice Get the entry fee beneficiary share
         @return Feeshare amount
     */
-    function getEntryFeeBeneficiaryShare() external view returns(uint256);
+    function getEntryFeeBeneficiaryShare() external view returns (uint256);
 
     /**
         @notice Set the fee beneficiaries share of the exit fee
@@ -88,13 +87,13 @@ interface IBasketFacet {
         @notice Get the exit fee beneficiary share
         @return Feeshare amount
     */
-    function getExitFeeBeneficiaryShare() external view returns(uint256);
+    function getExitFeeBeneficiaryShare() external view returns (uint256);
 
     /**
         @notice Calculate the oustanding annualized fee
         @return Amount of pool tokens to be minted to charge the annualized fee
     */
-    function calcOutStandingAnnualizedFee() external view returns(uint256);
+    function calcOutStandingAnnualizedFee() external view returns (uint256);
 
     /**
         @notice Charges the annualized fee
