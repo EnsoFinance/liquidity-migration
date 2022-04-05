@@ -1,7 +1,5 @@
 pragma solidity >=0.8.0;
 
-
-
 import "../helpers/Ownable.sol";
 import "./Migrator.sol";
 import "./interfaces/ILiquidityMigrationV2.sol";
@@ -34,7 +32,7 @@ interface ILiquidityMigrationV1 {
     function controller() external view returns (address);
 }
 
-contract MigrationCoordinator is Migrator, Ownable{
+contract MigrationCoordinator is Migrator, Ownable {
     ILiquidityMigrationV1 public immutable liquidityMigrationV1;
     ILiquidityMigrationV2 public immutable liquidityMigrationV2;
     address public immutable migrationAdapter;
@@ -67,13 +65,16 @@ contract MigrationCoordinator is Migrator, Ownable{
         liquidityMigrationV1.updateGeneric(address(liquidityMigrationV2));
         // If controller is not zero address, set to zero address
         // Don't want anyone calling migrate until process is complete
-        if (liquidityMigrationV1.controller() != address(0))
-          liquidityMigrationV1.updateController(address(0));
+        if (liquidityMigrationV1.controller() != address(0)) liquidityMigrationV1.updateController(address(0));
         // Finally, unlock the migration contract
         liquidityMigrationV1.updateUnlock(block.timestamp);
     }
 
-    function migrateLP(address[] memory users, address lp, address adapter) external onlyMigrator {
+    function migrateLP(
+        address[] memory users,
+        address lp,
+        address adapter
+    ) external onlyMigrator {
         // Set controller to allow migration
         liquidityMigrationV1.updateController(address(this));
         // Set adapter to allow migration
@@ -101,21 +102,18 @@ contract MigrationCoordinator is Migrator, Ownable{
 
     // Refund wrapper since MigrationCoordinator is now owner of LiquidityMigrationV1
     function refund(address user, address lp) external onlyOwner {
-      liquidityMigrationV1.refund(user, lp);
+        liquidityMigrationV1.refund(user, lp);
     }
 
     function addAdapter(address adapter) external onlyOwner {
-      liquidityMigrationV1.addAdapter(adapter);
+        liquidityMigrationV1.addAdapter(adapter);
     }
 
     function removeAdapter(address adapter) external onlyOwner {
-      liquidityMigrationV1.removeAdapter(adapter);
+        liquidityMigrationV1.removeAdapter(adapter);
     }
 
-    function updateMigrator(address newMigrator)
-        external
-        onlyOwner
-    {
+    function updateMigrator(address newMigrator) external onlyOwner {
         require(migrator != newMigrator, "Already exists");
         migrator = newMigrator;
     }

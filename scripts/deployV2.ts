@@ -26,12 +26,11 @@ enum PROTOCOLS {
 
 async function main() {
   if (network) {
-
     const deployer = await getOwner(hre);
     const signer = await hre.ethers.getSigner(deployer);
 
-    const estimatedGasPrice = await signer.getGasPrice()
-    const gasPrice = estimatedGasPrice.add(estimatedGasPrice.div(10))
+    const estimatedGasPrice = await signer.getGasPrice();
+    const gasPrice = estimatedGasPrice.add(estimatedGasPrice.div(10));
 
     // @ts-ignore
     const deploymentAddresses = deployments[network];
@@ -46,7 +45,9 @@ async function main() {
     adapters[PROTOCOLS.PIEDAO] = deploymentAddresses["PieDaoAdapter"];
 
     const LiquidityMigrationV2Factory = await hre.ethers.getContractFactory("LiquidityMigrationV2");
-    const liquidityMigrationV2 = await LiquidityMigrationV2Factory.connect(signer).deploy(adapters, unlock, modify, { gasPrice: gasPrice });
+    const liquidityMigrationV2 = await LiquidityMigrationV2Factory.connect(signer).deploy(adapters, unlock, modify, {
+      gasPrice: gasPrice,
+    });
     await liquidityMigrationV2.deployed();
     log("LiquidityMigrationV2", liquidityMigrationV2.address);
 
@@ -61,7 +62,7 @@ async function main() {
       liquidityMigrationAddress,
       liquidityMigrationV2.address,
       migrationAdapter.address,
-      { gasPrice: gasPrice }
+      { gasPrice: gasPrice },
     );
     await migrationCoordinator.deployed();
     log("MigrationCoordinator", migrationCoordinator.address);

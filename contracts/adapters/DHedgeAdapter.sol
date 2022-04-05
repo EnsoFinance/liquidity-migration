@@ -5,11 +5,23 @@ import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/S
 import "./AbstractAdapter.sol";
 
 interface IDHedge {
-    function getFundComposition() external view returns(bytes32[] memory, uint256[] memory, uint256[] memory);
-    function getAssetProxy(bytes32 key) external view returns(address);
+    function getFundComposition()
+        external
+        view
+        returns (
+            bytes32[] memory,
+            uint256[] memory,
+            uint256[] memory
+        );
+
+    function getAssetProxy(bytes32 key) external view returns (address);
+
     function withdraw(uint256 _fundTokenAmount) external;
+
     function deposit(uint256 _susdAmount) external returns (uint256);
+
     function totalSupply() external view returns (uint256);
+
     function totalFundValue() external view returns (uint256);
 }
 
@@ -26,12 +38,7 @@ contract DHedgeAdapter is AbstractAdapter {
         SUSD = susd_;
     }
 
-    function outputTokens(address _lp)
-        public
-        view
-        override
-        returns (address[] memory)
-    {
+    function outputTokens(address _lp) public view override returns (address[] memory) {
         (bytes32[] memory assets, , ) = IDHedge(_lp).getFundComposition();
         address[] memory outputs = new address[](assets.length);
         for (uint256 i = 0; i < assets.length; i++) {
@@ -40,24 +47,19 @@ contract DHedgeAdapter is AbstractAdapter {
         return outputs;
     }
 
-    function encodeMigration(address _genericRouter, address _strategy, address _lp, uint256 _amount)
-        public
-        override
-        view
-        onlyWhitelisted(_lp)
-        returns (Call[] memory calls)
-    {
+    function encodeMigration(
+        address _genericRouter,
+        address _strategy,
+        address _lp,
+        uint256 _amount
+    ) public view override onlyWhitelisted(_lp) returns (Call[] memory calls) {
         address[] memory tokens = outputTokens(_lp);
         calls = new Call[](tokens.length + 1);
         calls[0] = encodeWithdraw(_lp, _amount)[0];
         for (uint256 i = 0; i < tokens.length; i++) {
             calls[i + 1] = Call(
                 _genericRouter,
-                abi.encodeWithSelector(
-                    IGenericRouter(_genericRouter).settleTransfer.selector,
-                    tokens[i],
-                    _strategy
-                )
+                abi.encodeWithSelector(IGenericRouter(_genericRouter).settleTransfer.selector, tokens[i], _strategy)
             );
         }
         return calls;
@@ -65,19 +67,13 @@ contract DHedgeAdapter is AbstractAdapter {
 
     function encodeWithdraw(address _lp, uint256 _amount)
         public
-        override
         view
+        override
         onlyWhitelisted(_lp)
         returns (Call[] memory calls)
     {
         calls = new Call[](1);
-        calls[0] = Call(
-            payable(_lp),
-            abi.encodeWithSelector(
-                IDHedge(_lp).withdraw.selector,
-                _amount
-            )
-        );
+        calls[0] = Call(payable(_lp), abi.encodeWithSelector(IDHedge(_lp).withdraw.selector, _amount));
     }
 
     /*

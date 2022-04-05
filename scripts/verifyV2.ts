@@ -28,9 +28,9 @@ async function main() {
     const deployer = await getOwner(hre);
     // @ts-ignore
     const deploymentAddresses = deployments[network];
-    const liquidityMigrationAddress = deploymentAddresses['LiquidityMigration'];
-    const liquidityMigrationV2Address = deploymentAddresses['LiquidityMigrationV2'];
-    const migrationAdapterAddress = deploymentAddresses['MigrationAdapter'];
+    const liquidityMigrationAddress = deploymentAddresses["LiquidityMigration"];
+    const liquidityMigrationV2Address = deploymentAddresses["LiquidityMigrationV2"];
+    const migrationAdapterAddress = deploymentAddresses["MigrationAdapter"];
 
     const adapters = [];
     adapters[PROTOCOLS.INDEXCOOP] = deploymentAddresses["IndexCoopAdapter"];
@@ -51,13 +51,8 @@ async function main() {
     });
 
     await hre.run("verify:verify", {
-      address: deploymentAddresses['MigrationCoordinator'],
-      constructorArguments: [
-        treasury,
-        liquidityMigrationAddress,
-        liquidityMigrationV2Address,
-        migrationAdapterAddress
-      ],
+      address: deploymentAddresses["MigrationCoordinator"],
+      constructorArguments: [treasury, liquidityMigrationAddress, liquidityMigrationV2Address, migrationAdapterAddress],
     });
   } else {
     console.log("Network undefined");

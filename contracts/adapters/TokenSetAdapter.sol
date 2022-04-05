@@ -6,11 +6,16 @@ import "./AbstractAdapter.sol";
 
 interface ISetToken {
     function getComponents() external view returns (address[] memory);
+
     function isInitializedModule(address _module) external view returns (bool);
 }
 
 interface IBasicIssuanceModule {
-    function redeem(address _setToken, uint256 _quantity, address _to) external;
+    function redeem(
+        address _setToken,
+        uint256 _quantity,
+        address _to
+    ) external;
 }
 
 /// @title Token Sets Vampire Attack Contract
@@ -23,7 +28,7 @@ contract TokenSetAdapter is AbstractAdapter {
     address public genericRouter;
     address public leverageAdapter;
     IBasicIssuanceModule public basicModule;
-    mapping (address => bool) private _leveraged;
+    mapping(address => bool) private _leveraged;
 
     address private constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     address private constant ETH2X = 0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD;
@@ -36,8 +41,7 @@ contract TokenSetAdapter is AbstractAdapter {
         address leverageAdapter_,
         address genericRouter_,
         address owner_
-    ) AbstractAdapter(owner_)
-    {
+    ) AbstractAdapter(owner_) {
         basicModule = basicModule_;
         leverageAdapter = leverageAdapter_;
         genericRouter = genericRouter_;
@@ -55,12 +59,7 @@ contract TokenSetAdapter is AbstractAdapter {
         leverageAdapter = _leverageAdapter;
     }
 
-    function outputTokens(address _lp)
-        public
-        view
-        override
-        returns (address[] memory)
-    {
+    function outputTokens(address _lp) public view override returns (address[] memory) {
         /*
         if (_leveraged[_lp]) {
             address[] memory outputs = new address[](1);
@@ -72,58 +71,53 @@ contract TokenSetAdapter is AbstractAdapter {
         return ISetToken(_lp).getComponents();
     }
 
-    function encodeMigration(address _genericRouter, address _strategy, address _lp, uint256 _amount)
-        public
-        override
-        view
-        onlyWhitelisted(_lp)
-        returns (Call[] memory calls)
-    {
+    function encodeMigration(
+        address _genericRouter,
+        address _strategy,
+        address _lp,
+        uint256 _amount
+    ) public view override onlyWhitelisted(_lp) returns (Call[] memory calls) {
         if (_leveraged[_lp]) {
-          calls = new Call[](3);
-          Call[] memory withdrawCalls = encodeWithdraw(_lp, _amount);
-          calls[0] = withdrawCalls[0];
-          calls[1] = withdrawCalls[1];
-          if (_lp == ETH2X) {
-              calls[2] = Call(
-                  _genericRouter,
-                  abi.encodeWithSelector(
-                      IGenericRouter(_genericRouter).settleSwap.selector,
-                      leverageAdapter,
-                      WETH,
-                      AWETH,
-                      _genericRouter,
-                      _strategy
-                  )
-              );
-          }
-          if (_lp == BTC2X) {
-              calls[2] = Call(
-                  _genericRouter,
-                  abi.encodeWithSelector(
-                      IGenericRouter(_genericRouter).settleSwap.selector,
-                      leverageAdapter,
-                      WBTC,
-                      AWBTC,
-                      _genericRouter,
-                      _strategy
-                  )
-              );
-          }
+            calls = new Call[](3);
+            Call[] memory withdrawCalls = encodeWithdraw(_lp, _amount);
+            calls[0] = withdrawCalls[0];
+            calls[1] = withdrawCalls[1];
+            if (_lp == ETH2X) {
+                calls[2] = Call(
+                    _genericRouter,
+                    abi.encodeWithSelector(
+                        IGenericRouter(_genericRouter).settleSwap.selector,
+                        leverageAdapter,
+                        WETH,
+                        AWETH,
+                        _genericRouter,
+                        _strategy
+                    )
+                );
+            }
+            if (_lp == BTC2X) {
+                calls[2] = Call(
+                    _genericRouter,
+                    abi.encodeWithSelector(
+                        IGenericRouter(_genericRouter).settleSwap.selector,
+                        leverageAdapter,
+                        WBTC,
+                        AWBTC,
+                        _genericRouter,
+                        _strategy
+                    )
+                );
+            }
         } else {
-          address[] memory tokens = outputTokens(_lp);
-          calls = new Call[](tokens.length + 1);
-          calls[0] = encodeWithdraw(_lp, _amount)[0];
-          for (uint256 i = 0; i < tokens.length; i++) {
-              calls[i + 1] = Call(
-                  _genericRouter,
-                  abi.encodeWithSelector(
-                      IGenericRouter(_genericRouter).settleTransfer.selector,
-                      tokens[i],
-                      _strategy
-                  )
-              );
-          }
+            address[] memory tokens = outputTokens(_lp);
+            calls = new Call[](tokens.length + 1);
+            calls[0] = encodeWithdraw(_lp, _amount)[0];
+            for (uint256 i = 0; i < tokens.length; i++) {
+                calls[i + 1] = Call(
+                    _genericRouter,
+                    abi.encodeWithSelector(IGenericRouter(_genericRouter).settleTransfer.selector, tokens[i], _strategy)
+                );
+            }
         }
 
         return calls;
@@ -131,22 +125,15 @@ contract TokenSetAdapter is AbstractAdapter {
 
     function encodeWithdraw(address _lp, uint256 _amount)
         public
-        override
         view
+        override
         onlyWhitelisted(_lp)
         returns (Call[] memory calls)
     {
         if (_leveraged[_lp]) {
             // Redeem debt is too complicated. Just sell the token
             calls = new Call[](2);
-            calls[0] = Call(
-                _lp,
-                abi.encodeWithSelector(
-                    IERC20(_lp).approve.selector,
-                    UNI_V3,
-                    _amount
-                )
-            );
+            calls[0] = Call(_lp, abi.encodeWithSelector(IERC20(_lp).approve.selector, UNI_V3, _amount));
             if (_lp == ETH2X) {
                 calls[1] = Call(
                     UNI_V3,
@@ -187,12 +174,7 @@ contract TokenSetAdapter is AbstractAdapter {
             calls = new Call[](1);
             calls[0] = Call(
                 address(basicModule),
-                abi.encodeWithSelector(
-                    basicModule.redeem.selector,
-                    _lp,
-                    _amount,
-                    genericRouter
-                )
+                abi.encodeWithSelector(basicModule.redeem.selector, _lp, _amount, genericRouter)
             );
         }
     }

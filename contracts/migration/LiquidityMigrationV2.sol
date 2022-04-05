@@ -16,10 +16,10 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
     address public emergencyReceiver;
 
     bool public paused;
-    mapping (address => bool) public adapters; // adapter -> bool
-    mapping (address => uint256) public totalStaked; // lp -> total staked
-    mapping (address => address) public strategies; // lp -> enso strategy
-    mapping (address => mapping (address => uint256)) public staked; // user -> lp -> stake
+    mapping(address => bool) public adapters; // adapter -> bool
+    mapping(address => uint256) public totalStaked; // lp -> total staked
+    mapping(address => address) public strategies; // lp -> enso strategy
+    mapping(address => mapping(address => uint256)) public staked; // user -> lp -> stake
 
     event Staked(address adapter, address strategy, uint256 amount, address account);
     event Migrated(address adapter, address lp, address strategy, address account);
@@ -28,16 +28,16 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
     event EmergencyMigration(address lp, uint256 amount, address receiver);
 
     /**
-    * @dev Require adapter registered
-    */
+     * @dev Require adapter registered
+     */
     modifier onlyRegistered(address adapter) {
         require(adapters[adapter], "Not registered");
         _;
     }
 
     /**
-    * @dev Require adapter allows lp
-    */
+     * @dev Require adapter allows lp
+     */
     modifier onlyWhitelisted(address adapter, address lp) {
         require(IAdapter(adapter).isWhitelisted(lp), "Not whitelist");
         _;
@@ -62,22 +62,17 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         address[] memory adapters_,
         uint256 unlock_,
         uint256 modify_
-    )
-        Timelocked(unlock_, modify_, msg.sender)
-    {
+    ) Timelocked(unlock_, modify_, msg.sender) {
         for (uint256 i = 0; i < adapters_.length; i++) {
             adapters[adapters_[i]] = true;
         }
     }
 
     function setStrategy(address lp, address strategy) external onlyOwner notPaused {
-        require(
-            IMigrationController(controller).initialized(strategy),
-            "Not enso strategy"
-        );
+        require(IMigrationController(controller).initialized(strategy), "Not enso strategy");
         if (strategies[lp] != address(0)) {
-          // This value can be changed as long as no migration is in progress
-          require(IERC20(strategies[lp]).balanceOf(address(this)) == 0, "Already set");
+            // This value can be changed as long as no migration is in progress
+            require(IERC20(strategies[lp]).balanceOf(address(this)) == 0, "Already set");
         }
         strategies[lp] = strategy;
     }
@@ -87,12 +82,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         address lp,
         address adapter,
         uint256 amount
-    )
-        external
-        override
-        notPaused
-        onlyLocked
-    {
+    ) external override notPaused onlyLocked {
         require(msg.sender == migrationCoordinator, "Wrong sender");
         _stake(user, lp, adapter, amount);
     }
@@ -101,12 +91,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         address lp,
         uint256 amount,
         address adapter
-    )
-        external
-        notPaused
-        onlyLocked
-        onlyRegistered(adapter)
-    {
+    ) external notPaused onlyLocked onlyRegistered(adapter) {
         _transferFromAndStake(lp, adapter, amount);
     }
 
@@ -114,12 +99,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         address[] memory lps,
         uint256[] memory amounts,
         address adapter
-    )
-        external
-        notPaused
-        onlyLocked
-        onlyRegistered(adapter)
-    {
+    ) external notPaused onlyLocked onlyRegistered(adapter) {
         require(lps.length == amounts.length, "Incorrect arrays");
         for (uint256 i = 0; i < lps.length; i++) {
             _transferFromAndStake(lps[i], adapter, amounts[i]);
@@ -132,22 +112,12 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         address exchange,
         uint256 minAmountOut,
         uint256 deadline
-    )
-        external
-        payable
-        notPaused
-        onlyLocked
-        onlyRegistered(adapter)
-        onlyWhitelisted(adapter, lp)
-    {
+    ) external payable notPaused onlyLocked onlyRegistered(adapter) onlyWhitelisted(adapter, lp) {
         require(msg.value > 0, "No value");
         _buyAndStake(lp, msg.value, adapter, exchange, minAmountOut, deadline);
     }
 
-    function migrateAll(
-        address lp,
-        address adapter
-    )
+    function migrateAll(address lp, address adapter)
         external
         override
         notPaused
@@ -162,7 +132,13 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         delete totalStaked[lp];
         uint256 strategyBalanceBefore = IStrategy(strategy).balanceOf(address(this));
         IERC20(lp).safeTransfer(genericRouter, totalStake);
-        IMigrationController(controller).migrate(IStrategy(strategy), IStrategyRouter(genericRouter), IERC20(lp), IAdapter(adapter), totalStake);
+        IMigrationController(controller).migrate(
+            IStrategy(strategy),
+            IStrategyRouter(genericRouter),
+            IERC20(lp),
+            IAdapter(adapter),
+            totalStake
+        );
         uint256 strategyBalanceAfter = IStrategy(strategy).balanceOf(address(this));
         assert((strategyBalanceAfter - strategyBalanceBefore) == totalStake);
     }
@@ -207,9 +183,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         address lp,
         address adapter,
         uint256 amount
-    )
-        internal
-    {
+    ) internal {
         staked[user][lp] += amount;
         totalStaked[lp] += amount;
         emit Staked(adapter, lp, amount, user);
@@ -219,10 +193,7 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         address lp,
         address adapter,
         uint256 amount
-    )
-        internal
-        onlyWhitelisted(adapter, lp)
-    {
+    ) internal onlyWhitelisted(adapter, lp) {
         require(amount > 0, "No amount");
         IERC20(lp).safeTransferFrom(msg.sender, address(this), amount);
         _stake(msg.sender, lp, adapter, amount);
@@ -235,11 +206,9 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         address exchange,
         uint256 minAmountOut,
         uint256 deadline
-    )
-        internal
-    {
+    ) internal {
         uint256 balanceBefore = IERC20(lp).balanceOf(address(this));
-        IAdapter(adapter).buy{value: amount}(lp, exchange, minAmountOut, deadline);
+        IAdapter(adapter).buy{ value: amount }(lp, exchange, minAmountOut, deadline);
         uint256 amountAdded = IERC20(lp).balanceOf(address(this)) - balanceBefore;
         _stake(msg.sender, lp, adapter, amountAdded);
     }
@@ -255,59 +224,37 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         emit Refunded(lp, amount, user);
     }
 
-    function updateController(address newController)
-        external
-        onlyOwner
-    {
+    function updateController(address newController) external onlyOwner {
         require(controller != newController, "Controller already exists");
         controller = newController;
     }
 
-    function updateGenericRouter(address newGenericRouter)
-        external
-        onlyOwner
-    {
+    function updateGenericRouter(address newGenericRouter) external onlyOwner {
         require(genericRouter != newGenericRouter, "GenericRouter already exists");
         genericRouter = newGenericRouter;
     }
 
-    function updateCoordinator(address newCoordinator)
-        external
-        onlyOwner
-    {
+    function updateCoordinator(address newCoordinator) external onlyOwner {
         require(migrationCoordinator != newCoordinator, "Coordinator already exists");
         migrationCoordinator = newCoordinator;
     }
 
-    function updateEmergencyReceiver(address newReceiver)
-        external
-        onlyOwner
-    {
+    function updateEmergencyReceiver(address newReceiver) external onlyOwner {
         require(emergencyReceiver != newReceiver, "Receiver already exists");
         emergencyReceiver = newReceiver;
     }
 
-    function addAdapter(address adapter)
-        external
-        onlyOwner
-    {
+    function addAdapter(address adapter) external onlyOwner {
         require(!adapters[adapter], "Adapter already exists");
         adapters[adapter] = true;
     }
 
-    function removeAdapter(address adapter)
-        external
-        onlyOwner
-    {
+    function removeAdapter(address adapter) external onlyOwner {
         require(adapters[adapter], "Adapter does not exist");
         adapters[adapter] = false;
     }
 
-    function hasStaked(address account, address lp)
-        external
-        view
-        returns(bool)
-    {
+    function hasStaked(address account, address lp) external view returns (bool) {
         return staked[account][lp] > 0;
     }
 }

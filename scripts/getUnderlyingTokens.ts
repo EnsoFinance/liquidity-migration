@@ -211,10 +211,10 @@ class UnderlyingTokens {
         // Look through  dictionary for this derived asset
         // Is this already saved as underlying asset?
         if (!this.findBase(tokens[i])) {
-          let protocol: AcceptedProtocols = await this.findSupportedProtocol(toks[i]);
+          const protocol: AcceptedProtocols = await this.findSupportedProtocol(toks[i]);
           // Is it a derived token?
           if (protocol != AcceptedProtocols.DEFAULT_ORACLE) {
-            let adapter = this.getAdapter(protocol);
+            const adapter = this.getAdapter(protocol);
             //let position = await setupStrategyItems(this.enso.platform.oracles.ensoOracle, adapter, this.signer.address, underlyingTokens);
             const derivedAsset: DerivedAsset = {
               chainId: toks[i].chainId,
@@ -298,7 +298,7 @@ async function main() {
   // @ts-ignore
   const signer = await ethers.getSigner();
 
-  let builder = new EnsoBuilder(signer);
+  const builder = new EnsoBuilder(signer);
   builder
     .addAdapter("balancer")
     .addAdapter("curve")

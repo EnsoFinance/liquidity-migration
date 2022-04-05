@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { MainnetSigner } from "../types";
 import { PIE_DAO_HOLDERS } from "../src/constants";
-import {  Contract, Signer } from "ethers";
+import { Contract, Signer } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { FACTORY_REGISTRIES } from "../src/constants";
@@ -36,7 +36,7 @@ export class PieDaoEnvironmentBuilder {
 
     const PieDaoAdapterFactory = (await ethers.getContractFactory("PieDaoAdapter")) as PieDaoAdapter__factory;
 
-    const adapter = this.adapter?? await PieDaoAdapterFactory.deploy(this.signer.address);
+    const adapter = this.adapter ?? (await PieDaoAdapterFactory.deploy(this.signer.address));
 
     const contract = await this.getImplementation(lp);
 

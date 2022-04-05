@@ -7,8 +7,8 @@ import { IERC20__factory, IStrategy__factory } from "../typechain";
 
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { DEPOSIT_SLIPPAGE, FACTORY_REGISTRIES, INITIAL_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
-import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils"
-import { EnsoBuilder} from "@enso/contracts";
+import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils";
+import { EnsoBuilder } from "@enso/contracts";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 
 describe("Indexed: Unit tests", function () {
@@ -44,9 +44,7 @@ describe("Indexed: Unit tests", function () {
         holder: await this.IndexedEnv.holders[i].getAddress(),
         balance: await this.indexedErc20.balanceOf(await this.IndexedEnv.holders[i].getAddress()),
       };
-      expect(await this.indexedErc20.balanceOf(await this.IndexedEnv.holders[i].getAddress())).to.gt(
-        BigNumber.from(0),
-      );
+      expect(await this.indexedErc20.balanceOf(await this.IndexedEnv.holders[i].getAddress())).to.gt(BigNumber.from(0));
     }
 
     const previoustokenBalance = holderBalances[0].balance;
@@ -56,20 +54,14 @@ describe("Indexed: Unit tests", function () {
     for (let i = 0; i < this.underlyingTokens.length; i++) {
       minAmount[i] = 0;
     }
-    const tx = await this.IndexedEnv.pool
-      .connect(this.IndexedEnv.holders[0])
-      .exitPool(previoustokenBalance, minAmount);
+    const tx = await this.IndexedEnv.pool.connect(this.IndexedEnv.holders[0]).exitPool(previoustokenBalance, minAmount);
     await tx.wait();
-    const posttokenBalance = await this.indexedErc20.balanceOf(
-      await this.IndexedEnv.holders[0].getAddress(),
-    );
+    const posttokenBalance = await this.indexedErc20.balanceOf(await this.IndexedEnv.holders[0].getAddress());
     expect(posttokenBalance.isZero()).to.be.true;
   });
 
   it("Token holder should be able to stake LP token", async function () {
-    const tx = await this.IndexedEnv.adapter
-      .connect(this.signers.default)
-      .add(FACTORY_REGISTRIES.DEGEN_INDEX);
+    const tx = await this.IndexedEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.DEGEN_INDEX);
     await tx.wait();
     const holder2 = await this.IndexedEnv.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -81,9 +73,7 @@ describe("Indexed: Unit tests", function () {
       .connect(holder2)
       .stake(this.IndexedEnv.pool.address, holder2Balance.div(3), this.IndexedEnv.adapter.address);
     expect(
-      (await this.liquidityMigration.staked(holder2Address, this.IndexedEnv.pool.address)).eq(
-        holder2Balance.div(3),
-      ),
+      (await this.liquidityMigration.staked(holder2Address, this.IndexedEnv.pool.address)).eq(holder2Balance.div(3)),
     ).to.be.true;
     const holder2AfterBalance = await this.indexedErc20.balanceOf(holder2Address);
     expect(holder2AfterBalance.gt(BigNumber.from(0))).to.be.true;
@@ -96,9 +86,7 @@ describe("Indexed: Unit tests", function () {
     // staking the tokens in the liquidity migration contract
     const holder2BalanceBefore = await this.indexedErc20.balanceOf(holder2Address);
     expect(holder2BalanceBefore.gt(BigNumber.from(0))).to.be.true;
-    await this.indexedErc20
-      .connect(holder2)
-      .approve(this.liquidityMigration.address, holder2BalanceBefore);
+    await this.indexedErc20.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
       .stake(this.IndexedEnv.pool.address, holder2BalanceBefore, this.IndexedEnv.adapter.address);
@@ -107,28 +95,25 @@ describe("Indexed: Unit tests", function () {
 
     const holder2BalanceAfter = await this.indexedErc20.balanceOf(holder2Address);
     expect(holder2BalanceAfter.eq(BigNumber.from(0))).to.be.true;
-    const tx = await this.IndexedEnv.adapter
-      .connect(this.signers.default)
-      .remove(FACTORY_REGISTRIES.DEGEN_INDEX);
+    const tx = await this.IndexedEnv.adapter.connect(this.signers.default).remove(FACTORY_REGISTRIES.DEGEN_INDEX);
     await tx.wait();
     // Migrate
     await expect(
       this.liquidityMigration
         .connect(holder2)
-        ['migrate(address,address,address,uint256)'](
+        ["migrate(address,address,address,uint256)"](
           this.IndexedEnv.pool.address,
           this.IndexedEnv.adapter.address,
           ethers.constants.AddressZero,
-          DEPOSIT_SLIPPAGE
+          DEPOSIT_SLIPPAGE,
         ),
     ).to.be.reverted;
   });
 
   it("Adding to whitelist from non-manager account should fail", async function () {
     // adding the Indexed Token as a whitelisted token
-    await expect(
-      this.IndexedEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.DEGEN_INDEX),
-    ).to.be.reverted;
+    await expect(this.IndexedEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.DEGEN_INDEX)).to.be
+      .reverted;
   });
 
   it("Getting the output token list", async function () {
@@ -140,38 +125,41 @@ describe("Indexed: Unit tests", function () {
 
   it("Migration using a non-whitelisted token should fail", async function () {
     // Setup migration calls using DEGENAdapter contract
-    await expect(this.IndexedEnv.adapter.encodeWithdraw(this.IndexedEnv.pool.address, BigNumber.from(10000))).to.be.revertedWith(
-      "Whitelistable#onlyWhitelisted: not whitelisted lp",
-    );
+    await expect(
+      this.IndexedEnv.adapter.encodeWithdraw(this.IndexedEnv.pool.address, BigNumber.from(10000)),
+    ).to.be.revertedWith("Whitelistable#onlyWhitelisted: not whitelisted lp");
   });
 
   it("Create strategy", async function () {
-      // adding the DEGEN Token as a whitelisted token
-      let tx = await this.IndexedEnv.adapter
-        .connect(this.signers.default)
-        .add(FACTORY_REGISTRIES.DEGEN_INDEX);
-      await tx.wait();
+    // adding the DEGEN Token as a whitelisted token
+    let tx = await this.IndexedEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.DEGEN_INDEX);
+    await tx.wait();
 
-      // deploy strategy
-      const strategyData = encodeStrategyData(
-        this.signers.default.address,
-        "DEGEN",
-        "DEGEN",
-        await setupStrategyItems(this.enso.platform.oracles.ensoOracle, this.enso.adapters.uniswap.contract.address, this.IndexedEnv.pool.address, this.underlyingTokens),
-        INITIAL_STATE,
-        ethers.constants.AddressZero,
-        '0x'
-      )
-      tx = await this.liquidityMigration.createStrategy(
-        this.indexedErc20.address,
-        this.IndexedEnv.adapter.address,
-        strategyData
-      );
-      const receipt = await tx.wait();
-      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
-      console.log("Strategy address: ", strategyAddress);
-      this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
-  })
+    // deploy strategy
+    const strategyData = encodeStrategyData(
+      this.signers.default.address,
+      "DEGEN",
+      "DEGEN",
+      await setupStrategyItems(
+        this.enso.platform.oracles.ensoOracle,
+        this.enso.adapters.uniswap.contract.address,
+        this.IndexedEnv.pool.address,
+        this.underlyingTokens,
+      ),
+      INITIAL_STATE,
+      ethers.constants.AddressZero,
+      "0x",
+    );
+    tx = await this.liquidityMigration.createStrategy(
+      this.indexedErc20.address,
+      this.IndexedEnv.adapter.address,
+      strategyData,
+    );
+    const receipt = await tx.wait();
+    const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
+    console.log("Strategy address: ", strategyAddress);
+    this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+  });
 
   it("Should migrate tokens to strategy", async function () {
     const holder3 = await this.IndexedEnv.holders[2];
@@ -181,9 +169,7 @@ describe("Indexed: Unit tests", function () {
     const holder3BalanceBefore = await this.indexedErc20.balanceOf(holder3Address);
     expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
 
-    await this.indexedErc20
-      .connect(holder3)
-      .approve(this.liquidityMigration.address, holder3BalanceBefore);
+    await this.indexedErc20.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
     await this.liquidityMigration
       .connect(holder3)
       .stake(this.IndexedEnv.pool.address, holder3BalanceBefore, this.IndexedEnv.adapter.address);
@@ -193,15 +179,20 @@ describe("Indexed: Unit tests", function () {
     expect(holder3BalanceAfter).to.be.equal(BigNumber.from(0));
 
     const tx = await this.liquidityMigration
-      .connect(holder3)['migrate(address,address,address,uint256)'](
+      .connect(holder3)
+      ["migrate(address,address,address,uint256)"](
         this.IndexedEnv.pool.address,
         this.IndexedEnv.adapter.address,
         this.strategy.address,
-        DEPOSIT_SLIPPAGE
+        DEPOSIT_SLIPPAGE,
       );
-    const receipt = await tx.wait()
-    console.log('Migration Gas Used: ', receipt.gasUsed.toString())
-    const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, this.underlyingTokens);
+    const receipt = await tx.wait();
+    console.log("Migration Gas Used: ", receipt.gasUsed.toString());
+    const [total] = await estimateTokens(
+      this.enso.platform.oracles.ensoOracle,
+      this.strategy.address,
+      this.underlyingTokens,
+    );
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
   });
@@ -213,9 +204,13 @@ describe("Indexed: Unit tests", function () {
     expect(await this.strategy.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
     expect(await this.liquidityMigration.staked(defaultAddress, this.indexedErc20.address)).to.be.eq(BigNumber.from(0));
 
-    const ethAmount = ethers.constants.WeiPerEther
-    const expectedAmount = await this.IndexedEnv.adapter.callStatic.getAmountOut(this.indexedErc20.address, UNISWAP_V2_ROUTER, ethAmount)
-    console.log("Expected: ", expectedAmount.toString())
+    const ethAmount = ethers.constants.WeiPerEther;
+    const expectedAmount = await this.IndexedEnv.adapter.callStatic.getAmountOut(
+      this.indexedErc20.address,
+      UNISWAP_V2_ROUTER,
+      ethAmount,
+    );
+    console.log("Expected: ", expectedAmount.toString());
 
     await this.liquidityMigration.connect(this.signers.default).buyAndStake(
       this.indexedErc20.address,
@@ -223,11 +218,11 @@ describe("Indexed: Unit tests", function () {
       UNISWAP_V2_ROUTER,
       expectedAmount.mul(995).div(1000), //0.5% slippage
       ethers.constants.MaxUint256,
-      {value: ethAmount}
-    )
+      { value: ethAmount },
+    );
 
-    const staked = await this.liquidityMigration.staked(defaultAddress, this.indexedErc20.address)
-    console.log("Staked: ", staked.toString())
+    const staked = await this.liquidityMigration.staked(defaultAddress, this.indexedErc20.address);
+    console.log("Staked: ", staked.toString());
     expect(staked).to.be.gt(BigNumber.from(0));
-  })
+  });
 });

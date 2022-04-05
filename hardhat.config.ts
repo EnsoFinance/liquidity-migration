@@ -38,12 +38,12 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-let mnemonic: string | undefined = process.env.MNEMONIC;
-let infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
-let etherscanApiKey: string | undefined = process.env.ETHERSCAN_API_KEY;
-let archiveNode: string | undefined = process.env.ARCHIVE_NODE;
+const mnemonic: string | undefined = process.env.MNEMONIC;
+const infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
+const etherscanApiKey: string | undefined = process.env.ETHERSCAN_API_KEY;
+const archiveNode: string | undefined = process.env.ARCHIVE_NODE;
 
-let networkIndex: number = process.argv.findIndex(arg => arg === "--network");
+const networkIndex: number = process.argv.findIndex(arg => arg === "--network");
 if (networkIndex > 0) {
   if (process.argv[networkIndex + 1] !== "hardhat") {
     if (!mnemonic) {
@@ -85,7 +85,7 @@ function getNetworks(): NetworksUserConfig {
     networks.kovan = createTestnetConfig("kovan");
     networks.rinkeby = createTestnetConfig("rinkeby");
     networks.ropsten = createTestnetConfig("ropsten");
-    networks.mainnet = createTestnetConfig("mainnet")
+    networks.mainnet = createTestnetConfig("mainnet");
   }
   return networks;
 }
@@ -112,8 +112,8 @@ const config: HardhatUserConfig = {
   },
   gasReporter: {
     enabled: false,
-    currency: 'USD',
-    gasPrice: 100
+    currency: "USD",
+    gasPrice: 100,
   },
   paths: {
     artifacts: "./artifacts",

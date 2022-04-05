@@ -7,7 +7,7 @@ import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { FACTORY_REGISTRIES, DEPOSIT_SLIPPAGE, INITIAL_STATE} from "../src/constants";
+import { FACTORY_REGISTRIES, DEPOSIT_SLIPPAGE, INITIAL_STATE } from "../src/constants";
 import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
 import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems } from "../src/utils";
@@ -126,7 +126,11 @@ describe("Batch: Unit tests", function () {
       ); //KNC
     await enso.platform.strategyFactory
       .connect(signers.admin)
-      .addItemToRegistry(ITEM_CATEGORY.BASIC, ESTIMATOR_CATEGORY.CHAINLINK_ORACLE, "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202"); //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
+      .addItemToRegistry(
+        ITEM_CATEGORY.BASIC,
+        ESTIMATOR_CATEGORY.CHAINLINK_ORACLE,
+        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
+      ); //Synth estimator uses Chainlink, but otherwise will be treated like a basic token
 
     await dpi_setup();
     await piedao_setup();
@@ -213,7 +217,7 @@ describe("Batch: Unit tests", function () {
         [indexedPool.address, dpiPool.address, piePool.address],
         [indexedEnv.adapter.address, dpiEnv.adapter.address, pieEnv.adapter.address],
         [indexedStrategy.address, dpiStrategy.address, pieStrategy.address],
-        Array(3).fill(DEPOSIT_SLIPPAGE)
+        Array(3).fill(DEPOSIT_SLIPPAGE),
       );
   });
   it("Should batch migrate", async function () {
@@ -225,7 +229,7 @@ describe("Batch: Unit tests", function () {
         [indexedPool.address, dpiPool.address, piePool.address],
         [indexedEnv.adapter.address, dpiEnv.adapter.address, pieEnv.adapter.address],
         [indexedStrategy.address, dpiStrategy.address, pieStrategy.address],
-        Array(3).fill(DEPOSIT_SLIPPAGE)
+        Array(3).fill(DEPOSIT_SLIPPAGE),
       );
   });
 });

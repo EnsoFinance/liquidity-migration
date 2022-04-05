@@ -43,9 +43,7 @@ describe("PieDao: Unit tests", function () {
     const totalSupply = await pool.totalSupply();
     console.log("Holder percent:", holderBalance.mul(1000).div(totalSupply).toString());
 
-    await this.liquidityMigration
-      .connect(holder)
-      .stake(pool.address, holderBalance, this.pieDaoEnv.adapter.address);
+    await this.liquidityMigration.connect(holder).stake(pool.address, holderBalance, this.pieDaoEnv.adapter.address);
     expect(await this.liquidityMigration.staked(holderAddress, pool.address)).to.equal(holderBalance);
   });
 
@@ -78,14 +76,19 @@ describe("PieDao: Unit tests", function () {
     const holder = this.pieDaoEnv.holders[0];
     const holderAddress = await holder.getAddress();
     // Migrate
-    await increaseTime(10)
+    await increaseTime(10);
     await this.liquidityMigration
       .connect(holder)
-      ["migrate(address,address,address,uint256)"](pool.address, this.pieDaoEnv.adapter.address, this.strategy.address, DEPOSIT_SLIPPAGE);
+      ["migrate(address,address,address,uint256)"](
+        pool.address,
+        this.pieDaoEnv.adapter.address,
+        this.strategy.address,
+        DEPOSIT_SLIPPAGE,
+      );
     const [total] = await estimateTokens(
       this.enso.platform.oracles.ensoOracle,
       this.strategy.address,
-      this.pieDaoTokens
+      this.pieDaoTokens,
     );
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holderAddress)).to.gt(0);
