@@ -1,7 +1,6 @@
 import { task } from "hardhat/config";
 import { TRANSFER_OWNERSHIP } from "./task-names";
 import { getOwner } from "./whitelistStrategy";
-import { Ownable__factory } from "../typechain";
 import deployments from "../deployments.json";
 const prompts = require("prompts");
 
@@ -27,10 +26,10 @@ task(TRANSFER_OWNERSHIP, "Transfer ownership to new wallet")
         const keys = Object.keys(deployment);
         for (let i = 0; i < keys.length; i++) {
           // @ts-ignore
-          const value = deployment[keys[i]]
-          if (value) {
-            //@ts-ignore
-            const ownable = Ownable__factory.connect(value, signer);
+          const ownableAddr = deployment[keys[i]]
+          if (ownableAddr) {
+            const ownableFactory = await hre.ethers.getContractFactory("Ownable", signer);            ;
+            const ownable = ownableFactory.attach(ownableAddr);
             const currentOwner = await ownable.owner();
             console.log(`\n${keys[i]} Current Owner: `, currentOwner);
             if (currentOwner && currentOwner == signer.address) {

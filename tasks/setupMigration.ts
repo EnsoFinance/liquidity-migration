@@ -2,7 +2,6 @@ import { task } from "hardhat/config";
 import deployments from "../deployments.json";
 import { SETUP_MIGRATION } from "./task-names";
 import { getOwner } from "./whitelistStrategy";
-import { Ownable__factory, MigrationCoordinator__factory, Claimable__factory } from "../typechain";
 
 enum PROTOCOLS {
   TOKENSET,
@@ -38,7 +37,7 @@ task(SETUP_MIGRATION, "Setup migration coordinator as multisig", async (_taskArg
   });
   const treasurySigner = await hre.ethers.getSigner(treasury);
   console.log("Transferring LiquidityMigration ownership to MigrationCoordinator...")
-  const liquidityMigration = Ownable__factory.connect(liquidityMigrationV1Address, treasurySigner);
+  const liquidityMigration = (await hre.ethers.getContractFactory("Ownable", treasurySigner)).attach(liquidityMigrationV1Address);
   const currentOwner = await liquidityMigration.owner();
   if (currentOwner == treasury) {
     await liquidityMigration.transferOwnership(migrationCoordinatorAddress);
@@ -46,14 +45,14 @@ task(SETUP_MIGRATION, "Setup migration coordinator as multisig", async (_taskArg
     const owner = await getOwner(hre);
     const ownerSigner = await hre.ethers.getSigner(owner);
     console.log("Initate migration...");
-    const migrationCoordinator = MigrationCoordinator__factory.connect(migrationCoordinatorAddress, ownerSigner);
+    const migrationCoordinator = (await hre.ethers.getContractFactory("MigrationCoordinator", ownerSigner)).attach(migrationCoordinatorAddress);
     await migrationCoordinator.initiateMigration(protocol_addresses);
     console.log("Migration initiated");
   } else {
     console.log("Not owner!");
   }
   console.log("Updating LiquidityMigration address in Claimable...")
-  const claimable = Claimable__factory.connect(claimableAddress, treasurySigner);
+  const claimable = (await hre.ethers.getContractFactory("Claimable", treasurySigner)).attach(claimableAddress);
   await claimable.updateMigration(liquidityMigrationV2Address);
   console.log("Complete")
 });
