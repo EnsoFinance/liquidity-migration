@@ -16,7 +16,7 @@ import {
   DEPOSIT_SLIPPAGE,
 } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData, increaseTime } from "../src/utils";
-import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@ensofinance/v1-core";
 
 describe("METAVERSE: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff

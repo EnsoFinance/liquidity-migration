@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0;
 
 import { SafeERC20, IERC20 } from "../../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
-import "@enso/contracts/contracts/interfaces/IStrategyController.sol";
-import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
+import "@ensofinance/v1-core/contracts/interfaces/IStrategyController.sol";
+import "@ensofinance/v1-core/contracts/helpers/StrategyTypes.sol";
 import "../../interfaces/IAdapter.sol";
 import "../../helpers/Timelocked.sol";
 import "../Migrator.sol";

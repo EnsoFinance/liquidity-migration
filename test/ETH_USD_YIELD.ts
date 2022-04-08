@@ -7,7 +7,7 @@ import { IERC20, IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { DEPOSIT_SLIPPAGE, FACTORY_REGISTRIES, INITIAL_STATE, UNISWAP_V3_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils";
-import { EnsoBuilder } from "@enso/contracts";
+import { EnsoBuilder } from "@ensofinance/v1-core";
 
 describe("ETH_USD_YIELD: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
