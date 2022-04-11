@@ -8,7 +8,7 @@ import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { DEPOSIT_SLIPPAGE, FACTORY_REGISTRIES, INITIAL_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils";
-import { EnsoBuilder } from "@enso/contracts";
+import { EnsoBuilder } from "@ensofinance/v1-core";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 
 describe("Indexed: Unit tests", function () {

@@ -24,6 +24,7 @@ import "./tasks/addAdapter";
 import "./tasks/addAllAdapters";
 import "./tasks/transferOwnership";
 import "./tasks/setupMigration";
+import "./tasks/initiateMigration";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -77,7 +78,7 @@ function getNetworks(): NetworksUserConfig {
     if (archiveNode)
       networks.hardhat.forking = {
         url: archiveNode,
-        blockNumber: 13901475,
+        blockNumber: 14034913,
       };
   }
   if (mnemonic && infuraApiKey) {

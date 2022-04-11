@@ -6,7 +6,7 @@ import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymi
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { INITIAL_STATE } from "../src/constants";
-import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
+import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@ensofinance/v1-core";
 import { WETH, SUSD } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
 

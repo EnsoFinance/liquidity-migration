@@ -5,7 +5,7 @@ import { Signers } from "../types";
 import { IStrategy__factory } from "../typechain";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
-import { EnsoBuilder } from "@enso/contracts";
+import { EnsoBuilder } from "@ensofinance/v1-core";
 import { DEPOSIT_SLIPPAGE, INITIAL_STATE, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData, increaseTime } from "../src/utils";
 

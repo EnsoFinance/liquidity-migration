@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { IAdapter, LiquidityMigration__factory, LiquidityMigrationV2__factory } from "../typechain";
-import { EnsoEnvironment } from "@enso/contracts";
+import { EnsoEnvironment } from "@ensofinance/v1-core";
 import { getBlockTime } from "./utils";
 
 export enum AcceptedProtocols {

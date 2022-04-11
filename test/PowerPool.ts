@@ -15,7 +15,7 @@ import {
   DEPOSIT_SLIPPAGE,
 } from "../src/constants";
 import { setupStrategyItems, estimateTokens } from "../src/utils";
-import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { EnsoBuilder, Position, Multicall, prepareStrategy, encodeSettleTransfer } from "@ensofinance/v1-core";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 
 describe("PowerPool: Unit tests", function () {

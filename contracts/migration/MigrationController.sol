@@ -2,10 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "@enso/contracts/contracts/StrategyControllerStorage.sol";
-import "@enso/contracts/contracts/interfaces/IOracle.sol";
-import "@enso/contracts/contracts/interfaces/registries/ITokenRegistry.sol";
-import "@enso/contracts/contracts/helpers/StrategyTypes.sol";
+import "@ensofinance/v1-core/contracts/StrategyControllerStorage.sol";
+import "@ensofinance/v1-core/contracts/interfaces/IOracle.sol";
+import "@ensofinance/v1-core/contracts/interfaces/registries/ITokenRegistry.sol";
+import "@ensofinance/v1-core/contracts/helpers/StrategyTypes.sol";
 import "./libraries/SignedSafeMath.sol";
 import "./interfaces/IMigrationController.sol";
 

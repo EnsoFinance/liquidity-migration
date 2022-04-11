@@ -9,10 +9,10 @@ import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { EnsoBuilder, EnsoEnvironment, ESTIMATOR_CATEGORY as AcceptedProtocols } from "@enso/contracts";
-import ISynthetix from "@enso/contracts/artifacts/contracts/interfaces/synthetix/ISynthetix.sol/ISynthetix.json";
-import ICurveAddressProvider from "@enso/contracts/artifacts/contracts/interfaces/curve/ICurveAddressProvider.sol/ICurveAddressProvider.json";
-import ICurveRegistry from "@enso/contracts/artifacts/contracts/interfaces/curve/ICurveRegistry.sol/ICurveRegistry.json";
+import { EnsoBuilder, EnsoEnvironment, ESTIMATOR_CATEGORY as AcceptedProtocols } from "@ensofinance/v1-core";
+import ISynthetix from "@ensofinance/v1-core/artifacts/contracts/interfaces/synthetix/ISynthetix.sol/ISynthetix.json";
+import ICurveAddressProvider from "@ensofinance/v1-core/artifacts/contracts/interfaces/curve/ICurveAddressProvider.sol/ICurveAddressProvider.json";
+import ICurveRegistry from "@ensofinance/v1-core/artifacts/contracts/interfaces/curve/ICurveRegistry.sol/ICurveRegistry.json";
 import fs from "fs";
 const tokenRegistry: HashMap<TokenDictionary> = require("../dictionary.json");
 const ALT_ERC20 = [

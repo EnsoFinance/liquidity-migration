@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { MainnetSigner } from "../types";
 import { Contract, Signer } from "ethers";
-import { EnsoEnvironment } from "@enso/contracts";
+import { EnsoEnvironment } from "@ensofinance/v1-core";
 
 import { TOKENSET_HOLDERS, TOKENSET_ISSUANCE_MODULES } from "./constants";
 import {

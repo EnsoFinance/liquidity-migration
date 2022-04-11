@@ -10,7 +10,7 @@ import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
 import { setupStrategyItems, encodeStrategyData, estimateTokens, increaseTime } from "../src/utils";
-import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@enso/contracts";
+import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@ensofinance/v1-core";
 import { WETH, SUSD, INITIAL_STATE, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -146,22 +146,22 @@ describe("Integration: Unit tests", function () {
     // Curve
     await factory.addItemToRegistry(
       ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CURVE,
+      ESTIMATOR_CATEGORY.CRV,
       "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522",
     ); //usdn3CRV
     await factory.addItemToRegistry(
       ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CURVE,
+      ESTIMATOR_CATEGORY.CRV,
       "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
     ); //BUSD3CRV-f
     await factory.addItemToRegistry(
       ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CURVE,
+      ESTIMATOR_CATEGORY.CRV,
       "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
     ); //LUSD3CRV-f
     await factory.addItemToRegistry(
       ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CURVE,
+      ESTIMATOR_CATEGORY.CRV,
       "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6",
     ); //USDP/3Crv
     // YEarn

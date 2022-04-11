@@ -1,7 +1,7 @@
 pragma solidity >=0.8.0;
 
-import "@enso/contracts/contracts/interfaces/IStrategy.sol";
-import "@enso/contracts/contracts/interfaces/IStrategyRouter.sol";
+import "@ensofinance/v1-core/contracts/interfaces/IStrategy.sol";
+import "@ensofinance/v1-core/contracts/interfaces/IStrategyRouter.sol";
 
 contract Migrator {
     function deposit(
