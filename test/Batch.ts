@@ -8,7 +8,7 @@ import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { FACTORY_REGISTRIES, DEPOSIT_SLIPPAGE, INITIAL_STATE } from "../src/constants";
-import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
+import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@ensofinance/v1-core";
 import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
 import { setupStrategyItems } from "../src/utils";
 

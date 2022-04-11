@@ -27,7 +27,7 @@ import {
   encodeSettleTransfer,
   ITEM_CATEGORY,
   ESTIMATOR_CATEGORY,
-} from "@enso/contracts";
+} from "@ensofinance/v1-core";
 import { TASK_COMPILE_SOLIDITY_LOG_NOTHING_TO_COMPILE } from "hardhat/builtin-tasks/task-names";
 
 describe("DPI: Unit tests", function () {

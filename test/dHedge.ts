@@ -8,7 +8,7 @@ import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
 import { FACTORY_REGISTRIES, WETH, SUSD, DEPOSIT_SLIPPAGE, INITIAL_STATE } from "../src/constants";
 import { setupStrategyItems, estimateTokens, encodeStrategyData } from "../src/utils";
-import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@enso/contracts";
+import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@ensofinance/v1-core";
 
 describe("dHedge: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff

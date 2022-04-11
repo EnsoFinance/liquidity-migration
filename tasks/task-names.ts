@@ -9,3 +9,4 @@ export const WHITELIST_MIGRATION_ADAPTER: string = "whitelistMigrationAdapter";
 export const ADD_ALL_ADAPTERS: string = "addAllAdapters";
 export const TRANSFER_OWNERSHIP: string = "transferOwnership";
 export const SETUP_MIGRATION: string = "setupMigration";
+export const INITIATE_MIGRATION: string = "initiateMigration";

@@ -1,5 +1,5 @@
 import { BigNumber } from "ethers";
-import { StrategyState, InitialState } from "@enso/contracts";
+import { StrategyState, InitialState } from "@ensofinance/v1-core";
 
 interface Holders {
   [key: string]: string[] | undefined;

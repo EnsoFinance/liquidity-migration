@@ -4,7 +4,6 @@
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import hre from "hardhat";
-import { getBlockTime } from "../src/utils";
 import * as fs from "fs";
 import deployments from "../deployments.json";
 import { getOwner } from "../tasks/whitelistStrategy";

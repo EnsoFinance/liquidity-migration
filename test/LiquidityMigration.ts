@@ -5,7 +5,7 @@ import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20__factory, IStrategy__factory } from "../typechain";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { EnsoBuilder } from "@enso/contracts";
+import { EnsoBuilder } from "@ensofinance/v1-core";
 
 describe("Liquidity Migration", function () {
   // lets create a strategy and then log its address and related stuff

@@ -14,7 +14,7 @@ import {
   DEPOSIT_SLIPPAGE,
 } from "../src/constants";
 import { estimateTokens } from "../src/utils";
-import { EnsoBuilder, Position, Multicall, Tokens, prepareStrategy, encodeSettleTransfer } from "@enso/contracts";
+import { EnsoBuilder, Position, Multicall, Tokens, prepareStrategy, encodeSettleTransfer } from "@ensofinance/v1-core";
 
 describe("ETH_2X: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
