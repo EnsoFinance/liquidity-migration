@@ -18,18 +18,18 @@ task(INITIATE_MIGRATION, "Initiate migration", async (_taskArgs, hre) => {
   // @ts-ignore
   const addresses = deployments[network];
 
-  const liquidityMigrationV1Address = addresses['LiquidityMigration'];
-  const migrationCoordinatorAddress = addresses['MigrationCoordinator'];
+  const liquidityMigrationV1Address = addresses["LiquidityMigration"];
+  const migrationCoordinatorAddress = addresses["MigrationCoordinator"];
 
   const adapterAddresses = [];
-  adapterAddresses[PROTOCOLS.INDEXCOOP] = addresses['IndexCoopAdapter']
-  adapterAddresses[PROTOCOLS.INDEXED] = addresses['IndexedAdapter']
-  adapterAddresses[PROTOCOLS.POWERPOOL] = addresses['PowerPoolAdapter']
-  adapterAddresses[PROTOCOLS.TOKENSET] = addresses['TokenSetAdapter']
-  adapterAddresses[PROTOCOLS.DHEDGE] = addresses['DHedgeAdapter']
-  adapterAddresses[PROTOCOLS.PIEDAO] = addresses['PieDaoAdapter']
+  adapterAddresses[PROTOCOLS.INDEXCOOP] = addresses["IndexCoopAdapter"];
+  adapterAddresses[PROTOCOLS.INDEXED] = addresses["IndexedAdapter"];
+  adapterAddresses[PROTOCOLS.POWERPOOL] = addresses["PowerPoolAdapter"];
+  adapterAddresses[PROTOCOLS.TOKENSET] = addresses["TokenSetAdapter"];
+  adapterAddresses[PROTOCOLS.DHEDGE] = addresses["DHedgeAdapter"];
+  adapterAddresses[PROTOCOLS.PIEDAO] = addresses["PieDaoAdapter"];
 
-  console.log("Adapters: ", adapterAddresses)
+  console.log("Adapters: ", adapterAddresses);
 
   const owner = await getOwner(hre);
   const ownerSigner = await hre.ethers.getSigner(owner);
@@ -44,5 +44,5 @@ task(INITIATE_MIGRATION, "Initiate migration", async (_taskArgs, hre) => {
   } else {
     console.log("Not owner!");
   }
-  console.log("Complete")
+  console.log("Complete");
 });
