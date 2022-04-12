@@ -6,7 +6,7 @@
     "node": ">=0.12"
   },
   "dependencies": {
-    "@ensofinance/v1-core": "^0.1.1"
+    "@ensofinance/v1-core": "^0.1.3"
   },
   "devDependencies": {
     "@ethersproject/abstract-signer": "~5.6.0",

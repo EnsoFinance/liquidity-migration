@@ -141,7 +141,7 @@ export async function estimateTokens(
 
     }
     */
-  const estimates = await Promise.all(tokensAndBalances.map(async obj => oracle.estimateItem(obj.balance, obj.token)));
+  const estimates = await Promise.all(tokensAndBalances.map(async obj => oracle['estimateItem(uint256,address)'](obj.balance, obj.token)));
   const total = estimates.reduce((a, b) => a.add(b));
 
   return [total, estimates];
@@ -163,22 +163,22 @@ export async function addItemsToRegistry(factory: Contract) {
   // Curve
   await factory.addItemToRegistry(
     ITEM_CATEGORY.BASIC,
-    ESTIMATOR_CATEGORY.CRV,
+    ESTIMATOR_CATEGORY.CURVE_LP,
     "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522",
   ); //usdn3CRV
   await factory.addItemToRegistry(
     ITEM_CATEGORY.BASIC,
-    ESTIMATOR_CATEGORY.CRV,
+    ESTIMATOR_CATEGORY.CURVE_LP,
     "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
   ); //BUSD3CRV-f
   await factory.addItemToRegistry(
     ITEM_CATEGORY.BASIC,
-    ESTIMATOR_CATEGORY.CRV,
+    ESTIMATOR_CATEGORY.CURVE_LP,
     "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
   ); //LUSD3CRV-f
   await factory.addItemToRegistry(
     ITEM_CATEGORY.BASIC,
-    ESTIMATOR_CATEGORY.CRV,
+    ESTIMATOR_CATEGORY.CURVE_LP,
     "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6",
   ); //USDP/3Crv
   // YEarn

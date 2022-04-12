@@ -2,7 +2,7 @@ import { ethers, network } from "hardhat";
 import { expect } from "chai";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
-import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigrationv2";
+import { AcceptedProtocols, LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
 import { IERC20__factory } from "../typechain";
 import Strategy from "@ensofinance/v1-core/artifacts/contracts/Strategy.sol/Strategy.json";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
@@ -103,7 +103,7 @@ describe("LiquidityMigrationV2", function () {
 
     await dpi_setup();
 
-    const lmBuilder = new LiquidityMigrationBuilder(signers.admin, enso);
+    const lmBuilder = new LiquidityMigrationBuilderV2(signers.admin, enso);
     lmBuilder.addAdapter(AcceptedProtocols.IndexCoop, indexCoopAdapter);
     liquidityMigration = (await lmBuilder.deploy()).liquidityMigration;
 

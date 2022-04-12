@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { BigNumber, Signer, Contract, Event } from "ethers";
 import { Signers } from "../types";
-import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
+import { AcceptedProtocols, LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
 import { IAdapter, IERC20__factory, IStrategy__factory } from "../typechain";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { PieDaoEnvironmentBuilder } from "../src/piedao";
@@ -29,7 +29,7 @@ describe("Integration: Unit tests", function () {
   };
 
   const setupPools = async (signer: SignerWithAddress, enso: EnsoEnvironment) => {
-    const liquidityMigrationBuilder = new LiquidityMigrationBuilder(signer, enso);
+    const liquidityMigrationBuilder = new LiquidityMigrationBuilderV2(signer, enso);
     let pool;
     for (const { victim, lpTokenAddress, lpTokenName, walletAddress } of LP_TOKEN_WHALES) {
       switch (victim.toLowerCase()) {
@@ -146,22 +146,22 @@ describe("Integration: Unit tests", function () {
     // Curve
     await factory.addItemToRegistry(
       ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CRV,
+      ESTIMATOR_CATEGORY.CURVE_LP,
       "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522",
     ); //usdn3CRV
     await factory.addItemToRegistry(
       ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CRV,
+      ESTIMATOR_CATEGORY.CURVE_LP,
       "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
     ); //BUSD3CRV-f
     await factory.addItemToRegistry(
       ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CRV,
+      ESTIMATOR_CATEGORY.CURVE_LP,
       "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
     ); //LUSD3CRV-f
     await factory.addItemToRegistry(
       ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CRV,
+      ESTIMATOR_CATEGORY.CURVE_LP,
       "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6",
     ); //USDP/3Crv
     // YEarn
@@ -232,6 +232,7 @@ describe("Integration: Unit tests", function () {
         } catch (e) {
           poolAddress = pool.pool.address;
         }
+        console.log("Pool address: ", poolAddress)
         const strategyItems = await setupStrategyItems(
           this.enso.platform.oracles.ensoOracle,
           ethers.constants.AddressZero, // For real strategies an adapter is needed, but for migration it is not
