@@ -132,4 +132,8 @@ abstract contract AbstractAdapter is IAdapter, Whitelistable {
     function isExchange(address _exchange) public pure returns (bool) {
         return (_exchange == SUSHI || _exchange == UNI_V2 || _exchange == UNI_V3);
     }
+
+    function sensitiveToSlippage(address _token) public view virtual override returns (bool) {
+        return false;
+    }
 }

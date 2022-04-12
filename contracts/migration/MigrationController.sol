@@ -50,12 +50,17 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         require(strategy.totalSupply() == 0, "Strategy cannot be migrated to");
         require(amount > 0, "No amount");
         require(lpToken.balanceOf(address(genericRouter)) >= amount, "Wrong balance"); // Funds should have been sent to GenericRouter
+        bool sensitiveToSlippage = adapter.sensitiveToSlippage(address(lpToken));
+        int256 estimateBefore = (sensitiveToSlippage) ? oracle().estimateItem(amount, address(lpToken)) : 0; 
         bytes memory migrationData = abi.encode(
             adapter.encodeMigration(address(genericRouter), address(strategy), address(lpToken), amount)
         );
         genericRouter.deposit(address(strategy), migrationData);
         // At this point the underlying tokens should be in the Strategy. Estimate strategy value
         (uint256 total, ) = oracle().estimateStrategy(strategy);
+        if (sensitiveToSlippage) {
+            require(int256(total) >= estimateBefore, "migrate: value lost to slippage.");
+        }
         // Migration is a one-time function and cannot be called unless Strategy's total
         // supply is zero. So we can trust that `amount` will be the new total supply
         strategy.updateTokenValue(total, amount);

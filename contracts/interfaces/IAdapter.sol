@@ -33,4 +33,6 @@ interface IAdapter {
     ) external returns (uint256);
 
     function isWhitelisted(address _token) external view returns (bool);
+
+    function sensitiveToSlippage(address _token) external view returns (bool);
 }

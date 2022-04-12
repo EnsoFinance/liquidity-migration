@@ -178,4 +178,8 @@ contract TokenSetAdapter is AbstractAdapter {
             );
         }
     }
+
+    function sensitiveToSlippage(address _token) public view override returns (bool) {
+        return _leveraged[_token];
+    }
 }
