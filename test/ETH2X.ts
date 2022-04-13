@@ -28,7 +28,9 @@ describe("ETH_2X: Unit tests", function () {
     ensoBuilder.addAdapter("leverage");
     this.enso = await ensoBuilder.build();
     this.tokens = new Tokens();
-    this.tokens.registerTokens(this.signers.admin, this.enso.platform.strategyFactory);
+    const { chainlinkRegistry, uniswapV3Registry } = this.enso.platform.oracles.registries;
+    this.tokens.registerTokens(this.signers.admin, this.enso.platform.strategyFactory, uniswapV3Registry, chainlinkRegistry);
+
 
     this.TokenSetEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
       FACTORY_REGISTRIES.ETH_2X,
@@ -114,6 +116,7 @@ describe("ETH_2X: Unit tests", function () {
   });
 
   it("Create strategy", async function () {
+    
     // adding the ETH_2X Token as a whitelisted token
     let tx = await this.TokenSetEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.ETH_2X);
     await tx.wait();
@@ -122,7 +125,7 @@ describe("ETH_2X: Unit tests", function () {
       {
         token: this.tokens.aWETH,
         percentage: BigNumber.from(2000),
-        adapters: [this.enso.adapters.aavelend.contract.address],
+        adapters: [this.enso.adapters.aaveV2.contract.address],
         path: [],
         cache: ethers.utils.defaultAbiCoder.encode(
           ["uint16"],
@@ -133,9 +136,9 @@ describe("ETH_2X: Unit tests", function () {
         token: this.tokens.debtUSDC,
         percentage: BigNumber.from(-1000),
         adapters: [
-          this.enso.adapters.aaveborrow.contract.address,
+          this.enso.adapters.aaveV2Debt.contract.address,
           this.enso.adapters.uniswap.contract.address,
-          this.enso.adapters.aavelend.contract.address,
+          this.enso.adapters.aaveV2.contract.address,
         ],
         path: [this.tokens.usdc, this.tokens.weth],
         cache: ethers.utils.defaultAbiCoder.encode(["address"], [this.tokens.aWETH]),
@@ -162,25 +165,13 @@ describe("ETH_2X: Unit tests", function () {
   });
 
   it("Should migrate tokens to strategy", async function () {
-    const holder3 = await this.TokenSetEnv.holders[2];
-    const holder3Address = await holder3.getAddress();
-
-    // staking the tokens in the liquidity migration contract
-    const holder3BalanceBefore = await this.TokenSetEnv.pool.balanceOf(holder3Address);
-    expect(holder3BalanceBefore).to.be.gt(BigNumber.from(0));
-
-    await this.TokenSetEnv.pool.connect(holder3).approve(this.liquidityMigration.address, holder3BalanceBefore);
-    await this.liquidityMigration
-      .connect(holder3)
-      .stake(this.TokenSetEnv.pool.address, holder3BalanceBefore.div(10), this.TokenSetEnv.adapter.address);
-    const amount = await this.liquidityMigration.staked(holder3Address, this.TokenSetEnv.pool.address);
+    const holder2 = await this.TokenSetEnv.holders[1];
+    const holder2Address = await holder2.getAddress();
+    const amount = await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
-    const holder3BalanceAfter = await this.TokenSetEnv.pool.balanceOf(holder3Address);
-    expect(holder3BalanceBefore).to.be.gt(holder3BalanceAfter);
-
     // Migrate
     await this.liquidityMigration
-      .connect(holder3)
+      .connect(holder2)
       ["migrate(address,address,address,uint256)"](
         this.TokenSetEnv.pool.address,
         this.TokenSetEnv.adapter.address,
@@ -192,10 +183,11 @@ describe("ETH_2X: Unit tests", function () {
       this.tokens.debtUSDC,
     ]);
     expect(total).to.gt(0);
-    expect(await this.strategy.balanceOf(holder3Address)).to.gt(0);
+    expect(await this.strategy.balanceOf(holder2Address)).to.gt(0);
   });
 
   it("Should buy and stake", async function () {
+    
     const defaultAddress = await this.signers.default.getAddress();
 
     expect(await this.TokenSetEnv.pool.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
