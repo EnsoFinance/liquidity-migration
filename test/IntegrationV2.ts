@@ -2,8 +2,8 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { BigNumber, Signer, Contract, Event } from "ethers";
 import { Signers } from "../types";
-import { getPoolsToMigrate, liveMigrationContract } from "../src/mainnet";
-import { AcceptedProtocols } from "../src/types";
+import { getPoolsToMigrate, liveMigrationContract, impersonateAccount } from "../src/mainnet";
+import { AcceptedProtocols, PoolsToMigrate } from "../src/types";
 import { IAdapter, IERC20__factory, IStrategy__factory, IPV2SmartPool__factory } from "../typechain";
 import { toErc20, setupStrategyItems, encodeStrategyData, estimateTokens, increaseTime } from "../src/utils";
 import { getLiveContracts, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@ensofinance/v1-core";
@@ -24,24 +24,24 @@ describe("Integration: Unit tests", function () {
 
   it("Stake all tokens", async function () {
     for (let i = 0; i < this.poolsToMigrate.length; i++) {
-      const pool = this.poolsToMigrate[i];
-      const holder = await ethers.getSigner(pool.holder[0]);
+      const pool: PoolsToMigrate = this.poolsToMigrate[i];
+      const holder = await impersonateAccount(pool.users[0]);
       const erc20 = toErc20(pool.lp, this.signers.admin);
-      const holderBalance = pool.balances[holder.address];
-      //const holderBalance = await erc20.balanceOf(holder);
-
+      console.log("Staking for user: ", holder.address);
+      const stakedBefore = await this.liquidityMigration.staked(holder.address, pool.lp);
+      const holderBalance = await erc20.balanceOf(holder.address);
       if (holderBalance.eq(BigNumber.from(0))) {
         console.log("Balance: ", holderBalance, "  \nHolder: ", holder.address);
         throw Error("Need to update holder for pool in tasks/initMasterUser: " + pool.lp);
       }
-
-      // TODO: adapter getter
-      //expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
-      // expect(holderBalance).to.be.gt(BigNumber.from(0));
-
-      await erc20.connect(holder).approve(this.liquidityMigration.address, holderBalance.div(2));
-      await this.liquidityMigration.connect(holder).stake(pool.lp, holderBalance.div(2), pool.adapter);
-      expect(await this.liquidityMigration.staked(holder.address, pool.lp)).to.equal(holderBalance.div(2));
+      console.log("holder balance: ", holderBalance);
+      // Make sure whitelisted
+      expect(await pool.adapter.isWhitelisted(pool.lp)).to.be.eq(true, "Pool not whitelisted");
+      // Stake
+      await erc20.connect(holder).approve(this.liquidityMigration.address, holderBalance);
+      const tx = await this.liquidityMigration.connect(holder).stake(pool.lp, holderBalance, pool.adapter.address);
+      expect(await this.liquidityMigration.staked(holder.address, pool.lp)).to.be.eq(holderBalance.add(stakedBefore));
+      expect(await erc20.balanceOf(holder.address)).to.be.eq(BigNumber.from(0));
     }
   });
 

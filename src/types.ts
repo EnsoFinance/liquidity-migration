@@ -23,6 +23,16 @@ export type Adapter = {
   adapter: string;
 };
 
+export interface HoldersWithBalance {
+  // lp => { address, balance }
+  [key: string]: HolderWithBalance;
+}
+
+export type HolderWithBalance = {
+  address: string;
+  balance: BigNumber;
+};
+
 export interface HolderBalance {
   [key: string]: string | undefined;
 }

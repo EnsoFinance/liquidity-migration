@@ -1,7 +1,9 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
+import { ethers, waffle } from "hardhat";
 import { BigNumber, constants, Contract, ContractInterface } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { LiquidityMigrationV2__factory, PieDaoAdapter__factory } from "../typechain";
+import { PieDaoAdapter__factory } from "../typechain";
+import { toErc20 } from "./utils";
 import {
   DeployedContracts,
   HolderBalanceTyped,
@@ -10,9 +12,16 @@ import {
   Adapter,
   Adapters,
   AcceptedProtocols,
+  HolderWithBalance,
 } from "./types";
 import deployments from "../deployments.json";
 import poolsToMigrate from "../out/above_threshold.json";
+import LiquidityMigrationV2 from "../artifacts/contracts/migration/LiquidityMigrationV2.sol/LiquidityMigrationV2.json";
+import TokenSetAdapter from "../artifacts/contracts/adapters/TokenSetAdapter.sol/TokenSetAdapter.json";
+import PieDaoAdapter from "../artifacts/contracts/adapters/PieDaoAdapter.sol/PieDaoAdapter.json";
+import BalancerAdapter from "../artifacts/contracts/adapters/BalancerAdapter.sol/BalancerAdapter.json";
+import DHedgeAdapter from "../artifacts/contracts/adapters/DHedgeAdapter.sol/DHedgeAdapter.json";
+
 const { AddressZero } = constants;
 
 export function getMainnetDeployments(): DeployedContracts {
@@ -23,34 +32,61 @@ export function getMainnetDeployments(): DeployedContracts {
   return d;
 }
 
+export async function getHolderWithBalance(
+  balances: HolderBalanceTyped,
+  lp: string,
+  signer: SignerWithAddress,
+): Promise<HolderWithBalance> {
+  const erc20 = toErc20(lp, signer);
+  const addrs = Object.keys(balances);
+  let balance: BigNumber = BigNumber.from(0);
+  let address = "";
+  for (let i = 0; i < addrs.length; i += 4) {
+    // TODO: multicall
+    const b = await erc20.balanceOf(addrs[i]);
+    if (b.gt(balance)) {
+      balance = b;
+    }
+    address = addrs[i];
+  }
+  if (balance.eq(BigNumber.from(0))) {
+    throw Error("Failed to find balanace higher than 0");
+  } else {
+    return { address, balance } as HolderWithBalance;
+  }
+}
+
 // Return contract interface if one of Adapters enum
-export async function getAdapterAbi(
+export async function getAdapterInterface(
   adapter: string,
   contractName: Adapters,
   signer: SignerWithAddress,
 ): Promise<Contract> {
-  let abi: Contract;
-  console.log("Getting contract: ", contractName);
   switch (contractName) {
+    case Adapters.IndexCoopAdapter:
+      return new Contract(adapter, TokenSetAdapter.abi, signer);
     case Adapters.IndexedAdapter:
-      abi = (await ethers.getContractFactory("PieDaoAdapter")).connect(signer).attach(adapter);
-    // TODO: Finish
+      return new Contract(adapter, TokenSetAdapter.abi, signer);
+    case Adapters.PowerPoolAdapter:
+      return new Contract(adapter, BalancerAdapter.abi, signer);
+    case Adapters.TokenSetAdapter:
+      return new Contract(adapter, TokenSetAdapter.abi, signer);
+    case Adapters.DHedgeAdapter:
+      return new Contract(adapter, DHedgeAdapter.abi, signer);
+    case Adapters.PieDaoAdapter:
+      return new Contract(adapter, PieDaoAdapter.abi, signer);
     default:
-      throw Error("Adapter not found in deployments.json");
+      throw Error(`Adapter: ${contractName} doesnt exist`);
   }
-  return abi;
 }
 
 export async function getAdapterFromType(adapterType: Adapters, signer: SignerWithAddress): Promise<Contract> {
   const liveContracts = getMainnetDeployments();
   const keys = Object.keys(liveContracts);
   for (let i = 0; i < keys.length; i++) {
-    const name = keys[i] as Adapters;
-    console.log(name, " == ", adapterType);
-    if (name === adapterType) {
-      console.log("Found matching adapter: ", adapterType);
-      const adapter = await getAdapterAbi(liveContracts[name], adapterType, signer);
-      console.log("Adapter is: ", adapter.address);
+    const aType = keys[i] as Adapters;
+    if (aType === adapterType) {
+      const adapter = await getAdapterInterface(liveContracts[aType], adapterType, signer);
       return adapter;
     }
   }
@@ -60,17 +96,16 @@ export async function getAdapterFromType(adapterType: Adapters, signer: SignerWi
 // Find protocol adapter for this address on mainnet
 export async function getAdapterFromAddr(addr: string, signer: SignerWithAddress): Promise<Contract> {
   const liveContracts = getMainnetDeployments();
-  Object.keys(liveContracts).map(async (c: string) => {
-    console.log(c);
-    console.log(liveContracts[c], " == ", addr);
-    if (liveContracts[c].toLowerCase() == addr.toLowerCase()) {
-      const adapterType = c as Adapters;
-      console.log("Found matching adapter: ", adapterType);
-      const adapter = await getAdapterAbi(liveContracts[c], adapterType, signer);
-      console.log(adapter);
+  const keys = Object.keys(liveContracts);
+  for (let i = 0; i < keys.length; i++) {
+    const contractName = keys[i];
+    const contractAddr = liveContracts[contractName];
+    const aType = contractName as Adapters;
+    if (contractAddr.toLowerCase() == addr.toLowerCase()) {
+      const adapter = await getAdapterInterface(contractAddr, aType, signer);
       return adapter;
     }
-  });
+  }
   throw Error("Failed to find adapter");
   //return new Contract(AddressZero, [], signer.provider)
 }
@@ -81,7 +116,7 @@ export async function getPoolsToMigrate(signer: SignerWithAddress): Promise<Pool
   const pools: PoolsToMigrate[] = [];
   for (let i = 0; i < poolsData.length; i++) {
     const p = poolsData[i];
-    const keys: string[] = Object(p.balances).keys();
+    const keys: string[] = Object.keys(p.balances);
     const balances: HolderBalanceTyped = {};
     keys.map((addr, iter) => {
       balances[addr] = BigNumber.from(p.balances[addr]);
@@ -93,17 +128,20 @@ export async function getPoolsToMigrate(signer: SignerWithAddress): Promise<Pool
   return pools;
 }
 
-export async function liveMigrationContract(signer: SignerWithAddress): Promise<Contract> {
-  const LiquidityMigrationFactory = (await ethers.getContractFactory(
-    "LiquidityMigrationV2",
-  )) as LiquidityMigrationV2__factory;
-
-  if (!deployments.mainnet || !deployments.mainnet.LiquidityMigrationV2)
+export function liveMigrationContract(signer: SignerWithAddress): Contract {
+  if (!deployments.mainnet || !deployments.mainnet.LiquidityMigrationV2) {
     throw Error("Failed to find LiquidityMigration2 address");
+  }
+  const migration = new Contract(deployments.mainnet.LiquidityMigrationV2, LiquidityMigrationV2.abi, signer);
+  return migration;
+}
 
-  const liquidityMigration = await LiquidityMigrationFactory.connect(signer).attach(
-    deployments.mainnet.LiquidityMigrationV2,
-  );
-
-  return liquidityMigration;
+export async function impersonateAccount(addr: string): Promise<SignerWithAddress> {
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: [addr],
+  });
+  const signer = waffle.provider.getSigner(addr);
+  const signerWithAddress = await ethers.getSigner(addr);
+  return signerWithAddress;
 }
