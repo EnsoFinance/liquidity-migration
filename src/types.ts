@@ -1,4 +1,4 @@
-import { BigNumber, Contract } from "ethers"
+import { BigNumber, Contract } from "ethers";
 
 export enum AcceptedProtocols {
   Indexed,
@@ -10,18 +10,18 @@ export enum AcceptedProtocols {
 }
 
 export enum Adapters {
-    IndexCoopAdapter = "IndexCoopAdapter",
-    IndexedAdapter = "IndexedAdapter",
-    PowerPoolAdapter = "PowerPoolAdapter",
-    TokenSetAdapter = "TokenSetAdapter",
-    DHedgeAdapter = "DHedgeAdapter",
-    PieDaoAdapter = "PieDaoAdapter"
+  IndexCoopAdapter = "IndexCoopAdapter",
+  IndexedAdapter = "IndexedAdapter",
+  PowerPoolAdapter = "PowerPoolAdapter",
+  TokenSetAdapter = "TokenSetAdapter",
+  DHedgeAdapter = "DHedgeAdapter",
+  PieDaoAdapter = "PieDaoAdapter",
 }
 
 export type Adapter = {
   protocol: AcceptedProtocols;
   adapter: string;
-}
+};
 
 export interface HolderBalance {
   [key: string]: string | undefined;
@@ -37,19 +37,19 @@ export interface Deployments {
 }
 
 export interface DeployedContracts {
-    [key: string]: string;
+  [key: string]: string;
 }
 
 export interface PoolsToMigrate {
-    users: string[]
-    lp: string
-    adapter: Contract
-    balances: HolderBalanceTyped
+  users: string[];
+  lp: string;
+  adapter: Contract;
+  balances: HolderBalanceTyped;
 }
 
 export interface PoolsToMigrateData {
-    users: string[]
-    lp: string
-    adapter: string
-    balances: HolderBalance
+  users: string[];
+  lp: string;
+  adapter: string;
+  balances: HolderBalance;
 }

@@ -2,8 +2,8 @@ import { ethers, network } from "hardhat";
 import { expect } from "chai";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
-import { AcceptedProtocols, Adapters } from "../src/types"
-import { liveMigrationContract, getAdapterFromType } from "../src/mainnet"
+import { AcceptedProtocols, Adapters } from "../src/types";
+import { liveMigrationContract, getAdapterFromType } from "../src/mainnet";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { getLiveContracts, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@ensofinance/v1-core";
 import { FACTORY_REGISTRIES, INITIAL_STATE, WETH, SUSD, UNISWAP_V3_ROUTER, ENSO_MULTISIG } from "../src/constants";
@@ -25,14 +25,14 @@ describe("LiquidityMigrationV2", function () {
   const dpi_setup = async function () {
     dpiEnv = await new TokenSetEnvironmentBuilder(signers.admin, enso).connect(FACTORY_REGISTRIES.DPI.toLowerCase());
     indexCoopAdapter = await getAdapterFromType(Adapters.IndexCoopAdapter, signers.admin);
-    console.log("Adapter: ", indexCoopAdapter.address)
+    console.log("Adapter: ", indexCoopAdapter.address);
     dpiPool = dpiEnv.pool;
     dpiUnderlying = await indexCoopAdapter.outputTokens(dpiPool.address);
   };
 
   const dpiStrategy_setup = async function () {
-    console.log('dpi pool address', dpiPool.address)
-    console.log('dpc underlying: ', dpiUnderlying)
+    console.log("dpi pool address", dpiPool.address);
+    console.log("dpc underlying: ", dpiUnderlying);
     dpiStrategy = new ethers.Contract(
       await deployStrategy(
         "DPI",
@@ -88,7 +88,6 @@ describe("LiquidityMigrationV2", function () {
     liquidityMigration = await liveMigrationContract(signers.admin);
     //await indexCoopAdapter.connect(signers.admin).add(dpiPool.address);
 
-
     // Upgrade StrategyController to MigrationController
     const MigrationController = await ethers.getContractFactory("MigrationController");
     const migrationControllerImplementation = await MigrationController.connect(signers.admin).deploy(
@@ -98,9 +97,8 @@ describe("LiquidityMigrationV2", function () {
     );
     await migrationControllerImplementation.deployed();
     // Upgrade controller to new implementation
-  
-    await dpiStrategy_setup();
 
+    await dpiStrategy_setup();
   });
 
   it("Buy tokens", async function () {

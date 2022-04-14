@@ -11,13 +11,12 @@ import { ENSO_MULTISIG, WETH, SUSD, INITIAL_STATE, DEPOSIT_SLIPPAGE } from "../s
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("Integration: Unit tests", function () {
-      
   before(async function () {
     this.signers = {} as Signers;
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
-    this.signers.admin = await ethers.getSigner(ENSO_MULTISIG)
-    this.enso = getLiveContracts(this.signers.admin)
+    this.signers.admin = await ethers.getSigner(ENSO_MULTISIG);
+    this.enso = getLiveContracts(this.signers.admin);
     const { chainlinkRegistry, curveDepositZapRegistry } = this.enso.platform.oracles.registries;
     this.liquidityMigration = liveMigrationContract(this.signers.admin);
     this.poolsToMigrate = await getPoolsToMigrate(this.signers.admin);
@@ -35,16 +34,13 @@ describe("Integration: Unit tests", function () {
         console.log("Balance: ", holderBalance, "  \nHolder: ", holder.address);
         throw Error("Need to update holder for pool in tasks/initMasterUser: " + pool.lp);
       }
-      
+
       // TODO: adapter getter
       //expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
       // expect(holderBalance).to.be.gt(BigNumber.from(0));
 
-      
       await erc20.connect(holder).approve(this.liquidityMigration.address, holderBalance.div(2));
-      await this.liquidityMigration
-        .connect(holder)
-        .stake(pool.lp, holderBalance.div(2), pool.adapter);
+      await this.liquidityMigration.connect(holder).stake(pool.lp, holderBalance.div(2), pool.adapter);
       expect(await this.liquidityMigration.staked(holder.address, pool.lp)).to.equal(holderBalance.div(2));
     }
   });
@@ -66,7 +62,7 @@ describe("Integration: Unit tests", function () {
         //console.log("Underlying tokens: \n", underlyingTokens);
         let poolAddress;
         try {
-          const pieDaoPool = IPV2SmartPool__factory.connect(pool.lp, this.signers.default)
+          const pieDaoPool = IPV2SmartPool__factory.connect(pool.lp, this.signers.default);
           poolAddress = await pieDaoPool.getBPool();
         } catch (e) {
           poolAddress = pool.lp;
@@ -99,12 +95,7 @@ describe("Integration: Unit tests", function () {
         console.log("Holder address: ", holder.address);
         await this.liquidityMigration
           .connect(holder)
-          ["migrate(address,address,address,uint256)"](
-            pool.lp,
-            pool.adapter,
-            this.strategy.address,
-            DEPOSIT_SLIPPAGE,
-          );
+          ["migrate(address,address,address,uint256)"](pool.lp, pool.adapter, this.strategy.address, DEPOSIT_SLIPPAGE);
         const [total] = await estimateTokens(
           this.enso.platform.oracles.ensoOracle,
           this.strategy.address,

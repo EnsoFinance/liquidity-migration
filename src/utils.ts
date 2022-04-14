@@ -30,8 +30,8 @@ export enum Networks {
 }
 
 export function toErc20(addr: string, signer: SignerWithAddress): Contract {
-    return IERC20__factory.connect(addr, signer);
-};
+  return IERC20__factory.connect(addr, signer);
+}
 
 let dhedgeAdapter: Contract;
 let indexedAdapter: Contract;
@@ -131,99 +131,97 @@ export async function setupStrategyItems(
   return prepareStrategy(positions, adapter);
 }
 
-  export type Pools = {
-      liquidityMigration: Contract
-      poolsToMigrate: any
-      adapters: Contract[]
-  }
+export type Pools = {
+  liquidityMigration: Contract;
+  poolsToMigrate: any;
+  adapters: Contract[];
+};
 
-  export const setupPools = async (signer: SignerWithAddress, enso: EnsoEnvironment) => {
-    const liquidityMigrationBuilder =  new LiquidityMigrationBuilderV2(signer, enso);
-    let pool;
-    const poolsToMigrate: any[] = [];
-    
-    for (const { victim, lpTokenAddress, lpTokenName, walletAddress } of LP_TOKEN_WHALES) {
-      switch (victim.toLowerCase()) {
-        case "dhedge":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new DHedgeEnvironmentBuilder(signer, dhedgeAdapter).connect(lpTokenAddress, [walletAddress]);
-          if (!dhedgeAdapter) {
-            dhedgeAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DHedge, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
+export const setupPools = async (signer: SignerWithAddress, enso: EnsoEnvironment) => {
+  const liquidityMigrationBuilder = new LiquidityMigrationBuilderV2(signer, enso);
+  let pool;
+  const poolsToMigrate: any[] = [];
 
-        case "indexed":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new IndexedEnvironmentBuilder(signer, indexedAdapter).connect(lpTokenAddress, [walletAddress]);
-          if (!indexedAdapter) {
-            indexedAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
+  for (const { victim, lpTokenAddress, lpTokenName, walletAddress } of LP_TOKEN_WHALES) {
+    switch (victim.toLowerCase()) {
+      case "dhedge":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new DHedgeEnvironmentBuilder(signer, dhedgeAdapter).connect(lpTokenAddress, [walletAddress]);
+        if (!dhedgeAdapter) {
+          dhedgeAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DHedge, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
 
-        case "piedao":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new PieDaoEnvironmentBuilder(signer, pieDaoAdapter).connect(lpTokenAddress, [walletAddress]);
-          if (!pieDaoAdapter) {
-            pieDaoAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.PieDao, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
+      case "indexed":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new IndexedEnvironmentBuilder(signer, indexedAdapter).connect(lpTokenAddress, [walletAddress]);
+        if (!indexedAdapter) {
+          indexedAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
 
-        case "powerpool":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new PowerpoolEnvironmentBuilder(signer, powerpoolAdapter).connect(lpTokenAddress, [
-            walletAddress,
-          ]);
-          if (!powerpoolAdapter) {
-            powerpoolAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
+      case "piedao":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new PieDaoEnvironmentBuilder(signer, pieDaoAdapter).connect(lpTokenAddress, [walletAddress]);
+        if (!pieDaoAdapter) {
+          pieDaoAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.PieDao, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
 
-        case "tokensets":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new TokenSetEnvironmentBuilder(signer, enso, tokensetsAdapter).connect(lpTokenAddress, [
-            walletAddress,
-          ]);
-          if (!tokensetsAdapter) {
-            tokensetsAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
+      case "powerpool":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new PowerpoolEnvironmentBuilder(signer, powerpoolAdapter).connect(lpTokenAddress, [walletAddress]);
+        if (!powerpoolAdapter) {
+          powerpoolAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
 
-        case "indexcoop":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new TokenSetEnvironmentBuilder(signer, enso, indexCoopAdapter).connect(lpTokenAddress, [
-            walletAddress,
-          ]);
-          if (!indexCoopAdapter) {
-            indexCoopAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.IndexCoop, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
+      case "tokensets":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new TokenSetEnvironmentBuilder(signer, enso, tokensetsAdapter).connect(lpTokenAddress, [
+          walletAddress,
+        ]);
+        if (!tokensetsAdapter) {
+          tokensetsAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
 
-        default:
-          throw Error("Failed to parse victim");
-      }
+      case "indexcoop":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new TokenSetEnvironmentBuilder(signer, enso, indexCoopAdapter).connect(lpTokenAddress, [
+          walletAddress,
+        ]);
+        if (!indexCoopAdapter) {
+          indexCoopAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.IndexCoop, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
+
+      default:
+        throw Error("Failed to parse victim");
     }
-    // deploy liqudity migration
-    const lm = await liquidityMigrationBuilder.deploy();
-
-    // add pools to adapters
-    const txs = await Promise.all(poolsToMigrate.map(async p => await p.adapter.add(p.pool.address)));
-
-    await Promise.all(txs.map(async p => await p.wait()));
-
-    return [lm.liquidityMigration, poolsToMigrate];
   }
+  // deploy liqudity migration
+  const lm = await liquidityMigrationBuilder.deploy();
+
+  // add pools to adapters
+  const txs = await Promise.all(poolsToMigrate.map(async p => await p.adapter.add(p.pool.address)));
+
+  await Promise.all(txs.map(async p => await p.wait()));
+
+  return [lm.liquidityMigration, poolsToMigrate];
+};
 
 export async function estimateTokens(
   oracle: Contract,
@@ -320,5 +318,3 @@ export async function addItemsToRegistry(factory: Contract) {
     "0xC4dAf3b5e2A9e93861c3FBDd25f1e943B8D87417",
   ); //yvCurve-USDP
 }
-
-
