@@ -2,17 +2,15 @@ import { ethers, network } from "hardhat";
 import { expect } from "chai";
 import { BigNumber, Event } from "ethers";
 import { Signers } from "../types";
-import { AcceptedProtocols, LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
-import { IERC20__factory } from "../typechain";
-import Strategy from "@ensofinance/v1-core/artifacts/contracts/Strategy.sol/Strategy.json";
+import { AcceptedProtocols, Adapters } from "../src/types"
+import { liveMigrationContract, getAdapterFromType } from "../src/mainnet"
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, INITIAL_STATE } from "../src/constants";
-import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@ensofinance/v1-core";
-import { WETH, SUSD, UNISWAP_V2_ROUTER } from "../src/constants";
+import { getLiveContracts, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@ensofinance/v1-core";
+import { FACTORY_REGISTRIES, INITIAL_STATE, WETH, SUSD, UNISWAP_V3_ROUTER, ENSO_MULTISIG } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
-
-const ownerMultisig = "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F";
+import { IERC20__factory } from "../typechain";
+import Strategy from "@ensofinance/v1-core/artifacts/contracts/Strategy.sol/Strategy.json";
 
 describe("LiquidityMigrationV2", function () {
   let signers: any,
@@ -26,19 +24,22 @@ describe("LiquidityMigrationV2", function () {
 
   const dpi_setup = async function () {
     dpiEnv = await new TokenSetEnvironmentBuilder(signers.admin, enso).connect(FACTORY_REGISTRIES.DPI.toLowerCase());
-    indexCoopAdapter = dpiEnv.adapter;
+    indexCoopAdapter = await getAdapterFromType(Adapters.IndexCoopAdapter, signers.admin);
+    console.log("Adapter: ", indexCoopAdapter.address)
     dpiPool = dpiEnv.pool;
     dpiUnderlying = await indexCoopAdapter.outputTokens(dpiPool.address);
   };
 
   const dpiStrategy_setup = async function () {
+    console.log('dpi pool address', dpiPool.address)
+    console.log('dpc underlying: ', dpiUnderlying)
     dpiStrategy = new ethers.Contract(
       await deployStrategy(
         "DPI",
         "DPI",
         await setupStrategyItems(
           enso.platform.oracles.ensoOracle,
-          enso.adapters.uniswap.contract.address,
+          enso.adapters.uniswapV3.address,
           dpiPool.address,
           dpiUnderlying,
         ),
@@ -71,43 +72,22 @@ describe("LiquidityMigrationV2", function () {
     signers.secondary = allSigners[1];
     await network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: [ownerMultisig],
+      params: [ENSO_MULTISIG],
     });
-    signers.admin = await ethers.getSigner(ownerMultisig);
+    signers.admin = await ethers.getSigner(ENSO_MULTISIG);
     console.log("Admin: ", signers.admin.address);
 
-    enso = await new EnsoBuilder(signers.admin).mainnet().build();
-    // KNC not on Uniswap, use Chainlink
-    await enso.platform.oracles.registries.chainlinkRegistry
-      .connect(signers.admin)
-      .addOracle(SUSD, WETH, "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419", true); //sUSD
-    await enso.platform.oracles.registries.chainlinkRegistry
-      .connect(signers.admin)
-      .addOracle(
-        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
-        SUSD,
-        "0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc",
-        false,
-      ); //KNC
-    await enso.platform.strategyFactory
-      .connect(signers.admin)
-      .addItemToRegistry(
-        ITEM_CATEGORY.BASIC,
-        ESTIMATOR_CATEGORY.CHAINLINK_ORACLE,
-        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
-      );
+    enso = await getLiveContracts(signers.admin);
 
     console.log("Controller: ", enso.platform.controller.address);
-    console.log("Router: ", enso.routers[0].contract.address);
+    console.log("LoopRouter: ", enso.routers.loop.address);
+    console.log("FullRouter: ", enso.routers.full.address);
     console.log("Oracle: ", enso.platform.oracles.ensoOracle.address);
 
     await dpi_setup();
+    liquidityMigration = await liveMigrationContract(signers.admin);
+    //await indexCoopAdapter.connect(signers.admin).add(dpiPool.address);
 
-    const lmBuilder = new LiquidityMigrationBuilderV2(signers.admin, enso);
-    lmBuilder.addAdapter(AcceptedProtocols.IndexCoop, indexCoopAdapter);
-    liquidityMigration = (await lmBuilder.deploy()).liquidityMigration;
-
-    await indexCoopAdapter.connect(signers.admin).add(dpiPool.address);
 
     // Upgrade StrategyController to MigrationController
     const MigrationController = await ethers.getContractFactory("MigrationController");
@@ -118,19 +98,17 @@ describe("LiquidityMigrationV2", function () {
     );
     await migrationControllerImplementation.deployed();
     // Upgrade controller to new implementation
-    await enso.platform.administration.platformProxyAdmin
-      .connect(signers.admin)
-      .upgrade(enso.platform.controller.address, migrationControllerImplementation.address);
-
+  
     await dpiStrategy_setup();
+
   });
 
   it("Buy tokens", async function () {
     await dpiEnv.adapter
-      .connect(signers.default)
-      .buy(dpiPool.address, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
+      .connect(signers.admin)
+      .buy(dpiPool.address, UNISWAP_V3_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
 
-    const user = await signers.default.getAddress();
+    const user = await signers.admin.getAddress();
     expect(await dpiPool.balanceOf(user)).to.be.gt(BigNumber.from(0));
   });
 
@@ -149,7 +127,7 @@ describe("LiquidityMigrationV2", function () {
     const value = BigNumber.from(3).mul(amount);
     await liquidityMigration
       .connect(signers.secondary)
-      .buyAndStake(dpiPool.address, indexCoopAdapter.address, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, {
+      .buyAndStake(dpiPool.address, indexCoopAdapter.address, UNISWAP_V3_ROUTER, 0, ethers.constants.MaxUint256, {
         value: value,
       });
     const user = await signers.secondary.getAddress();
@@ -166,10 +144,10 @@ describe("LiquidityMigrationV2", function () {
 
     await indexCoopAdapter
       .connect(signers.default)
-      .buy(lp1, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
+      .buy(lp1, UNISWAP_V3_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
     await indexCoopAdapter
       .connect(signers.default)
-      .buy(lp2, UNISWAP_V2_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
+      .buy(lp2, UNISWAP_V3_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
 
     const lp1Token = IERC20__factory.connect(lp1, signers.default);
     const lp1Balance = await lp1Token.balanceOf(signers.default.address);
