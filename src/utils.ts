@@ -9,7 +9,7 @@ import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
-import { AcceptedProtocols, PoolsToMigrate } from "../src/types";
+import { AcceptedProtocols, StakedPool } from "../src/types";
 import {
   EnsoEnvironment,
   ITEM_CATEGORY,
@@ -35,10 +35,10 @@ export function toErc20(addr: string, signer: SignerWithAddress): Contract {
   return IERC20__factory.connect(addr, signer);
 }
 
-export const write2File = (fileName: string, json: ScriptOutput) => {
+export function write2File(fileName: string, json: ScriptOutput) {
   const data = JSON.stringify(json, null, 4);
   fs.writeFileSync("out/" + fileName, data);
-};
+}
 
 const strategyItemTuple =
   "tuple(address item, int256 percentage, tuple(address[] adapters, address[] path, bytes cache) data)";

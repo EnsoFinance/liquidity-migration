@@ -1,6 +1,6 @@
 import { BigNumber, Contract } from "ethers";
 
-export type ScriptOutput = HoldersWithBalance;
+export type ScriptOutput = Erc20Holders;
 
 export enum AcceptedProtocols {
   Indexed,
@@ -25,22 +25,47 @@ export type Adapter = {
   adapter: string;
 };
 
-export interface HoldersWithBalance {
-  // lp => { address, balance }
-  [key: string]: HolderWithBalance;
-}
-
-export type HolderWithBalance = {
+export interface Holder {
   address: string;
-  balance: BigNumber;
-};
-
-export interface HolderBalance {
-  [key: string]: string | undefined;
 }
 
-export interface HolderBalanceTyped {
-  [key: string]: BigNumber;
+export interface HolderBalance extends Holder {
+  balance: BigNumber;
+}
+
+export interface HolderBalanceJson extends Holder {
+  balance: string;
+}
+
+export interface Erc20HoldersJson {
+  // lp => { address, balance }
+  [key: string]: HolderBalanceJson;
+}
+export interface Erc20Holders {
+  // lp => { address, balance }
+  [key: string]: HolderBalance;
+}
+
+export interface StakedPool {
+  users: string[];
+  lp: string;
+  adapter: Contract;
+  balances: BalanceMapping;
+}
+
+export interface StakedPoolJson {
+  users: string[];
+  lp: string;
+  adapter: string;
+  balances: BalanceMappingJson;
+}
+
+export interface BalanceMapping {
+  [key: string]: BigNumber | undefined;
+}
+
+export interface BalanceMappingJson {
+  [key: string]: string | undefined;
 }
 
 export interface Deployments {
@@ -50,18 +75,4 @@ export interface Deployments {
 
 export interface DeployedContracts {
   [key: string]: string;
-}
-
-export interface PoolsToMigrate {
-  users: string[];
-  lp: string;
-  adapter: Contract;
-  balances: HolderBalanceTyped;
-}
-
-export interface PoolsToMigrateData {
-  users: string[];
-  lp: string;
-  adapter: string;
-  balances: HolderBalance;
 }

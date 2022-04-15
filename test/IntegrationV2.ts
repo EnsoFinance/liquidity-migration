@@ -1,40 +1,51 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Signer, Contract, Event } from "ethers";
+import { BigNumber, Signer, Contract, Event, constants } from "ethers";
 import { Signers } from "../types";
-import { getPoolsToMigrate, liveMigrationContract, impersonateAccount } from "../src/mainnet";
-import { AcceptedProtocols, PoolsToMigrate } from "../src/types";
+import {
+  impersonateAccount,
+  getPoolsToMigrate,
+  liveMigrationContract,
+  impersonateWithEth,
+  readTokenHolders,
+} from "../src/mainnet";
+import { AcceptedProtocols, StakedPool } from "../src/types";
 import { IAdapter, IERC20__factory, IStrategy__factory, IPV2SmartPool__factory } from "../typechain";
 import { toErc20, setupStrategyItems, encodeStrategyData, estimateTokens, increaseTime } from "../src/utils";
 import { getLiveContracts, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@ensofinance/v1-core";
-import { ENSO_MULTISIG, WETH, SUSD, INITIAL_STATE, DEPOSIT_SLIPPAGE } from "../src/constants";
+import { ENSO_MULTISIG, WETH, SUSD, INITIAL_STATE, DEPOSIT_SLIPPAGE, VITALIK } from "../src/constants";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+const { WeiPerEther } = constants;
 
 describe("Integration: Unit tests", function () {
   before(async function () {
     this.signers = {} as Signers;
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
-    this.signers.admin = await ethers.getSigner(ENSO_MULTISIG);
+    this.whale = await impersonateAccount(VITALIK);
+    const admin = await ethers.getSigner(ENSO_MULTISIG);
+    this.signers.admin = await impersonateWithEth(this.whale, admin.address, WeiPerEther.mul(10));
     this.enso = getLiveContracts(this.signers.admin);
     const { chainlinkRegistry, curveDepositZapRegistry } = this.enso.platform.oracles.registries;
     this.liquidityMigration = liveMigrationContract(this.signers.admin);
     this.poolsToMigrate = await getPoolsToMigrate(this.signers.admin);
+    this.holders = await readTokenHolders();
   });
 
   it("Stake all tokens", async function () {
     for (let i = 0; i < this.poolsToMigrate.length; i++) {
-      const pool: PoolsToMigrate = this.poolsToMigrate[i];
-      const holder = await impersonateAccount(pool.users[0]);
-      const erc20 = toErc20(pool.lp, this.signers.admin);
-      console.log("Staking for user: ", holder.address);
+      const pool: StakedPool = this.poolsToMigrate[i];
+      const holderAcc = this.holders[pool.lp];
+      // Impersonate and give ETH
+      console.log("Staking into pool: ", pool.lp, "for user: ", holderAcc);
+      const holder = await impersonateWithEth(this.whale, holderAcc.address, WeiPerEther.mul(1));
+      const erc20 = toErc20(pool.lp, holder);
       const stakedBefore = await this.liquidityMigration.staked(holder.address, pool.lp);
       const holderBalance = await erc20.balanceOf(holder.address);
       if (holderBalance.eq(BigNumber.from(0))) {
         console.log("Balance: ", holderBalance, "  \nHolder: ", holder.address);
         throw Error("Need to update holder for pool in tasks/initMasterUser: " + pool.lp);
       }
-      console.log("holder balance: ", holderBalance);
       // Make sure whitelisted
       expect(await pool.adapter.isWhitelisted(pool.lp)).to.be.eq(true, "Pool not whitelisted");
       // Stake
@@ -42,6 +53,7 @@ describe("Integration: Unit tests", function () {
       const tx = await this.liquidityMigration.connect(holder).stake(pool.lp, holderBalance, pool.adapter.address);
       expect(await this.liquidityMigration.staked(holder.address, pool.lp)).to.be.eq(holderBalance.add(stakedBefore));
       expect(await erc20.balanceOf(holder.address)).to.be.eq(BigNumber.from(0));
+      console.log("User staked: ", holder.address);
     }
   });
 

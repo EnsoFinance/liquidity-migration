@@ -1,18 +1,22 @@
 import hre from "hardhat";
 import { ethers, waffle } from "hardhat";
-import { BigNumber, constants, Contract, ContractInterface } from "ethers";
+import { Event, BigNumber, constants, Contract, ContractInterface } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { PieDaoAdapter__factory } from "../typechain";
 import { toErc20 } from "./utils";
+import { VITALIK } from "./constants";
 import {
   DeployedContracts,
-  HolderBalanceTyped,
-  PoolsToMigrate,
-  PoolsToMigrateData,
+  BalanceMapping,
+  StakedPoolJson,
+  StakedPool,
   Adapter,
   Adapters,
   AcceptedProtocols,
-  HolderWithBalance,
+  HolderBalance,
+  Erc20Holders,
+  Erc20HoldersJson,
+  HolderBalanceJson,
 } from "./types";
 import deployments from "../deployments.json";
 import poolsToMigrate from "../out/above_threshold.json";
@@ -21,8 +25,11 @@ import TokenSetAdapter from "../artifacts/contracts/adapters/TokenSetAdapter.sol
 import PieDaoAdapter from "../artifacts/contracts/adapters/PieDaoAdapter.sol/PieDaoAdapter.json";
 import BalancerAdapter from "../artifacts/contracts/adapters/BalancerAdapter.sol/BalancerAdapter.json";
 import DHedgeAdapter from "../artifacts/contracts/adapters/DHedgeAdapter.sol/DHedgeAdapter.json";
+const { AddressZero, WeiPerEther } = constants;
 
-const { AddressZero } = constants;
+import tokenHolders from "../out/erc20_holders.json";
+
+export const MIN_ETH_SIGNER = WeiPerEther.mul(10);
 
 export function getMainnetDeployments(): DeployedContracts {
   if (!deployments.mainnet) {
@@ -32,37 +39,69 @@ export function getMainnetDeployments(): DeployedContracts {
   return d;
 }
 
+export async function getTransferEvents(
+  addr: string,
+  start: number,
+  end: number,
+  signer: SignerWithAddress,
+): Promise<[Event[], Contract]> {
+  const abi = [
+    "event Transfer(address indexed src, address indexed dst, uint val)",
+    "function balanceOf(address user) public view returns (uint)",
+  ];
+  const contract = new Contract(addr, abi, signer.provider);
+  let filter = contract.filters.Transfer(null, null);
+  let transfers = await contract.queryFilter(filter, start, end);
+  return [transfers, contract];
+}
+
+export async function giveEth(whale: SignerWithAddress, to: string, value: BigNumber) {
+  console.log("Giving ", value, " ETH to sender: ", to);
+  const tx = await whale.sendTransaction({ to, value });
+  await tx.wait();
+  console.log("Account is now richer");
+}
+
+export async function readTokenHolders(): Promise<Erc20Holders> {
+  if (!tokenHolders) {
+    throw Error("erc20_holders.json not found. Run scripts/getHoldersWithBalance.ts");
+  }
+  const holders: Erc20Holders = {};
+  const holdersJson: Erc20HoldersJson = tokenHolders;
+  const keys: string[] = Object.keys(holdersJson);
+  keys.map(async k => {
+    const holder = holdersJson[k];
+    const address = holder.address;
+    const balance = BigNumber.from(holder.balance);
+    holders[k] = { address, balance };
+  });
+  return holders;
+}
+
 // Search numBlocks to find token holder
 export async function getErc20Holder(
   erc20: string,
   startBlock: number,
   endBlock: number,
   signer: SignerWithAddress,
-): Promise<HolderWithBalance | undefined> {
+): Promise<HolderBalanceJson | undefined> {
   if (!signer.provider) throw Error("No provider attached to signer");
-  let address = "";
-  let balance = BigNumber.from(0);
-
-  const abi = [
-    "event Transfer(address indexed src, address indexed dst, uint val)",
-    "function balanceOf(address user) public view returns (uint)",
-  ];
-  const contract = new Contract(erc20, abi, signer.provider);
-  let filter = contract.filters.Transfer(null, null);
-  let transfers = await contract.queryFilter(filter, startBlock, endBlock);
-
+  const [transfers, contract] = await getTransferEvents(erc20, startBlock, endBlock, signer);
   if (transfers.length) {
-    const balances: HolderWithBalance[] = await Promise.all(
+    const balances: HolderBalance[] = await Promise.all(
       transfers.map(async t => {
         const balance = await contract.balanceOf(t.args?.dst);
         const address = t.args?.dst;
         return { balance, address };
       }),
     );
-    const withBalance = balances.filter(b => b.balance.gt(BigNumber.from(0)));
+    const withBalance: HolderBalance[] = balances.filter(b => b.balance.gt(BigNumber.from(0)));
     if (withBalance.length) {
       // TODO: check for highest balance?
-      return withBalance.pop();
+      let holder: HolderBalance = withBalance[0];
+      if (!holder) throw Error("This shouldn't happen");
+      const holderJson: HolderBalanceJson = { address: holder.address, balance: holder.balance.toString() };
+      return holderJson;
     }
   }
   return getErc20Holder(erc20, startBlock - 2000, endBlock - 2000, signer);
@@ -119,22 +158,21 @@ export async function getAdapterFromAddr(addr: string, signer: SignerWithAddress
     }
   }
   throw Error("Failed to find adapter");
-  //return new Contract(AddressZero, [], signer.provider)
 }
 
 // Parse staked users json and populate balances as BigNumber + adapter as Contract
-export async function getPoolsToMigrate(signer: SignerWithAddress): Promise<PoolsToMigrate[]> {
-  const poolsData: PoolsToMigrateData[] = poolsToMigrate;
-  const pools: PoolsToMigrate[] = [];
+export async function getPoolsToMigrate(signer: SignerWithAddress): Promise<StakedPool[]> {
+  const poolsData: StakedPoolJson[] = poolsToMigrate;
+  const pools: StakedPool[] = [];
   for (let i = 0; i < poolsData.length; i++) {
     const p = poolsData[i];
     const keys: string[] = Object.keys(p.balances);
-    const balances: HolderBalanceTyped = {};
+    const balances: BalanceMapping = {};
     keys.map((addr, iter) => {
       balances[addr] = BigNumber.from(p.balances[addr]);
     });
     const adapter = await getAdapterFromAddr(p.adapter, signer);
-    const pool: PoolsToMigrate = { users: p.users, balances, lp: p.lp, adapter };
+    const pool: StakedPool = { users: p.users, balances, lp: p.lp, adapter };
     pools[i] = pool;
   }
   return pools;
@@ -146,6 +184,18 @@ export function liveMigrationContract(signer: SignerWithAddress): Contract {
   }
   const migration = new Contract(deployments.mainnet.LiquidityMigrationV2, LiquidityMigrationV2.abi, signer);
   return migration;
+}
+
+export async function impersonateWithEth(
+  whale: SignerWithAddress,
+  addr: string,
+  value: BigNumber,
+): Promise<SignerWithAddress> {
+  //await giveEth(whale, addr, value)
+  await hre.network.provider.send("hardhat_setBalance", [addr, "0xFFFFFFFFFFFFFFFFFFFFF"]);
+
+  const signer = await impersonateAccount(addr);
+  return signer;
 }
 
 export async function impersonateAccount(addr: string): Promise<SignerWithAddress> {
