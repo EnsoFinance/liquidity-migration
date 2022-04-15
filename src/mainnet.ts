@@ -32,28 +32,40 @@ export function getMainnetDeployments(): DeployedContracts {
   return d;
 }
 
-export async function getHolderWithBalance(
-  balances: HolderBalanceTyped,
-  lp: string,
+// Search numBlocks to find token holder
+export async function getErc20Holder(
+  erc20: string,
+  startBlock: number,
+  endBlock: number,
   signer: SignerWithAddress,
-): Promise<HolderWithBalance> {
-  const erc20 = toErc20(lp, signer);
-  const addrs = Object.keys(balances);
-  let balance: BigNumber = BigNumber.from(0);
+): Promise<HolderWithBalance | undefined> {
+  if (!signer.provider) throw Error("No provider attached to signer");
   let address = "";
-  for (let i = 0; i < addrs.length; i += 4) {
-    // TODO: multicall
-    const b = await erc20.balanceOf(addrs[i]);
-    if (b.gt(balance)) {
-      balance = b;
+  let balance = BigNumber.from(0);
+
+  const abi = [
+    "event Transfer(address indexed src, address indexed dst, uint val)",
+    "function balanceOf(address user) public view returns (uint)",
+  ];
+  const contract = new Contract(erc20, abi, signer.provider);
+  let filter = contract.filters.Transfer(null, null);
+  let transfers = await contract.queryFilter(filter, startBlock, endBlock);
+
+  if (transfers.length) {
+    const balances: HolderWithBalance[] = await Promise.all(
+      transfers.map(async t => {
+        const balance = await contract.balanceOf(t.args?.dst);
+        const address = t.args?.dst;
+        return { balance, address };
+      }),
+    );
+    const withBalance = balances.filter(b => b.balance.gt(BigNumber.from(0)));
+    if (withBalance.length) {
+      // TODO: check for highest balance?
+      return withBalance.pop();
     }
-    address = addrs[i];
   }
-  if (balance.eq(BigNumber.from(0))) {
-    throw Error("Failed to find balanace higher than 0");
-  } else {
-    return { address, balance } as HolderWithBalance;
-  }
+  return getErc20Holder(erc20, startBlock - 2000, endBlock - 2000, signer);
 }
 
 // Return contract interface if one of Adapters enum

@@ -1,5 +1,7 @@
 import { BigNumber, Contract } from "ethers";
 
+export type ScriptOutput = HoldersWithBalance;
+
 export enum AcceptedProtocols {
   Indexed,
   PieDao,

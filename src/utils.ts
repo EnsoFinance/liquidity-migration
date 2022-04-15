@@ -1,3 +1,4 @@
+import fs from "fs";
 import bignumber from "bignumber.js";
 import { BigNumber, Contract } from "ethers";
 import { ethers } from "hardhat";
@@ -22,6 +23,7 @@ import {
 } from "@ensofinance/v1-core";
 import { IERC20__factory, IAdapter } from "../typechain";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
+import { ScriptOutput } from "./types";
 
 export enum Networks {
   Mainnet,
@@ -33,12 +35,10 @@ export function toErc20(addr: string, signer: SignerWithAddress): Contract {
   return IERC20__factory.connect(addr, signer);
 }
 
-let dhedgeAdapter: Contract;
-let indexedAdapter: Contract;
-let pieDaoAdapter: Contract;
-let powerpoolAdapter: Contract;
-let tokensetsAdapter: Contract;
-let indexCoopAdapter: Contract;
+export const write2File = (fileName: string, json: ScriptOutput) => {
+  const data = JSON.stringify(json, null, 4);
+  fs.writeFileSync("out/" + fileName, data);
+};
 
 const strategyItemTuple =
   "tuple(address item, int256 percentage, tuple(address[] adapters, address[] path, bytes cache) data)";
@@ -137,7 +137,14 @@ export type Pools = {
   adapters: Contract[];
 };
 
-export const setupPools = async (signer: SignerWithAddress, enso: EnsoEnvironment) => {
+let dhedgeAdapter: Contract;
+let indexedAdapter: Contract;
+let pieDaoAdapter: Contract;
+let powerpoolAdapter: Contract;
+let tokensetsAdapter: Contract;
+let indexCoopAdapter: Contract;
+
+export async function setupPools(signer: SignerWithAddress, enso: EnsoEnvironment) {
   const liquidityMigrationBuilder = new LiquidityMigrationBuilderV2(signer, enso);
   let pool;
   const poolsToMigrate: any[] = [];
@@ -221,7 +228,7 @@ export const setupPools = async (signer: SignerWithAddress, enso: EnsoEnvironmen
   await Promise.all(txs.map(async p => await p.wait()));
 
   return [lm.liquidityMigration, poolsToMigrate];
-};
+}
 
 export async function estimateTokens(
   oracle: Contract,
