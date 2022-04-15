@@ -11,7 +11,7 @@ import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEG
 import { WETH, SUSD } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
 import deployments from "../deployments.json";
-import {impersonateWithEth } from "../src/mainnet"
+import { impersonateWithEth } from "../src/mainnet";
 const { WeiPerEther } = constants;
 
 const migrator = "0x007A8CFf81A9FCca63E8a05Acb41A8292F4b353e";

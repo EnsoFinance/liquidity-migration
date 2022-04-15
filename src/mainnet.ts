@@ -99,11 +99,7 @@ export async function getErc20Holder(
 }
 
 // Return contract interface if one of Adapters enum
-export function getAdapterInterface(
-  adapter: string,
-  contractName: Adapters,
-  signer: SignerWithAddress,
-): Contract {
+export function getAdapterInterface(adapter: string, contractName: Adapters, signer: SignerWithAddress): Contract {
   switch (contractName) {
     case Adapters.IndexCoopAdapter:
       return new Contract(adapter, TokenSetAdapter.abi, signer);
@@ -177,10 +173,7 @@ export function liveMigrationContract(signer: SignerWithAddress): Contract {
   return migration;
 }
 
-export async function impersonateWithEth(
-  addr: string,
-  value: BigNumber,
-): Promise<SignerWithAddress> {
+export async function impersonateWithEth(addr: string, value: BigNumber): Promise<SignerWithAddress> {
   await hre.network.provider.send("hardhat_setBalance", [addr, "0xFFFFFFFFFFFFFFFFFFFFF"]);
 
   const signer = await impersonateAccount(addr);

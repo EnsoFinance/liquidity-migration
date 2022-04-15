@@ -72,10 +72,10 @@ describe("LiquidityMigrationV2", function () {
     const allSigners = await ethers.getSigners();
     signers.default = allSigners[0];
     signers.secondary = allSigners[1];
-    signers.admin = await impersonateWithEth(ENSO_MULTISIG, WeiPerEther.mul(10)) 
+    signers.admin = await impersonateWithEth(ENSO_MULTISIG, WeiPerEther.mul(10));
     console.log("Admin: ", signers.admin.address);
-    holders = readTokenHolders()
-    console.log("holders", holders)
+    holders = readTokenHolders();
+    console.log("holders", holders);
     enso = await getLiveContracts(signers.admin);
 
     // KNC not on Uniswap, use Chainlink
@@ -90,7 +90,7 @@ describe("LiquidityMigrationV2", function () {
         "0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc",
         false,
       ); //KNC
-     console.log("Owner ", await enso.platform.strategyFactory.owner())
+    console.log("Owner ", await enso.platform.strategyFactory.owner());
     await enso.platform.strategyFactory
       .connect(signers.admin)
       .addItemToRegistry(
@@ -106,7 +106,7 @@ describe("LiquidityMigrationV2", function () {
 
     await dpi_setup();
     liquidityMigration = await liveMigrationContract(signers.admin);
-    console.log("LiquidityMigration: ", liquidityMigration.address)
+    console.log("LiquidityMigration: ", liquidityMigration.address);
     //await indexCoopAdapter.connect(signers.admin).add(dpiPool.address);
 
     // Upgrade StrategyController to MigrationController
@@ -123,7 +123,7 @@ describe("LiquidityMigrationV2", function () {
   });
 
   it("Buy tokens", async function () {
-      console.log("DPI: ", dpiPool.address)
+    console.log("DPI: ", dpiPool.address);
     await dpiEnv.adapter
       .connect(signers.admin)
       .buy(dpiPool.address, UNISWAP_V3_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
