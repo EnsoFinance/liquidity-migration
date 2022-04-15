@@ -13,19 +13,41 @@ import { AcceptedProtocols, StakedPool } from "../src/types";
 import { IAdapter, IERC20__factory, IStrategy__factory, IPV2SmartPool__factory } from "../typechain";
 import { toErc20, setupStrategyItems, encodeStrategyData, estimateTokens, increaseTime } from "../src/utils";
 import { getLiveContracts, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@ensofinance/v1-core";
-import { ENSO_MULTISIG, WETH, SUSD, INITIAL_STATE, DEPOSIT_SLIPPAGE, VITALIK } from "../src/constants";
+import { ENSO_MULTISIG, WETH, SUSD, INITIAL_STATE, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 const { WeiPerEther } = constants;
+
 
 describe("Integration: Unit tests", function () {
   before(async function () {
     this.signers = {} as Signers;
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
-    this.whale = await impersonateAccount(VITALIK);
     const admin = await ethers.getSigner(ENSO_MULTISIG);
-    this.signers.admin = await impersonateWithEth(this.whale, admin.address, WeiPerEther.mul(10));
+    this.signers.admin = await impersonateWithEth(admin.address, WeiPerEther.mul(10));
     this.enso = getLiveContracts(this.signers.admin);
+    // KNC not on Uniswap, use Chainlink
+    await this.enso.platform.oracles.registries.chainlinkRegistry
+      .connect(this.signers.admin)
+      .addOracle(SUSD, WETH, "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419", true); //sUSD
+    await this.enso.platform.oracles.registries.chainlinkRegistry
+      .connect(this.signers.admin)
+      .addOracle(
+        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
+        SUSD,
+        "0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc",
+        false,
+      ); //KNC
+     console.log("Owner ", await this.enso.platform.strategyFactory.owner())
+    await this.enso.platform.strategyFactory
+      .connect(this.signers.admin)
+      .addItemToRegistry(
+        ITEM_CATEGORY.BASIC,
+        ESTIMATOR_CATEGORY.CHAINLINK_ORACLE,
+        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
+      );
+
+
     const { chainlinkRegistry, curveDepositZapRegistry } = this.enso.platform.oracles.registries;
     this.liquidityMigration = liveMigrationContract(this.signers.admin);
     this.poolsToMigrate = await getPoolsToMigrate(this.signers.admin);
@@ -36,15 +58,14 @@ describe("Integration: Unit tests", function () {
     for (let i = 0; i < this.poolsToMigrate.length; i++) {
       const pool: StakedPool = this.poolsToMigrate[i];
       const holderAcc = this.holders[pool.lp];
-      // Impersonate and give ETH
+      // Impersonate and give ETH to holder of this coin
       console.log("Staking into pool: ", pool.lp, "for user: ", holderAcc);
-      const holder = await impersonateWithEth(this.whale, holderAcc.address, WeiPerEther.mul(1));
+      const holder = await impersonateWithEth(holderAcc.address, WeiPerEther.mul(1));
       const erc20 = toErc20(pool.lp, holder);
       const stakedBefore = await this.liquidityMigration.staked(holder.address, pool.lp);
       const holderBalance = await erc20.balanceOf(holder.address);
       if (holderBalance.eq(BigNumber.from(0))) {
-        console.log("Balance: ", holderBalance, "  \nHolder: ", holder.address);
-        throw Error("Need to update holder for pool in tasks/initMasterUser: " + pool.lp);
+        throw Error("Need to update holder token balances at scripts/getHoldersWithBalance.ts " + pool.lp);
       }
       // Make sure whitelisted
       expect(await pool.adapter.isWhitelisted(pool.lp)).to.be.eq(true, "Pool not whitelisted");
@@ -53,7 +74,6 @@ describe("Integration: Unit tests", function () {
       const tx = await this.liquidityMigration.connect(holder).stake(pool.lp, holderBalance, pool.adapter.address);
       expect(await this.liquidityMigration.staked(holder.address, pool.lp)).to.be.eq(holderBalance.add(stakedBefore));
       expect(await erc20.balanceOf(holder.address)).to.be.eq(BigNumber.from(0));
-      console.log("User staked: ", holder.address);
     }
   });
 
@@ -61,17 +81,14 @@ describe("Integration: Unit tests", function () {
     await increaseTime(10);
     for (let i = 0; i < this.poolsToMigrate.length; i++) {
       const pool = this.poolsToMigrate[i];
-      if (
-        // Skip 2X FLI, SciFi (GEL), WEB3 (OHM)
-        pool.lp !== "0xaa6e8127831c9de45ae56bb1b0d4d4da6e5665bd" &&
-        pool.lp !== "0x0b498ff89709d3838a063f1dfa463091f9801c2b" &&
-        pool.lp !== "0xfdc4a3fc36df16a78edcaf1b837d3acaaedb2cb4" &&
-        pool.lp !== "0xe8e8486228753E01Dbc222dA262Aa706Bd67e601"
-      ) {
         const underlyingTokens = await pool.adapter.outputTokens(pool.lp);
+        for (let u=0; u < underlyingTokens.length; u++){
+            console.log("token: ", underlyingTokens[i])
+            console.log("Pool Data ", await this.enso.platform.oracles.registries.uniswapV3Registry.getPoolData(underlyingTokens[i]))
+        }
         // encode strategy items
         console.log("Pool: ", pool.lp);
-        //console.log("Underlying tokens: \n", underlyingTokens);
+        console.log("Underlying tokens: \n", underlyingTokens);
         let poolAddress;
         try {
           const pieDaoPool = IPV2SmartPool__factory.connect(pool.lp, this.signers.default);
@@ -79,7 +96,6 @@ describe("Integration: Unit tests", function () {
         } catch (e) {
           poolAddress = pool.lp;
         }
-        console.log("Pool address: ", poolAddress);
         const strategyItems = await setupStrategyItems(
           this.enso.platform.oracles.ensoOracle,
           ethers.constants.AddressZero, // For real strategies an adapter is needed, but for migration it is not
@@ -96,7 +112,6 @@ describe("Integration: Unit tests", function () {
           ethers.constants.AddressZero,
           "0x",
         );
-        //console.log("Creating strategy: \n", strategyItems);
         const tx = await this.liquidityMigration.createStrategy(pool.lp, pool.adapter, strategyData);
         const receipt = await tx.wait();
         const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
@@ -118,6 +133,5 @@ describe("Integration: Unit tests", function () {
         console.log("strategy items: ", await this.strategy.items());
         console.log("strategy synths: ", await this.strategy.synths());
       }
-    }
   });
 });

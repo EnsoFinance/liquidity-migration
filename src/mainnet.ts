@@ -4,7 +4,6 @@ import { Event, BigNumber, constants, Contract, ContractInterface } from "ethers
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { PieDaoAdapter__factory } from "../typechain";
 import { toErc20 } from "./utils";
-import { VITALIK } from "./constants";
 import {
   DeployedContracts,
   BalanceMapping,
@@ -26,7 +25,6 @@ import PieDaoAdapter from "../artifacts/contracts/adapters/PieDaoAdapter.sol/Pie
 import BalancerAdapter from "../artifacts/contracts/adapters/BalancerAdapter.sol/BalancerAdapter.json";
 import DHedgeAdapter from "../artifacts/contracts/adapters/DHedgeAdapter.sol/DHedgeAdapter.json";
 const { AddressZero, WeiPerEther } = constants;
-
 import tokenHolders from "../out/erc20_holders.json";
 
 export const MIN_ETH_SIGNER = WeiPerEther.mul(10);
@@ -55,21 +53,14 @@ export async function getTransferEvents(
   return [transfers, contract];
 }
 
-export async function giveEth(whale: SignerWithAddress, to: string, value: BigNumber) {
-  console.log("Giving ", value, " ETH to sender: ", to);
-  const tx = await whale.sendTransaction({ to, value });
-  await tx.wait();
-  console.log("Account is now richer");
-}
-
-export async function readTokenHolders(): Promise<Erc20Holders> {
+export function readTokenHolders(): Erc20Holders {
   if (!tokenHolders) {
     throw Error("erc20_holders.json not found. Run scripts/getHoldersWithBalance.ts");
   }
   const holders: Erc20Holders = {};
   const holdersJson: Erc20HoldersJson = tokenHolders;
   const keys: string[] = Object.keys(holdersJson);
-  keys.map(async k => {
+  keys.map(k => {
     const holder = holdersJson[k];
     const address = holder.address;
     const balance = BigNumber.from(holder.balance);
@@ -108,11 +99,11 @@ export async function getErc20Holder(
 }
 
 // Return contract interface if one of Adapters enum
-export async function getAdapterInterface(
+export function getAdapterInterface(
   adapter: string,
   contractName: Adapters,
   signer: SignerWithAddress,
-): Promise<Contract> {
+): Contract {
   switch (contractName) {
     case Adapters.IndexCoopAdapter:
       return new Contract(adapter, TokenSetAdapter.abi, signer);
@@ -187,11 +178,9 @@ export function liveMigrationContract(signer: SignerWithAddress): Contract {
 }
 
 export async function impersonateWithEth(
-  whale: SignerWithAddress,
   addr: string,
   value: BigNumber,
 ): Promise<SignerWithAddress> {
-  //await giveEth(whale, addr, value)
   await hre.network.provider.send("hardhat_setBalance", [addr, "0xFFFFFFFFFFFFFFFFFFFFF"]);
 
   const signer = await impersonateAccount(addr);

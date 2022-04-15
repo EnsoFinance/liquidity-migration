@@ -1,9 +1,9 @@
 import { ethers, network } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Event } from "ethers";
+import { BigNumber, Event, constants } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, Adapters } from "../src/types";
-import { liveMigrationContract, getAdapterFromType } from "../src/mainnet";
+import { liveMigrationContract, getAdapterFromType, impersonateWithEth, readTokenHolders } from "../src/mainnet";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import { getLiveContracts, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEGORY } from "@ensofinance/v1-core";
 import { FACTORY_REGISTRIES, INITIAL_STATE, WETH, SUSD, UNISWAP_V3_ROUTER, ENSO_MULTISIG } from "../src/constants";
@@ -11,6 +11,7 @@ import { setupStrategyItems, getBlockTime } from "../src/utils";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 import { IERC20__factory } from "../typechain";
 import Strategy from "@ensofinance/v1-core/artifacts/contracts/Strategy.sol/Strategy.json";
+const { WeiPerEther } = constants;
 
 describe("LiquidityMigrationV2", function () {
   let signers: any,
@@ -20,10 +21,11 @@ describe("LiquidityMigrationV2", function () {
     dpiPool: any,
     dpiUnderlying: any,
     dpiStrategy: any,
-    liquidityMigration: any;
+    liquidityMigration: any,
+    holders: any;
 
   const dpi_setup = async function () {
-    dpiEnv = await new TokenSetEnvironmentBuilder(signers.admin, enso).connect(FACTORY_REGISTRIES.DPI.toLowerCase());
+    dpiEnv = await new TokenSetEnvironmentBuilder(signers.admin, enso).connect(FACTORY_REGISTRIES.DPI);
     indexCoopAdapter = await getAdapterFromType(Adapters.IndexCoopAdapter, signers.admin);
     console.log("Adapter: ", indexCoopAdapter.address);
     dpiPool = dpiEnv.pool;
@@ -70,14 +72,32 @@ describe("LiquidityMigrationV2", function () {
     const allSigners = await ethers.getSigners();
     signers.default = allSigners[0];
     signers.secondary = allSigners[1];
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [ENSO_MULTISIG],
-    });
-    signers.admin = await ethers.getSigner(ENSO_MULTISIG);
+    signers.admin = await impersonateWithEth(ENSO_MULTISIG, WeiPerEther.mul(10)) 
     console.log("Admin: ", signers.admin.address);
-
+    holders = readTokenHolders()
+    console.log("holders", holders)
     enso = await getLiveContracts(signers.admin);
+
+    // KNC not on Uniswap, use Chainlink
+    await enso.platform.oracles.registries.chainlinkRegistry
+      .connect(signers.admin)
+      .addOracle(SUSD, WETH, "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419", true); //sUSD
+    await enso.platform.oracles.registries.chainlinkRegistry
+      .connect(signers.admin)
+      .addOracle(
+        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
+        SUSD,
+        "0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc",
+        false,
+      ); //KNC
+     console.log("Owner ", await enso.platform.strategyFactory.owner())
+    await enso.platform.strategyFactory
+      .connect(signers.admin)
+      .addItemToRegistry(
+        ITEM_CATEGORY.BASIC,
+        ESTIMATOR_CATEGORY.CHAINLINK_ORACLE,
+        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
+      );
 
     console.log("Controller: ", enso.platform.controller.address);
     console.log("LoopRouter: ", enso.routers.loop.address);
@@ -86,6 +106,7 @@ describe("LiquidityMigrationV2", function () {
 
     await dpi_setup();
     liquidityMigration = await liveMigrationContract(signers.admin);
+    console.log("LiquidityMigration: ", liquidityMigration.address)
     //await indexCoopAdapter.connect(signers.admin).add(dpiPool.address);
 
     // Upgrade StrategyController to MigrationController
@@ -102,12 +123,12 @@ describe("LiquidityMigrationV2", function () {
   });
 
   it("Buy tokens", async function () {
+      console.log("DPI: ", dpiPool.address)
     await dpiEnv.adapter
       .connect(signers.admin)
       .buy(dpiPool.address, UNISWAP_V3_ROUTER, 0, ethers.constants.MaxUint256, { value: ethers.constants.WeiPerEther });
 
-    const user = await signers.admin.getAddress();
-    expect(await dpiPool.balanceOf(user)).to.be.gt(BigNumber.from(0));
+    expect(await dpiPool.balanceOf(signers.admin.address)).to.be.gt(BigNumber.from(0));
   });
 
   it("Stake", async function () {
