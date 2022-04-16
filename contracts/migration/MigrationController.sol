@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-//import "@openzeppelin/contracts/proxy/Initializable.sol";
 import "@ensofinance/v1-core/contracts/StrategyControllerStorage.sol";
 import "@ensofinance/v1-core/contracts/interfaces/IOracle.sol";
 import "@ensofinance/v1-core/contracts/interfaces/registries/ITokenRegistry.sol";
@@ -11,7 +10,11 @@ import "./libraries/SignedSafeMath.sol";
 import "./interfaces/IMigrationController.sol";
 
 // Acts as "generic" address in LiquidityMigration contract
-contract MigrationController is IMigrationController, StrategyTypes, StrategyControllerStorage { //, Initializable {
+contract MigrationController is 
+    IMigrationController,
+    StrategyTypes,
+    StrategyControllerStorage 
+{
     using SafeERC20Transfer for IERC20;
     using SignedSafeMath for int256;
 
@@ -80,6 +83,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         _removeStrategyLock(strategy);
     }
 
+
     function verifyStructure(address strategy, StrategyItem[] memory newItems) public view returns (bool) {
         require(newItems.length > 0, "Cannot set empty structure");
         require(newItems[0].item != address(0), "Invalid item addr"); //Everything else will caught by the ordering requirement below
@@ -101,7 +105,8 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
             }
             uint256 category = registry.estimatorCategories(item);
             require(category != uint256(EstimatorCategory.BLOCKED), "Token blocked");
-            if (category == uint256(EstimatorCategory.STRATEGY)) _checkCyclicDependency(strategy, IStrategy(item), registry);
+            if (category == uint256(EstimatorCategory.STRATEGY))
+                _checkCyclicDependency(strategy, IStrategy(item), registry);
             total = total.add(percentage);
         }
         require(total == int256(DIVISOR), "Total percentage wrong");
@@ -112,8 +117,12 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         return _initialized[strategy] > 0;
     }
 
-    function oracle() public view returns (IOracle) {
+    function oracle() public view override returns (IOracle) {
         return IOracle(_oracle);
+    }
+
+    function whitelist() external view override returns (IWhitelist) {
+        return IWhitelist(_whitelist);
     }
 
     function _setInitialState(address strategy, InitialState memory state) private {
