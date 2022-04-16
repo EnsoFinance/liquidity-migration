@@ -9,12 +9,10 @@ import "@ensofinance/v1-core/contracts/helpers/StrategyTypes.sol";
 import "./libraries/SignedSafeMath.sol";
 import "./interfaces/IMigrationController.sol";
 
+import "hardhat/console.sol";
+
 // Acts as "generic" address in LiquidityMigration contract
-contract MigrationController is 
-    IMigrationController,
-    StrategyTypes,
-    StrategyControllerStorage 
-{
+contract MigrationController is IMigrationController, StrategyTypes, StrategyControllerStorage {
     using SafeERC20Transfer for IERC20;
     using SignedSafeMath for int256;
 
@@ -50,6 +48,8 @@ contract MigrationController is
         IAdapter adapter,
         uint256 amount
     ) external override {
+      console.log("debug migrate");
+      console.log(address(genericRouter));
         require(msg.sender == _liquidityMigration, "Wrong sender");
         require(strategy.totalSupply() == 0, "Strategy cannot be migrated to");
         require(amount > 0, "No amount");
@@ -57,6 +57,10 @@ contract MigrationController is
         bytes memory migrationData = abi.encode(
             adapter.encodeMigration(address(genericRouter), address(strategy), address(lpToken), amount)
         );
+        if (strategy.supportsDebt()) {
+            IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), amount);
+            IStrategy(strategy).setRouter(address(genericRouter)); // FIXME assess if its ok to always set??
+        }
         genericRouter.deposit(address(strategy), migrationData);
         // At this point the underlying tokens should be in the Strategy. Estimate strategy value
         (uint256 total, ) = oracle().estimateStrategy(strategy);
@@ -71,7 +75,7 @@ contract MigrationController is
         address manager_,
         address strategy_,
         InitialState memory state_,
-        address,
+        address router_,
         bytes memory
     ) external payable {
         IStrategy strategy = IStrategy(strategy_);
@@ -80,9 +84,10 @@ contract MigrationController is
         require(msg.sender == factory, "Not factory");
         require(manager_ == _ensoManager, "Not enso");
         _setInitialState(strategy_, state_);
+        console.log("debug setupStrategy");
+        console.log(address(router_));
         _removeStrategyLock(strategy);
     }
-
 
     function verifyStructure(address strategy, StrategyItem[] memory newItems) public view returns (bool) {
         require(newItems.length > 0, "Cannot set empty structure");

@@ -52,6 +52,7 @@ describe("BTC_2X: Unit tests", function () {
       new Contract(this.tokens.usdc, [], this.signers.default),
       new Contract(this.tokens.weth, [], this.signers.default),
     );
+    console.log("debug leverageAdapter address:", leverageAdapter.address);
 
     this.enso.adapters.leverage.contract = leverageAdapter;
 
@@ -187,6 +188,7 @@ describe("BTC_2X: Unit tests", function () {
     await migrationControllerImplementation.deployed();
     await this.enso.platform.controller["updateAddresses()"]();
 
+
     // Upgrade controller to new implementation
     await this.enso.platform.administration.platformProxyAdmin
       .connect(this.signers.admin)
@@ -201,27 +203,26 @@ describe("BTC_2X: Unit tests", function () {
         "BTC_2X",
         strategyItems,
         INITIAL_STATE,
-        ethers.constants.AddressZero,
+        this.enso.adapters.leverage.contract.address,
         "0x",
       );
-    
+
     const receipt = await tx.wait();
     const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
     console.log("Strategy address: ", strategyAddress);
     this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
-    
+
     await this.liquidityMigration.connect(this.signers.admin).updateController(this.enso.platform.controller.address);
-    await this.liquidityMigration.connect(this.signers.admin).updateGenericRouter(this.enso.routers[0].contract.address); // TODO is this the default??
-    
-    await this.liquidityMigration.connect(this.signers.admin)
-    ["setStrategy(address,address)"](
-        this.TokenSetEnv.pool.address, 
-        this.strategy.address
-    )
+    await this.liquidityMigration
+      .connect(this.signers.admin)
+      .updateGenericRouter(this.enso.routers[0].contract.address); // TODO is this the default??
+
+    await this.liquidityMigration
+      .connect(this.signers.admin)
+      ["setStrategy(address,address)"](this.TokenSetEnv.pool.address, this.strategy.address);
   });
 
   it("Should migrate tokens to strategy", async function () {
-    /*
     const routerContract = this.enso.routers[0].contract;
     console.log("debug router address:", routerContract.address, this.enso.routers.length);
     const holder2 = await this.TokenSetEnv.holders[1];
@@ -235,12 +236,12 @@ describe("BTC_2X: Unit tests", function () {
 
     await this.liquidityMigration.connect(this.signers.admin).updateUnlock(0);
 
+    // FIXME error in the next call
+
     await this.liquidityMigration
       .connect(this.signers.admin)
-      ["migrateAll(address,address)"](
-        this.TokenSetEnv.pool.address, 
-        this.TokenSetEnv.adapter.address);
-    /*
+      ["migrateAll(address,address)"](this.TokenSetEnv.pool.address, this.TokenSetEnv.adapter.address);
+   /* 
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, [
       this.tokens.aWBTC,
       this.tokens.debtUSDC,
@@ -248,6 +249,7 @@ describe("BTC_2X: Unit tests", function () {
     expect(total).to.gt(0);
     expect(await this.strategy.balanceOf(holder2Address)).to.gt(0);
     */
+    
   });
 
   it("Should buy and stake", async function () {

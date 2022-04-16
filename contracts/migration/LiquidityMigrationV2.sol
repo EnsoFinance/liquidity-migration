@@ -7,6 +7,8 @@ import "./interfaces/IMigrationController.sol";
 import "./interfaces/ILiquidityMigrationV2.sol";
 import "../helpers/Timelocked.sol";
 
+import "hardhat/console.sol";
+
 contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
     using SafeERC20 for IERC20;
 
@@ -126,12 +128,15 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         onlyRegistered(adapter)
         onlyWhitelisted(adapter, lp)
     {
+        console.log("debug: migrateAll");
         address strategy = strategies[lp];
         require(strategy != address(0), "Strategy not initialized");
         uint256 totalStake = totalStaked[lp];
         delete totalStaked[lp];
         uint256 strategyBalanceBefore = IStrategy(strategy).balanceOf(address(this));
         IERC20(lp).safeTransfer(genericRouter, totalStake);
+
+        console.log("debug: migrateAll 0");
         IMigrationController(controller).migrate(
             IStrategy(strategy),
             IStrategyRouter(genericRouter),
@@ -139,6 +144,8 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
             IAdapter(adapter),
             totalStake
         );
+
+        console.log("debug: migrateAll 1");
         uint256 strategyBalanceAfter = IStrategy(strategy).balanceOf(address(this));
         assert((strategyBalanceAfter - strategyBalanceBefore) == totalStake);
     }
