@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
+//import "@openzeppelin/contracts/proxy/Initializable.sol";
 import "@ensofinance/v1-core/contracts/StrategyControllerStorage.sol";
 import "@ensofinance/v1-core/contracts/interfaces/IOracle.sol";
 import "@ensofinance/v1-core/contracts/interfaces/registries/ITokenRegistry.sol";
@@ -10,7 +11,7 @@ import "./libraries/SignedSafeMath.sol";
 import "./interfaces/IMigrationController.sol";
 
 // Acts as "generic" address in LiquidityMigration contract
-contract MigrationController is IMigrationController, StrategyTypes, StrategyControllerStorage {
+contract MigrationController is IMigrationController, StrategyTypes, StrategyControllerStorage { //, Initializable {
     using SafeERC20Transfer for IERC20;
     using SignedSafeMath for int256;
 
@@ -98,9 +99,9 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
                 require(percentage >= 0, "Token cannot be negative");
                 require(percentage <= PERCENTAGE_BOUND, "Out of bounds");
             }
-            EstimatorCategory category = EstimatorCategory(registry.estimatorCategories(item));
-            require(category != EstimatorCategory.BLOCKED, "Token blocked");
-            if (category == EstimatorCategory.STRATEGY) _checkCyclicDependency(strategy, IStrategy(item), registry);
+            uint256 category = registry.estimatorCategories(item);
+            require(category != uint256(EstimatorCategory.BLOCKED), "Token blocked");
+            if (category == uint256(EstimatorCategory.STRATEGY)) _checkCyclicDependency(strategy, IStrategy(item), registry);
             total = total.add(percentage);
         }
         require(total == int256(DIVISOR), "Total percentage wrong");
