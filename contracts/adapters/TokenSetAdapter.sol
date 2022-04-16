@@ -4,8 +4,6 @@ pragma solidity >=0.8.0;
 import { SafeERC20, IERC20 } from "../ecosystem/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./AbstractAdapter.sol";
 
-import "hardhat/console.sol";
-
 interface ISetToken {
     function getComponents() external view returns (address[] memory);
 
@@ -98,8 +96,6 @@ contract TokenSetAdapter is AbstractAdapter {
                 );
             }
             if (_lp == BTC2X) {
-                console.log("debug is btc2x");
-                console.log(_genericRouter);
                 calls[2] = Call(
                     _genericRouter,
                     abi.encodeWithSelector(
@@ -113,7 +109,6 @@ contract TokenSetAdapter is AbstractAdapter {
                 );
             }
         } else {
-            console.log("debug elsey");
             address[] memory tokens = outputTokens(_lp);
             calls = new Call[](tokens.length + 1);
             calls[0] = encodeWithdraw(_lp, _amount)[0];

@@ -9,8 +9,6 @@ import "@ensofinance/v1-core/contracts/helpers/StrategyTypes.sol";
 import "./libraries/SignedSafeMath.sol";
 import "./interfaces/IMigrationController.sol";
 
-import "hardhat/console.sol";
-
 // Acts as "generic" address in LiquidityMigration contract
 contract MigrationController is IMigrationController, StrategyTypes, StrategyControllerStorage {
     using SafeERC20Transfer for IERC20;
@@ -48,8 +46,6 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         IAdapter adapter,
         uint256 amount
     ) external override {
-      console.log("debug migrate");
-      console.log(address(genericRouter));
         require(msg.sender == _liquidityMigration, "Wrong sender");
         require(strategy.totalSupply() == 0, "Strategy cannot be migrated to");
         require(amount > 0, "No amount");
@@ -84,8 +80,6 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         require(msg.sender == factory, "Not factory");
         require(manager_ == _ensoManager, "Not enso");
         _setInitialState(strategy_, state_);
-        console.log("debug setupStrategy");
-        console.log(address(router_));
         _removeStrategyLock(strategy);
     }
 

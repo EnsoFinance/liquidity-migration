@@ -16,6 +16,9 @@ import {
 import { estimateTokens } from "../src/utils";
 import { EnsoBuilder, Position, Multicall, Tokens, prepareStrategy, encodeSettleTransfer } from "@ensofinance/v1-core";
 
+// FIXME use Leverage2XAdapter
+// FIXME refactor to be similar to BTC2X.ts
+
 describe("ETH_2X: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
   before(async function () {
@@ -29,8 +32,12 @@ describe("ETH_2X: Unit tests", function () {
     this.enso = await ensoBuilder.build();
     this.tokens = new Tokens();
     const { chainlinkRegistry, uniswapV3Registry } = this.enso.platform.oracles.registries;
-    this.tokens.registerTokens(this.signers.admin, this.enso.platform.strategyFactory, uniswapV3Registry, chainlinkRegistry);
-
+    this.tokens.registerTokens(
+      this.signers.admin,
+      this.enso.platform.strategyFactory,
+      uniswapV3Registry,
+      chainlinkRegistry,
+    );
 
     this.TokenSetEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
       FACTORY_REGISTRIES.ETH_2X,
@@ -65,6 +72,7 @@ describe("ETH_2X: Unit tests", function () {
 
   it("Should not be able to migrate tokens if the ETH_2X token is not whitelisted in the Token Sets Adapter", async function () {
     const routerContract = this.enso.routers[0].contract;
+    // FIXME router?? used??
     const holder2 = await this.TokenSetEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     // staking the tokens in the liquidity migration contract
@@ -106,6 +114,8 @@ describe("ETH_2X: Unit tests", function () {
 
   it("Migration using a non-whitelisted token should fail", async function () {
     const routerContract = this.enso.routers[0].contract;
+
+    // FIXME router?? used??
     const holder3 = await this.TokenSetEnv.holders[2];
     const holder3Address = await holder3.getAddress();
 
@@ -116,7 +126,6 @@ describe("ETH_2X: Unit tests", function () {
   });
 
   it("Create strategy", async function () {
-    
     // adding the ETH_2X Token as a whitelisted token
     let tx = await this.TokenSetEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.ETH_2X);
     await tx.wait();
@@ -187,7 +196,6 @@ describe("ETH_2X: Unit tests", function () {
   });
 
   it("Should buy and stake", async function () {
-    
     const defaultAddress = await this.signers.default.getAddress();
 
     expect(await this.TokenSetEnv.pool.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));

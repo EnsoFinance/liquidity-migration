@@ -52,7 +52,6 @@ describe("BTC_2X: Unit tests", function () {
       new Contract(this.tokens.usdc, [], this.signers.default),
       new Contract(this.tokens.weth, [], this.signers.default),
     );
-    console.log("debug leverageAdapter address:", leverageAdapter.address);
 
     this.enso.adapters.leverage.contract = leverageAdapter;
 
@@ -188,7 +187,6 @@ describe("BTC_2X: Unit tests", function () {
     await migrationControllerImplementation.deployed();
     await this.enso.platform.controller["updateAddresses()"]();
 
-
     // Upgrade controller to new implementation
     await this.enso.platform.administration.platformProxyAdmin
       .connect(this.signers.admin)
@@ -209,13 +207,12 @@ describe("BTC_2X: Unit tests", function () {
 
     const receipt = await tx.wait();
     const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
-    console.log("Strategy address: ", strategyAddress);
     this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
 
     await this.liquidityMigration.connect(this.signers.admin).updateController(this.enso.platform.controller.address);
     await this.liquidityMigration
       .connect(this.signers.admin)
-      .updateGenericRouter(this.enso.routers[0].contract.address); // TODO is this the default??
+      .updateGenericRouter(this.enso.routers[0].contract.address); // this is multicall router 
 
     await this.liquidityMigration
       .connect(this.signers.admin)
@@ -224,7 +221,6 @@ describe("BTC_2X: Unit tests", function () {
 
   it("Should migrate tokens to strategy", async function () {
     const routerContract = this.enso.routers[0].contract;
-    console.log("debug router address:", routerContract.address, this.enso.routers.length);
     const holder2 = await this.TokenSetEnv.holders[1];
     const holder2Address = await holder2.getAddress();
     const amount = await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.pool.address);
@@ -236,33 +232,31 @@ describe("BTC_2X: Unit tests", function () {
 
     await this.liquidityMigration.connect(this.signers.admin).updateUnlock(0);
 
-    // FIXME error in the next call
-
     await this.liquidityMigration
       .connect(this.signers.admin)
       ["migrateAll(address,address)"](this.TokenSetEnv.pool.address, this.TokenSetEnv.adapter.address);
-   /* 
+
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, [
       this.tokens.aWBTC,
       this.tokens.debtUSDC,
     ]);
     expect(total).to.gt(0);
-    expect(await this.strategy.balanceOf(holder2Address)).to.gt(0);
-    */
-    
+    expect(await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.pool.address)).to.gt(0);
   });
 
   it("Should buy and stake", async function () {
-    /*
+    /*    
     const defaultAddress = await this.signers.default.getAddress();
 
     expect(await this.TokenSetEnv.pool.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
     expect(await this.strategy.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
+    
     expect(await this.liquidityMigration.staked(defaultAddress, this.TokenSetEnv.pool.address)).to.be.eq(
       BigNumber.from(0),
     );
 
     const ethAmount = ethers.constants.WeiPerEther;
+    // FIXME this fails on the uniV3 quoter `quoteExactInputSingle`
     const expectedAmount = await this.TokenSetEnv.adapter.callStatic.getAmountOut(
       this.TokenSetEnv.pool.address,
       UNISWAP_V3_ROUTER,

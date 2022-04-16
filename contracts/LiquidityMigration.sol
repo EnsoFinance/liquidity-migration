@@ -8,8 +8,6 @@ import "@ensofinance/v1-core/contracts/interfaces/IStrategyController.sol";
 import "@ensofinance/v1-core/contracts/helpers/StrategyTypes.sol";
 import "./helpers/Timelocked.sol";
 
-import "hardhat/console.sol";
-
 contract LiquidityMigration is Timelocked, StrategyTypes {
     using SafeERC20 for IERC20;
 
@@ -119,7 +117,6 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         IStrategy _strategy,
         uint256 _slippage
     ) external onlyUnlocked {
-        console.log("debug liquidityMigration: migrate start");
         _migrate(msg.sender, _lp, _adapter, _strategy, _slippage);
     }
 
@@ -189,7 +186,6 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         IStrategy _strategy,
         uint256 _slippage
     ) internal onlyRegistered(_adapter) onlyWhitelisted(_adapter, _lp) {
-        console.log("debug: _migrate start");
         require(
             IStrategyController(controller).initialized(address(_strategy)),
             "LiquidityMigration#_migrate: not enso strategy"
@@ -198,26 +194,17 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         uint256 _stakeAmount = staked[_user][_lp];
         require(_stakeAmount > 0, "LiquidityMigration#_migrate: not staked");
 
-        console.log("debug: _migrate 0");
         delete staked[_user][_lp];
         IERC20(_lp).safeTransfer(generic, _stakeAmount);
 
-        console.log("debug: _migrate 1");
         uint256 _before = _strategy.balanceOf(address(this));
         bytes memory migrationData = abi.encode(
             IAdapter(_adapter).encodeMigration(generic, address(_strategy), _lp, _stakeAmount)
         );
 
-        console.log("debug: _migrate 2");
-        console.log(controller);
-        console.log(generic);
-        console.log(_slippage);
-        //console.log(migrationData);
         IStrategyController(controller).deposit(_strategy, IStrategyRouter(generic), 0, _slippage, migrationData);
-        console.log("debug: 2.5");
         uint256 _after = _strategy.balanceOf(address(this));
 
-        console.log("debug: _migrate 3");
         _strategy.transfer(_user, (_after - _before));
         emit Migrated(_adapter, _lp, address(_strategy), _user);
     }
