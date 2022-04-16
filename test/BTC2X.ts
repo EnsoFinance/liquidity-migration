@@ -14,8 +14,16 @@ import {
   DEPOSIT_SLIPPAGE,
 } from "../src/constants";
 import { estimateTokens } from "../src/utils";
-import { EnsoBuilder, Position, Multicall, Tokens, prepareStrategy, encodeSettleTransfer, deployLeverage2XAdapter } from "@ensofinance/v1-core";
-import AaveV2Adapter from "@ensofinance/v1-core/artifacts/contracts/adapters/lending/AaveV2Adapter.sol/AaveV2Adapter.json"
+import {
+  EnsoBuilder,
+  Position,
+  Multicall,
+  Tokens,
+  prepareStrategy,
+  encodeSettleTransfer,
+  deployLeverage2XAdapter,
+} from "@ensofinance/v1-core";
+import AaveV2Adapter from "@ensofinance/v1-core/artifacts/contracts/adapters/lending/AaveV2Adapter.sol/AaveV2Adapter.json";
 
 describe("BTC_2X: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -31,25 +39,24 @@ describe("BTC_2X: Unit tests", function () {
 
     this.tokens = new Tokens();
 
-
-    let aaveV2 = new Contract(this.enso.adapters.aaveV2.contract.address, AaveV2Adapter.abi, this.signers.default)
+    let aaveV2 = new Contract(this.enso.adapters.aaveV2.contract.address, AaveV2Adapter.abi, this.signers.default);
 
     const addressesProvider = new Contract(await aaveV2.addressesProvider(), [], this.signers.default);
-    
 
     let leverageAdapter = await deployLeverage2XAdapter(
-      this.signers.default, 
-      this.enso.adapters.uniswap.contract, 
-      this.enso.adapters.aaveV2.contract, 
+      this.signers.default,
+      this.enso.adapters.uniswap.contract,
+      this.enso.adapters.aaveV2.contract,
       this.enso.adapters.aaveV2Debt.contract,
-      addressesProvider, 
-      new Contract(this.tokens.usdc, [], this.signers.default), 
-      new Contract(this.tokens.weth, [], this.signers.default))
+      addressesProvider,
+      new Contract(this.tokens.usdc, [], this.signers.default),
+      new Contract(this.tokens.weth, [], this.signers.default),
+    );
 
     this.enso.adapters.leverage.contract = leverageAdapter;
-    
+
     const { chainlinkRegistry, uniswapV3Registry } = this.enso.platform.oracles.registries;
-    
+
     this.tokens.registerTokens(
       this.signers.admin,
       this.enso.platform.strategyFactory,
@@ -67,11 +74,9 @@ describe("BTC_2X: Unit tests", function () {
     liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, this.TokenSetEnv.adapter);
     await liquidityMigrationBuilder.deploy();
     this.liquidityMigration = liquidityMigrationBuilder.liquidityMigration;
-    
   });
 
   it("Token holder should be able to stake LP token", async function () {
-    
     const tx = await this.TokenSetEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.BTC_2X);
     await tx.wait();
     const holder2 = await this.TokenSetEnv.holders[1];
@@ -79,7 +84,7 @@ describe("BTC_2X: Unit tests", function () {
 
     const holder2Balance = await this.TokenSetEnv.pool.balanceOf(holder2Address);
     expect(holder2Balance).to.be.gt(BigNumber.from(0));
-    
+
     await this.TokenSetEnv.pool.connect(holder2).approve(this.liquidityMigration.address, holder2Balance);
     await this.liquidityMigration
       .connect(holder2)
@@ -99,24 +104,21 @@ describe("BTC_2X: Unit tests", function () {
     // staking the tokens in the liquidity migration contract
     const holder2BalanceBefore = await this.TokenSetEnv.pool.balanceOf(holder2Address);
     expect(holder2BalanceBefore).to.be.gt(BigNumber.from(0));
-    
+
     await this.TokenSetEnv.pool.connect(holder2).approve(this.liquidityMigration.address, holder2BalanceBefore);
     await this.liquidityMigration
       .connect(holder2)
       .stake(this.TokenSetEnv.pool.address, holder2BalanceBefore, this.TokenSetEnv.adapter.address);
     const amount = await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
-    
+
     const tx = await this.TokenSetEnv.adapter.connect(this.signers.default).remove(FACTORY_REGISTRIES.BTC_2X);
     await tx.wait();
     // Migrate
     await expect(
       this.liquidityMigration
         .connect(this.signers.admin)
-        ["migrateAll(address,address)"](
-          this.TokenSetEnv.pool.address,
-          this.TokenSetEnv.adapter.address,
-        ),
+        ["migrateAll(address,address)"](this.TokenSetEnv.pool.address, this.TokenSetEnv.adapter.address),
     ).to.be.reverted;
   });
 
@@ -174,11 +176,27 @@ describe("BTC_2X: Unit tests", function () {
     ];
     const strategyItems = prepareStrategy(positions, this.enso.adapters.uniswap.contract.address);
 
+    const strategyManagerAddress = this.signers.default.address;
+
+    const MigrationControllerImplementation = await ethers.getContractFactory("MigrationController");
+    const migrationControllerImplementation = await MigrationControllerImplementation.deploy(
+      this.enso.platform.strategyFactory.address,
+      this.liquidityMigration.address,
+      strategyManagerAddress,
+    );
+    await migrationControllerImplementation.deployed();
+    await this.enso.platform.controller["updateAddresses()"]();
+
+    // Upgrade controller to new implementation
+    await this.enso.platform.administration.platformProxyAdmin
+      .connect(this.signers.admin)
+      .upgrade(this.enso.platform.controller.address, migrationControllerImplementation.address);
+
     // deploy strategy
     tx = await this.enso.platform.strategyFactory
       .connect(this.signers.default)
       .createStrategy(
-        this.signers.default.address,
+        strategyManagerAddress,
         "BTC_2X",
         "BTC_2X",
         strategyItems,
@@ -186,13 +204,24 @@ describe("BTC_2X: Unit tests", function () {
         ethers.constants.AddressZero,
         "0x",
       );
+    
     const receipt = await tx.wait();
     const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
     console.log("Strategy address: ", strategyAddress);
     this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+    
+    await this.liquidityMigration.connect(this.signers.admin).updateController(this.enso.platform.controller.address);
+    await this.liquidityMigration.connect(this.signers.admin).updateGenericRouter(this.enso.routers[0].contract.address); // TODO is this the default??
+    
+    await this.liquidityMigration.connect(this.signers.admin)
+    ["setStrategy(address,address)"](
+        this.TokenSetEnv.pool.address, 
+        this.strategy.address
+    )
   });
 
   it("Should migrate tokens to strategy", async function () {
+    /*
     const routerContract = this.enso.routers[0].contract;
     console.log("debug router address:", routerContract.address, this.enso.routers.length);
     const holder2 = await this.TokenSetEnv.holders[1];
@@ -200,19 +229,17 @@ describe("BTC_2X: Unit tests", function () {
     const amount = await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
     // Migrate
-    
+
     const whitelist = this.enso.platform.administration.whitelist;
-    await whitelist.approve(this.enso.adapters.leverage.contract.address)
+    await whitelist.approve(this.enso.adapters.leverage.contract.address);
 
     await this.liquidityMigration.connect(this.signers.admin).updateUnlock(0);
-    
-    
+
     await this.liquidityMigration
       .connect(this.signers.admin)
       ["migrateAll(address,address)"](
-        this.TokenSetEnv.pool.address,
-        this.TokenSetEnv.adapter.address,
-      );
+        this.TokenSetEnv.pool.address, 
+        this.TokenSetEnv.adapter.address);
     /*
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, [
       this.tokens.aWBTC,
