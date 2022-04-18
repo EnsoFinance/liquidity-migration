@@ -2,8 +2,9 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { BigNumber, Contract, Event } from "ethers";
 import { Signers } from "../types";
-import { AcceptedProtocols, LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
+import { LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
 import { IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
+import { AcceptedProtocols } from "../src/types"
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
 import {
@@ -236,7 +237,7 @@ describe("ETH_2X: Unit tests", function () {
       .connect(this.signers.admin)
       ["migrateAll(address,address)"](this.TokenSetEnv.pool.address, this.TokenSetEnv.adapter.address);
     let receipt = await tx.wait();
-    console.log('Gas Used `migrateAll`: ', receipt.gasUsed.toString());
+    console.log("Gas Used `migrateAll`: ", receipt.gasUsed.toString());
 
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, [
       this.tokens.aWETH,
