@@ -201,7 +201,6 @@ contract LiquidityMigration is Timelocked, StrategyTypes {
         bytes memory migrationData = abi.encode(
             IAdapter(_adapter).encodeMigration(generic, address(_strategy), _lp, _stakeAmount)
         );
-
         IStrategyController(controller).deposit(_strategy, IStrategyRouter(generic), 0, _slippage, migrationData);
         uint256 _after = _strategy.balanceOf(address(this));
 

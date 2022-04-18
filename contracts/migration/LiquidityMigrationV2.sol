@@ -132,7 +132,6 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
         delete totalStaked[lp];
         uint256 strategyBalanceBefore = IStrategy(strategy).balanceOf(address(this));
         IERC20(lp).safeTransfer(genericRouter, totalStake);
-
         IMigrationController(controller).migrate(
             IStrategy(strategy),
             IStrategyRouter(genericRouter),
@@ -140,7 +139,6 @@ contract LiquidityMigrationV2 is ILiquidityMigrationV2, Timelocked {
             IAdapter(adapter),
             totalStake
         );
-
         uint256 strategyBalanceAfter = IStrategy(strategy).balanceOf(address(this));
         assert((strategyBalanceAfter - strategyBalanceBefore) == totalStake);
     }
