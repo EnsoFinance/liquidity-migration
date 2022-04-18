@@ -212,7 +212,7 @@ describe("BTC_2X: Unit tests", function () {
     await this.liquidityMigration.connect(this.signers.admin).updateController(this.enso.platform.controller.address);
     await this.liquidityMigration
       .connect(this.signers.admin)
-      .updateGenericRouter(this.enso.routers[0].contract.address); // this is multicall router 
+      .updateGenericRouter(this.enso.routers[0].contract.address); // this is multicall router
 
     await this.liquidityMigration
       .connect(this.signers.admin)
@@ -232,9 +232,11 @@ describe("BTC_2X: Unit tests", function () {
 
     await this.liquidityMigration.connect(this.signers.admin).updateUnlock(0);
 
-    await this.liquidityMigration
+    let tx = await this.liquidityMigration
       .connect(this.signers.admin)
       ["migrateAll(address,address)"](this.TokenSetEnv.pool.address, this.TokenSetEnv.adapter.address);
+    let receipt = await tx.wait();
+    console.log('Gas Used `migrateAll`: ', receipt.gasUsed.toString());
 
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, [
       this.tokens.aWBTC,
