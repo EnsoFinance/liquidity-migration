@@ -55,7 +55,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         );
         if (strategy.supportsDebt()) {
             IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), amount);
-            IStrategy(strategy).setRouter(address(genericRouter)); // FIXME assess if its ok to always set??
+            IStrategy(strategy).setRouter(address(genericRouter)); 
         }
         genericRouter.deposit(address(strategy), migrationData);
         // At this point the underlying tokens should be in the Strategy. Estimate strategy value
