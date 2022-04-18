@@ -4,20 +4,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { IAdapter, LiquidityMigrationV2__factory } from "../typechain";
 import { EnsoEnvironment } from "@ensofinance/v1-core";
 import { getBlockTime } from "./utils";
-
-export enum AcceptedProtocols {
-  Indexed,
-  PieDao,
-  DHedge,
-  Powerpool,
-  TokenSets,
-  IndexCoop,
-}
-
-export type Adapter = {
-  protocol: AcceptedProtocols;
-  adapter: string;
-};
+import { Adapter, AcceptedProtocols } from "./types";
 
 export class LiquidityMigrationBuilderV2 {
   signer: SignerWithAddress;

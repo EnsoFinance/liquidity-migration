@@ -112,6 +112,9 @@ export const DHEDGE_HOLDERS: Holders = {
   ], // DHedge Top Index
 };
 
+// export const ENSO_MULTISIG = "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F";
+export const ENSO_MULTISIG = "0x77b59E6CcDB8962192e48a848fdeaf6c0796Afa4";
+
 export const WETH: string = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
 export const SUSD: string = "0x57ab1ec28d129707052df4df418d58a2d46d5f51";
