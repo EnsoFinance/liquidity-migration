@@ -53,12 +53,16 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         bytes memory migrationData = abi.encode(
             adapter.encodeMigration(address(genericRouter), address(strategy), address(lpToken), amount)
         );
-        if (strategy.supportsDebt()) {
+        if (strategy.supportsDebt()) { // approve and set ONLY for the deposit
             IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), amount);
-            IStrategy(strategy).setRouter(address(genericRouter)); 
+            IStrategy(strategy).setRouter(address(genericRouter));
         }
         genericRouter.deposit(address(strategy), migrationData);
         // At this point the underlying tokens should be in the Strategy. Estimate strategy value
+        if (strategy.supportsDebt()) { // remove approval and router after deposit
+            IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), 0);
+            IStrategy(strategy).setRouter(address(0));
+        }
         (uint256 total, ) = oracle().estimateStrategy(strategy);
         // Migration is a one-time function and cannot be called unless Strategy's total
         // supply is zero. So we can trust that `amount` will be the new total supply
