@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "@ensofinance/v1-core/contracts/StrategyControllerStorage.sol";
 import "@ensofinance/v1-core/contracts/interfaces/IOracle.sol";
+import "@ensofinance/v1-core/contracts/interfaces/IStrategyController.sol";
 import "@ensofinance/v1-core/contracts/interfaces/registries/ITokenRegistry.sol";
 import "@ensofinance/v1-core/contracts/helpers/StrategyTypes.sol";
 import "./libraries/SignedSafeMath.sol";
@@ -20,6 +21,9 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
     address public immutable factory;
     address internal immutable _liquidityMigration;
     address internal immutable _ensoManager;
+
+    address private constant ETH2X = 0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD;
+    address private constant BTC2X = 0x0B498ff89709d3838a063f1dFA463091F9801c2b;
 
     event Withdraw(address indexed strategy, address indexed account, uint256 value, uint256 amount);
     event Deposit(address indexed strategy, address indexed account, uint256 value, uint256 amount);
@@ -50,12 +54,23 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         require(strategy.totalSupply() == 0, "Strategy cannot be migrated to");
         require(amount > 0, "No amount");
         require(lpToken.balanceOf(address(genericRouter)) >= amount, "Wrong balance"); // Funds should have been sent to GenericRouter
+        bool sensitiveToSlippage = _sensitiveToSlippage(address(lpToken));
+        int256 estimateBefore = (sensitiveToSlippage) ? oracle().estimateItem(amount, address(lpToken)) : 0;
         bytes memory migrationData = abi.encode(
             adapter.encodeMigration(address(genericRouter), address(strategy), address(lpToken), amount)
         );
         genericRouter.deposit(address(strategy), migrationData);
         // At this point the underlying tokens should be in the Strategy. Estimate strategy value
         (uint256 total, ) = oracle().estimateStrategy(strategy);
+        if (sensitiveToSlippage) {
+            int256 slippage = int256(
+                IStrategyController(strategy.controller()).strategyState(address(strategy)).restructureSlippage
+            );
+            require(
+                int256(total) >= estimateBefore.mul(slippage).div(int256(DIVISOR)),
+                "migrate: value lost to slippage."
+            );
+        }
         // Migration is a one-time function and cannot be called unless Strategy's total
         // supply is zero. So we can trust that `amount` will be the new total supply
         strategy.updateTokenValue(total, amount);
@@ -171,5 +186,9 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
 
     function _removeStrategyLock(IStrategy strategy) private {
         strategy.unlock();
+    }
+
+    function _sensitiveToSlippage(address token) private view returns(bool) {
+        return token == ETH2X || token == BTC2X;
     }
 }
