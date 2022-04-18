@@ -6,7 +6,7 @@
     "node": ">=0.12"
   },
   "dependencies": {
-    "@ensofinance/v1-core": "^0.1.4"
+    "@ensofinance/v1-core": "git+ssh://git@github.com:EnsoFinance/v1-core#george/leverage2X_weth_vs_wbtc"
   },
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.0.6",
