@@ -1,6 +1,6 @@
 import fs from "fs";
 import bignumber from "bignumber.js";
-import { BigNumber, Contract } from "ethers";
+import { BigNumber, Contract, Event } from "ethers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
@@ -9,9 +9,12 @@ import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
-import { AcceptedProtocols, StakedPool } from "../src/types";
+import { AcceptedProtocols, StakedPool, ScriptOutput } from "../src/types";
+import { getAdapterFromAddr } from "./mainnet";
+import { INITIAL_STATE } from "./constants";
 import {
   EnsoEnvironment,
+  LiveEnvironment,
   ITEM_CATEGORY,
   ESTIMATOR_CATEGORY,
   Position,
@@ -21,9 +24,8 @@ import {
   prepareStrategy,
   encodeSettleTransfer,
 } from "@ensofinance/v1-core";
-import { IERC20__factory, IAdapter } from "../typechain";
+import { IERC20__factory, IAdapter, IStrategy__factory } from "../typechain";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
-import { ScriptOutput } from "./types";
 
 export enum Networks {
   Mainnet,
@@ -38,6 +40,55 @@ export function toErc20(addr: string, signer: SignerWithAddress): Contract {
 export function write2File(fileName: string, json: ScriptOutput) {
   const data = JSON.stringify(json, null, 4);
   fs.writeFileSync("out/" + fileName, data);
+}
+
+export async function deployStrategy(
+  enso: LiveEnvironment,
+  name: string,
+  symbol: string,
+  items: StrategyItem[],
+  state: InitialState,
+  signer: SignerWithAddress,
+): Promise<string> {
+  const tx = await enso.platform.strategyFactory.createStrategy(
+    signer.address,
+    name,
+    symbol,
+    items,
+    state,
+    ethers.constants.AddressZero,
+    "0x",
+  );
+  const receipt = await tx.wait();
+  return receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
+}
+
+// TODO: pass state as param
+export async function deployStakedStrategy(
+  enso: LiveEnvironment,
+  stakedLP: string,
+  migrationAdapter: string,
+  signer: SignerWithAddress,
+  stratName?: string,
+  symbol?: string,
+): Promise<Contract> {
+  if (!stratName) stratName = stakedLP;
+  if (!symbol) symbol = stakedLP.slice(4);
+  const adapter = await getAdapterFromAddr(migrationAdapter, signer);
+  const underlying = await adapter.outputTokens(stakedLP);
+  const strategy = IStrategy__factory.connect(
+    await deployStrategy(
+      enso,
+      stratName,
+      symbol,
+      await setupStrategyItems(enso.platform.oracles.ensoOracle, enso.adapters.uniswapV3.address, stakedLP, underlying),
+      INITIAL_STATE,
+      signer,
+    ),
+    signer,
+  );
+  console.log("Strategy: ", strategy.address);
+  return strategy;
 }
 
 const strategyItemTuple =
@@ -265,7 +316,6 @@ export async function estimateTokens(
     tokensAndBalances.map(async obj => oracle["estimateItem(uint256,address)"](obj.balance, obj.token)),
   );
   const total = estimates.reduce((a, b) => a.add(b));
-
   return [total, estimates];
 }
 

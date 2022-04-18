@@ -138,6 +138,7 @@ export async function getAdapterFromAddr(addr: string, signer: SignerWithAddress
   for (let i = 0; i < keys.length; i++) {
     const contractName = keys[i];
     const contractAddr = liveContracts[contractName];
+    if (!contractAddr) throw Error(`Failed to find deployed contract: ${contractName}`);
     const aType = contractName as Adapters;
     if (contractAddr.toLowerCase() == addr.toLowerCase()) {
       const adapter = await getAdapterInterface(contractAddr, aType, signer);
