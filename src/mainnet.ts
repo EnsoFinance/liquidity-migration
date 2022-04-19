@@ -192,7 +192,7 @@ export function getAdapterInterface(adapter: string, contractName: Adapters, sig
     case Adapters.IndexCoopAdapter:
       return new Contract(adapter, TokenSetAdapter.abi, signer);
     case Adapters.IndexedAdapter:
-      return new Contract(adapter, TokenSetAdapter.abi, signer);
+      return new Contract(adapter, BalancerAdapter.abi, signer);
     case Adapters.PowerPoolAdapter:
       return new Contract(adapter, BalancerAdapter.abi, signer);
     case Adapters.TokenSetAdapter:
