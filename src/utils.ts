@@ -42,12 +42,6 @@ export function write2File(fileName: string, json: ScriptOutput) {
   fs.writeFileSync("out/" + fileName, data);
 }
 
-let strategyGas: BigNumber = BigNumber.from(0);
-
-export function printGas() {
-  console.log("Gas creating strategies: ", strategyGas);
-}
-
 export async function deployStrategy(
   enso: LiveEnvironment,
   name: string,
@@ -67,9 +61,6 @@ export async function deployStrategy(
   );
   const receipt = await tx.wait();
   console.log("\n\n Strategy creation cost: ", receipt.gasUsed);
-  {
-    strategyGas.add(receipt.gasUsed);
-  }
   return receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
 }
 
@@ -82,22 +73,20 @@ export async function deployStakedStrategy(
   stratName?: string,
   symbol?: string,
 ): Promise<Contract> {
-  if (!stratName) stratName = stakedLP;
+  if (!stratName) stratName = stakedLP.slice(8);
   if (!symbol) symbol = stakedLP.slice(4);
   const adapter = await getAdapterFromAddr(migrationAdapter, signer);
   const underlying = await adapter.outputTokens(stakedLP);
+  const strategyItems = await setupStrategyItems(
+    enso.platform.oracles.ensoOracle,
+    enso.adapters.uniswapV3.address,
+    stakedLP,
+    underlying,
+  );
   const strategy = IStrategy__factory.connect(
-    await deployStrategy(
-      enso,
-      stratName,
-      symbol,
-      await setupStrategyItems(enso.platform.oracles.ensoOracle, enso.adapters.uniswapV3.address, stakedLP, underlying),
-      INITIAL_STATE,
-      signer,
-    ),
+    await deployStrategy(enso, stratName, symbol, strategyItems, INITIAL_STATE, signer),
     signer,
   );
-  console.log("Strategy: ", strategy.address);
   return strategy;
 }
 

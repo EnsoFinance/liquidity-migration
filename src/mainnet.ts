@@ -56,6 +56,7 @@ export async function getTransferEvents(
   return [transfers, contract];
 }
 
+// TODO: add up Refund events instead of taking current balance to improve performance
 export async function getAllStakers(signer: SignerWithAddress): Promise<PoolMapJson> {
   if (!signer.provider) throw Error("No provider attached to signer");
   const lm = liveMigrationContract(signer);
@@ -106,7 +107,7 @@ export async function getAllStakers(signer: SignerWithAddress): Promise<PoolMapJ
               pool.balances[user] = stake.toString();
             }
           } else {
-            console.log(`Already added user ${user}`);
+            //console.log(`Already added user ${user}`);
           }
         }
       }),
@@ -125,7 +126,7 @@ export async function getAllStakers(signer: SignerWithAddress): Promise<PoolMapJ
 export async function getPoolsToMigrate(signer: SignerWithAddress): Promise<PoolMap> {
   const poolsData: PoolMapJson = poolsToMigrate;
   const pools: PoolMap = {};
-  const lps = Object.keys(poolsData);
+  const lps: string[] = Object.keys(poolsData);
   for (let i = 0; i < lps.length; i++) {
     const p = poolsData[lps[i]];
     if (!p) throw Error("Failed to find lp in out/stakes_to_migrate.json");
@@ -136,7 +137,7 @@ export async function getPoolsToMigrate(signer: SignerWithAddress): Promise<Pool
     });
     const adapter = await getAdapterFromAddr(p.adapter, signer);
     const pool: StakedPool = { users: p.users, balances, lp: p.lp, adapter };
-    pools[i] = pool;
+    pools[p.lp] = pool;
   }
   return pools;
 }
@@ -163,7 +164,7 @@ export async function getErc20Holder(
   startBlock: number,
   endBlock: number,
   signer: SignerWithAddress,
-): Promise<HolderBalanceJson | undefined> {
+): Promise<HolderBalanceJson> {
   if (!signer.provider) throw Error("No provider attached to signer");
   const [transfers, contract] = await getTransferEvents(erc20, startBlock, endBlock, signer);
   if (transfers.length) {
@@ -178,8 +179,8 @@ export async function getErc20Holder(
     if (withBalance.length) {
       // TODO: check for highest balance?
       let holder: HolderBalance = withBalance[0];
-      if (!holder) throw Error("This shouldn't happen");
       const holderJson: HolderBalanceJson = { address: holder.address, balance: holder.balance.toString() };
+      if (!holderJson) throw Error("This shouldn't happen");
       return holderJson;
     }
   }

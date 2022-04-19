@@ -35,9 +35,9 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@balancer-labs/core@https://github.com/balancer-labs/balancer-core":
+"@balancer-labs/core@git+https://github.com/balancer-labs/balancer-core.git":
   version "0.0.7"
-  resolved "https://github.com/balancer-labs/balancer-core#f4ed5d65362a8d6cec21662fb6eae233b0babc1f"
+  resolved "git+https://github.com/balancer-labs/balancer-core.git#f4ed5d65362a8d6cec21662fb6eae233b0babc1f"
   dependencies:
     decimal.js "^10.2.0"
     ganache-cli "^6.7.0"
@@ -120,9 +120,10 @@
   resolved "https://registry.yarnpkg.com/@ensofinance/staking/-/staking-0.1.1.tgz#a8b4b57efdb70ae6163ab8c23beb453e619320ae"
   integrity sha512-vwON1qHl1lCGldtbVJHDNrvYEre7/QfrCJX4w854TJQ2DRwiMGUTEip0U/C1IKjPITfVoq17x8DqDxwCbXnosw==
 
-"@ensofinance/v1-core@git+ssh://git@github.com:EnsoFinance/v1-core#develop":
-  version "0.1.4"
-  resolved "git+ssh://git@github.com:EnsoFinance/v1-core#e27625d5e2466698c5b4520609831f566cdf2005"
+"@ensofinance/v1-core@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@ensofinance/v1-core/-/v1-core-0.1.5.tgz#1b5436f97d104995c893eed6c558dd7dadcbde58"
+  integrity sha512-b37uGB/a+sQppudsiWvhWQl/ENpoYAyITrGYjKJpVqDOSlV1MZhDW4bzyAlPcO3/x9ommz1oDKr9lVvi+VsLTA==
   dependencies:
     "@0xsequence/token-directory" "1.1.14"
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"

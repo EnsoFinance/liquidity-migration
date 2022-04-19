@@ -1,6 +1,6 @@
 import { BigNumber, Contract } from "ethers";
 
-export type ScriptOutput = Erc20Holders | PoolMapJson;
+export type ScriptOutput = Erc20HoldersJson | PoolMapJson;
 
 export enum AcceptedProtocols {
   Indexed,

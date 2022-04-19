@@ -2,7 +2,8 @@ import hre from "hardhat";
 import { BigNumber } from "ethers";
 import { getPoolsToMigrate, getErc20Holder } from "../src/mainnet";
 import { write2File } from "../src/utils";
-import { StakedPools, Erc20Holders } from "../src/types";
+import { PoolMapJson, Erc20HoldersJson, HolderBalanceJson } from "../src/types";
+import allStakes from "../out/stakes_to_migrate.json";
 
 const NUM_BLOCKS = 2000;
 
@@ -10,13 +11,17 @@ const NUM_BLOCKS = 2000;
 async function main() {
   const [signer] = await hre.ethers.getSigners();
   if (!signer.provider) throw Error("No ethereum provider");
-  const poolsToMigrate: StakedPools[] = await getPoolsToMigrate(signer);
-  const holders: Erc20Holders = {};
+  const lps: string[] = Object.keys(allStakes);
+  const holders: Erc20HoldersJson = {};
+  const lpPools: PoolMapJson = allStakes;
   const currentBlock = await signer.provider.getBlockNumber();
-  for (let i = 0; i < poolsToMigrate.length; i++) {
-    const pool = poolsToMigrate[i];
+  for (let i = 0; i < lps.length; i++) {
+    console.log(`Finding erc20 holder for pool: ${lps[i]}`, i, "/", lps.length);
+    const lp: string = lps[i];
+    const pool = lpPools[lp];
+    if (!pool) throw Error(`Failed to find pool for ${lps[i]}`);
     try {
-      const holder = await getErc20Holder(pool.lp, currentBlock - NUM_BLOCKS, currentBlock, signer);
+      const holder: HolderBalanceJson = await getErc20Holder(pool.lp, currentBlock - NUM_BLOCKS, currentBlock, signer);
       if (!holder) throw Error(`Failed to find token holder for ${pool.lp}`);
       holders[pool.lp] = holder;
     } catch {
