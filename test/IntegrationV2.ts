@@ -151,7 +151,6 @@ describe("Stake and Migrate all tokens", function () {
       try {
         const bPoolFactory = IPV2SmartPool__factory.connect(pool.lp, this.signers.lmOwner);
         const bPool = await bPoolFactory.getBPool();
-        console.log("\n BPOOL: ", bPool);
         poolToken = bPool;
       } catch {
         poolToken = pool.lp;
@@ -162,12 +161,9 @@ describe("Stake and Migrate all tokens", function () {
         console.log("Underlying: ", underlyingTokens);
         // deploy strategy
         const strategy = await deployStakedStrategy(this.enso, poolToken, pool.adapter.address, this.signers.lmOwner);
+        console.log("strategy synths: ", await strategy.synths());
+        console.log("strategy items: ", await strategy.items());
         //console.log("Strategy address: ", strategy.address);
-
-        // TODO: initialize strategy?
-        //await this.migrationController.connect(this.signers.lmOwner).setupStrategy(this.signers.lmOwner.address, strategy.address, INITIAL_STATE, ethers.constants.AddressZero, "0x")
-        //console.log("Set strategy in migration controller contract")
-
         // set strategy
         await this.liquidityMigration.connect(this.signers.lmOwner).setStrategy(pool.lp, strategy.address);
         // migrate all
@@ -178,9 +174,7 @@ describe("Stake and Migrate all tokens", function () {
         const receipt = await tx.wait();
         const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, strategy.address, underlyingTokens);
         expect(total).to.be.gt(BigNumber.from(0));
-        console.log("strategy items: ", await strategy.items());
-        console.log("strategy synths: ", await strategy.synths());
-        console.log(`Gas used migrateAll for ${pool.lp} : ${receipt.gasUsed.toString()}`);
+        console.log(`migrateAll cost: ${receipt.gasUsed.toString()}`);
 
         //expect(await strategy.balanceOf(pool.users[0])).to.be.gt(0);
       } catch (err) {
