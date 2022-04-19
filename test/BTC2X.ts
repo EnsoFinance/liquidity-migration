@@ -25,13 +25,13 @@ const INITIAL_STATE: InitialState = {
   timelock: BigNumber.from(60), // 1 minute
   rebalanceThreshold: BigNumber.from(50), // 5%
   rebalanceSlippage: BigNumber.from(990), // 99.0 %
-  restructureSlippage: BigNumber.from(940), // 94 %
+  restructureSlippage: BigNumber.from(950), // 95 %
   performanceFee: BigNumber.from(0),
   social: true,
   set: false,
 };
 
-describe("ETH_2X: Unit tests", function () {
+describe("BTC_2X: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
   before(async function () {
     this.signers = {} as Signers;
@@ -46,20 +46,17 @@ describe("ETH_2X: Unit tests", function () {
 
     this.tokens = new Tokens();
 
-    let aaveV2 = new Contract(this.enso.adapters.aaveV2.contract.address, AaveV2Adapter.abi, this.signers.default);
-
-    const addressesProvider = new Contract(await aaveV2.addressesProvider(), [], this.signers.default);
-
-    let leverageAdapter = await deployLeverage2XAdapter(
-      this.signers.default,
+    const aaveV2 = this.enso.adapters.aaveV2.contract;
+    const addressesProvider = new Contract(await aaveV2.addressesProvider(), [], this.signers.admin);
+    const leverageAdapter = await deployLeverage2XAdapter(
+      this.signers.admin,
       this.enso.adapters.uniswapV3.contract,
       this.enso.adapters.aaveV2.contract,
       this.enso.adapters.aaveV2Debt.contract,
       addressesProvider,
-      new Contract(this.tokens.usdc, [], this.signers.default),
-      new Contract(this.tokens.weth, [], this.signers.default),
+      new Contract(this.tokens.usdc, [], this.signers.admin),
+      new Contract(this.tokens.weth, [], this.signers.admin),
     );
-
     this.enso.adapters.leverage.contract = leverageAdapter;
 
     const { chainlinkRegistry, uniswapV3Registry } = this.enso.platform.oracles.registries;
@@ -71,10 +68,11 @@ describe("ETH_2X: Unit tests", function () {
       chainlinkRegistry,
     );
 
-    await uniswapV3Registry.addPool(FACTORY_REGISTRIES.ETH_2X, this.tokens.weth, "3000");
+    await uniswapV3Registry.addPool(FACTORY_REGISTRIES.BTC_2X, this.tokens.wbtc, "10000");
+    await uniswapV3Registry.addPool(this.tokens.wbtc, this.tokens.usdc, "3000");
 
     this.TokenSetEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
-      FACTORY_REGISTRIES.ETH_2X,
+      FACTORY_REGISTRIES.BTC_2X,
     );
 
     console.log(`Token Sets Adapter: ${this.TokenSetEnv.adapter.address}`);
@@ -86,7 +84,7 @@ describe("ETH_2X: Unit tests", function () {
   });
 
   it("Token holder should be able to stake LP token", async function () {
-    const tx = await this.TokenSetEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.ETH_2X);
+    const tx = await this.TokenSetEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.BTC_2X);
     await tx.wait();
     const holder2 = await this.TokenSetEnv.holders[1];
     const holder2Address = await holder2.getAddress();
@@ -105,7 +103,7 @@ describe("ETH_2X: Unit tests", function () {
     expect(holder2AfterBalance).to.be.gt(BigNumber.from(0));
   });
 
-  it("Should not be able to migrate tokens if the ETH_2X token is not whitelisted in the Token Sets Adapter", async function () {
+  it("Should not be able to migrate tokens if the BTC_2X token is not whitelisted in the Token Sets Adapter", async function () {
     const routerContract = this.enso.routers[0].contract;
 
     const holder2 = await this.TokenSetEnv.holders[1];
@@ -121,7 +119,7 @@ describe("ETH_2X: Unit tests", function () {
     const amount = await this.liquidityMigration.staked(holder2Address, this.TokenSetEnv.pool.address);
     expect(amount).to.be.gt(BigNumber.from(0));
 
-    const tx = await this.TokenSetEnv.adapter.connect(this.signers.default).remove(FACTORY_REGISTRIES.ETH_2X);
+    const tx = await this.TokenSetEnv.adapter.connect(this.signers.default).remove(FACTORY_REGISTRIES.BTC_2X);
     await tx.wait();
     // Migrate
     await expect(
@@ -132,14 +130,14 @@ describe("ETH_2X: Unit tests", function () {
   });
 
   it("Adding to whitelist from non-manager account should fail", async function () {
-    // adding the ETH_2X Token as a whitelisted token
-    await expect(this.TokenSetEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.ETH_2X)).to.be.reverted;
+    // adding the BTC_2X Token as a whitelisted token
+    await expect(this.TokenSetEnv.adapter.connect(this.signers.admin).add(FACTORY_REGISTRIES.BTC_2X)).to.be.reverted;
   });
 
   it("Getting the output token list", async function () {
-    // adding the ETH_2X Token as a whitelisted token
+    // adding the BTC_2X Token as a whitelisted token
     const underlyingTokens = await this.TokenSetEnv.pool.getComponents();
-    const outputTokens = await this.TokenSetEnv.adapter.outputTokens(FACTORY_REGISTRIES.ETH_2X);
+    const outputTokens = await this.TokenSetEnv.adapter.outputTokens(FACTORY_REGISTRIES.BTC_2X);
     expect(underlyingTokens).to.be.eql(outputTokens);
   });
 
@@ -156,13 +154,13 @@ describe("ETH_2X: Unit tests", function () {
   });
 
   it("Create strategy", async function () {
-    // adding the ETH_2X Token as a whitelisted token
-    let tx = await this.TokenSetEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.ETH_2X);
+    // adding the BTC_2X Token as a whitelisted token
+    let tx = await this.TokenSetEnv.adapter.connect(this.signers.default).add(FACTORY_REGISTRIES.BTC_2X);
     await tx.wait();
 
     const positions = [
       {
-        token: this.tokens.aWETH,
+        token: this.tokens.aWBTC,
         percentage: BigNumber.from(2000),
         adapters: [this.enso.adapters.aaveV2.contract.address],
         path: [],
@@ -180,7 +178,7 @@ describe("ETH_2X: Unit tests", function () {
           this.enso.adapters.aaveV2.contract.address,
         ],
         path: [this.tokens.usdc, this.tokens.weth],
-        cache: ethers.utils.defaultAbiCoder.encode(["address"], [this.tokens.aWETH]),
+        cache: ethers.utils.defaultAbiCoder.encode(["address"], [this.tokens.aWBTC]),
       },
     ];
     const strategyItems = prepareStrategy(positions, this.enso.adapters.uniswapV3.contract.address);
@@ -206,8 +204,8 @@ describe("ETH_2X: Unit tests", function () {
       .connect(this.signers.default)
       .createStrategy(
         strategyManagerAddress,
-        "ETH_2X",
-        "ETH_2X",
+        "BTC_2X",
+        "BTC_2X",
         strategyItems,
         INITIAL_STATE,
         this.enso.adapters.leverage.contract.address,
@@ -222,7 +220,7 @@ describe("ETH_2X: Unit tests", function () {
     await this.liquidityMigration
       .connect(this.signers.admin)
       .updateGenericRouter(this.enso.routers[0].contract.address); // this is multicall router
-
+    console.log("Multicall: ", this.enso.routers[0].contract.address);
     await this.liquidityMigration
       .connect(this.signers.admin)
       ["setStrategy(address,address)"](this.TokenSetEnv.pool.address, this.strategy.address);
@@ -248,7 +246,7 @@ describe("ETH_2X: Unit tests", function () {
     console.log("Gas Used `migrateAll`: ", receipt.gasUsed.toString());
 
     const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, this.strategy.address, [
-      this.tokens.aWETH,
+      this.tokens.aWBTC,
       this.tokens.debtUSDC,
     ]);
     expect(total).to.gt(0);

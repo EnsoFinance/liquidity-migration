@@ -56,16 +56,24 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         require(lpToken.balanceOf(address(genericRouter)) >= amount, "Wrong balance"); // Funds should have been sent to GenericRouter
         bool sensitiveToSlippage = _sensitiveToSlippage(address(lpToken));
         int256 estimateBefore = (sensitiveToSlippage) ? oracle().estimateItem(amount, address(lpToken)) : 0;
+        if (strategy.supportsDebt()) {
+            // approve and set ONLY for the deposit
+            IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), uint256(-1));
+            IStrategy(strategy).setRouter(address(genericRouter));
+        }
         bytes memory migrationData = abi.encode(
             adapter.encodeMigration(address(genericRouter), address(strategy), address(lpToken), amount)
         );
         genericRouter.deposit(address(strategy), migrationData);
         // At this point the underlying tokens should be in the Strategy. Estimate strategy value
+        if (strategy.supportsDebt()) {
+            // remove approval and router after deposit
+            IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), 0);
+            IStrategy(strategy).setRouter(address(0));
+        }
         (uint256 total, ) = oracle().estimateStrategy(strategy);
         if (sensitiveToSlippage) {
-            int256 slippage = int256(
-                IStrategyController(strategy.controller()).strategyState(address(strategy)).restructureSlippage
-            );
+            int256 slippage = int256(_strategyStates[address(strategy)].restructureSlippage);
             require(
                 int256(total) >= estimateBefore.mul(slippage).div(int256(DIVISOR)),
                 "migrate: value lost to slippage."
@@ -113,9 +121,10 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
                 require(percentage >= 0, "Token cannot be negative");
                 require(percentage <= PERCENTAGE_BOUND, "Out of bounds");
             }
-            EstimatorCategory category = EstimatorCategory(registry.estimatorCategories(item));
-            require(category != EstimatorCategory.BLOCKED, "Token blocked");
-            if (category == EstimatorCategory.STRATEGY) _checkCyclicDependency(strategy, IStrategy(item), registry);
+            uint256 category = registry.estimatorCategories(item);
+            require(category != uint256(EstimatorCategory.BLOCKED), "Token blocked");
+            if (category == uint256(EstimatorCategory.STRATEGY))
+                _checkCyclicDependency(strategy, IStrategy(item), registry);
             total = total.add(percentage);
         }
         require(total == int256(DIVISOR), "Total percentage wrong");
@@ -126,8 +135,12 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         return _initialized[strategy] > 0;
     }
 
-    function oracle() public view returns (IOracle) {
+    function oracle() public view override returns (IOracle) {
         return IOracle(_oracle);
+    }
+
+    function whitelist() external view override returns (IWhitelist) {
+        return IWhitelist(_whitelist);
     }
 
     function _setInitialState(address strategy, InitialState memory state) private {
@@ -188,7 +201,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         strategy.unlock();
     }
 
-    function _sensitiveToSlippage(address token) private view returns(bool) {
+    function _sensitiveToSlippage(address token) private pure returns (bool) {
         return token == ETH2X || token == BTC2X;
     }
 }
