@@ -18,7 +18,6 @@ import {
   prepareStrategy,
   encodeSettleTransfer,
   deployLeverage2XAdapter,
-  deployMulticallRouter,
 } from "@ensofinance/v1-core";
 
 const { WeiPerEther } = ethers.constants;

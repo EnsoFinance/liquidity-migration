@@ -120,9 +120,9 @@
   resolved "https://registry.yarnpkg.com/@ensofinance/staking/-/staking-0.1.1.tgz#a8b4b57efdb70ae6163ab8c23beb453e619320ae"
   integrity sha512-vwON1qHl1lCGldtbVJHDNrvYEre7/QfrCJX4w854TJQ2DRwiMGUTEip0U/C1IKjPITfVoq17x8DqDxwCbXnosw==
 
-"@ensofinance/v1-core@git+ssh://git@github.com:EnsoFinance/v1-core#george/leverage2X_weth_vs_wbtc":
+"@ensofinance/v1-core@git+ssh://git@github.com:EnsoFinance/v1-core#develop":
   version "0.1.4"
-  resolved "git+ssh://git@github.com:EnsoFinance/v1-core#c1d270fd0397d953f9552af937a70049e72581f0"
+  resolved "git+ssh://git@github.com:EnsoFinance/v1-core#e27625d5e2466698c5b4520609831f566cdf2005"
   dependencies:
     "@0xsequence/token-directory" "1.1.14"
     "@balancer-labs/core" "https://github.com/balancer-labs/balancer-core"
@@ -3761,9 +3761,9 @@ ee-first@1.1.1:
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
 electron-to-chromium@^1.3.47:
-  version "1.4.111"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.111.tgz#897613f6504f3f17c9381c7499a635b413e4df4e"
-  integrity sha512-/s3+fwhKf1YK4k7btOImOzCQLpUjS6MaPf0ODTNuT4eTM1Bg4itBpLkydhOzJmpmH6Z9eXFyuuK5czsmzRzwtw==
+  version "1.4.113"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.113.tgz#b3425c086e2f4fc31e9e53a724c6f239e3adb8b9"
+  integrity sha512-s30WKxp27F3bBH6fA07FYL2Xm/FYnYrKpMjHr3XVCTUb9anAyZn/BeZfPWgTZGAbJeT4NxNwISSbLcYZvggPMA==
 
 elliptic@6.5.4, elliptic@^6.4.0, elliptic@^6.5.2, elliptic@^6.5.3, elliptic@^6.5.4:
   version "6.5.4"

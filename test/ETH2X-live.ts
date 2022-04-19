@@ -18,7 +18,6 @@ import {
   prepareStrategy,
   encodeSettleTransfer,
   deployLeverage2XAdapter,
-  deployMulticallRouter,
   ESTIMATOR_CATEGORY,
   ITEM_CATEGORY,
 } from "@ensofinance/v1-core";
@@ -31,8 +30,8 @@ const ENSO_TREASURY_MULTISIG = "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F";
 const INITIAL_STATE: InitialState = {
   timelock: BigNumber.from(60), // 1 minute
   rebalanceThreshold: BigNumber.from(50), // 5%
-  rebalanceSlippage: BigNumber.from(990), // 99.0 %
-  restructureSlippage: BigNumber.from(985), // 98.5 %
+  rebalanceSlippage: BigNumber.from(995), // 99.5 %
+  restructureSlippage: BigNumber.from(990), // 99 %
   performanceFee: BigNumber.from(0),
   social: true,
   set: false,
