@@ -56,24 +56,24 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         require(lpToken.balanceOf(address(genericRouter)) >= amount, "Wrong balance"); // Funds should have been sent to GenericRouter
         bool sensitiveToSlippage = _sensitiveToSlippage(address(lpToken));
         int256 estimateBefore = (sensitiveToSlippage) ? oracle().estimateItem(amount, address(lpToken)) : 0;
+        if (strategy.supportsDebt()) {
+            // approve and set ONLY for the deposit
+            IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), uint256(-1));
+            IStrategy(strategy).setRouter(address(genericRouter));
+        }
         bytes memory migrationData = abi.encode(
             adapter.encodeMigration(address(genericRouter), address(strategy), address(lpToken), amount)
         );
-        if (strategy.supportsDebt()) { // approve and set ONLY for the deposit
-            IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), amount);
-            IStrategy(strategy).setRouter(address(genericRouter));
-        }
         genericRouter.deposit(address(strategy), migrationData);
         // At this point the underlying tokens should be in the Strategy. Estimate strategy value
-        if (strategy.supportsDebt()) { // remove approval and router after deposit
+        if (strategy.supportsDebt()) {
+            // remove approval and router after deposit
             IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), 0);
             IStrategy(strategy).setRouter(address(0));
         }
         (uint256 total, ) = oracle().estimateStrategy(strategy);
         if (sensitiveToSlippage) {
-            int256 slippage = int256(
-                IStrategyController(strategy.controller()).strategyState(address(strategy)).restructureSlippage
-            );
+            int256 slippage = int256(_strategyStates[address(strategy)].restructureSlippage);
             require(
                 int256(total) >= estimateBefore.mul(slippage).div(int256(DIVISOR)),
                 "migrate: value lost to slippage."
@@ -90,7 +90,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         address manager_,
         address strategy_,
         InitialState memory state_,
-        address router_,
+        address,
         bytes memory
     ) external payable {
         IStrategy strategy = IStrategy(strategy_);
@@ -201,7 +201,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         strategy.unlock();
     }
 
-    function _sensitiveToSlippage(address token) private view returns(bool) {
+    function _sensitiveToSlippage(address token) private pure returns (bool) {
         return token == ETH2X || token == BTC2X;
     }
 }

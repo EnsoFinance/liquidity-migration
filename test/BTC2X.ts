@@ -4,27 +4,32 @@ import { BigNumber, Contract, Event } from "ethers";
 import { Signers } from "../types";
 import { LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
 import { IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
-import { AcceptedProtocols } from "../src/types"
+import { AcceptedProtocols } from "../src/types";
 
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import {
-  FACTORY_REGISTRIES,
-  TOKENSET_ISSUANCE_MODULES,
-  INITIAL_STATE,
-  UNISWAP_V3_ROUTER,
-  DEPOSIT_SLIPPAGE,
-} from "../src/constants";
+import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, UNISWAP_V3_ROUTER, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { estimateTokens } from "../src/utils";
 import {
   EnsoBuilder,
   Position,
   Multicall,
   Tokens,
+  InitialState,
   prepareStrategy,
   encodeSettleTransfer,
   deployLeverage2XAdapter,
 } from "@ensofinance/v1-core";
 import AaveV2Adapter from "@ensofinance/v1-core/artifacts/contracts/adapters/lending/AaveV2Adapter.sol/AaveV2Adapter.json";
+
+const INITIAL_STATE: InitialState = {
+  timelock: BigNumber.from(60), // 1 minute
+  rebalanceThreshold: BigNumber.from(50), // 5%
+  rebalanceSlippage: BigNumber.from(990), // 99.0 %
+  restructureSlippage: BigNumber.from(950), // 95 %
+  performanceFee: BigNumber.from(0),
+  social: true,
+  set: false,
+};
 
 describe("BTC_2X: Unit tests", function () {
   // lets create a strategy and then log its address and related stuff
@@ -36,24 +41,22 @@ describe("BTC_2X: Unit tests", function () {
 
     const ensoBuilder = new EnsoBuilder(this.signers.admin).mainnet();
     ensoBuilder.addAdapter("leverage");
+    ensoBuilder.addAdapter("uniswapv3");
     this.enso = await ensoBuilder.build();
 
     this.tokens = new Tokens();
 
-    let aaveV2 = new Contract(this.enso.adapters.aaveV2.contract.address, AaveV2Adapter.abi, this.signers.default);
-
-    const addressesProvider = new Contract(await aaveV2.addressesProvider(), [], this.signers.default);
-
-    let leverageAdapter = await deployLeverage2XAdapter(
-      this.signers.default,
-      this.enso.adapters.uniswap.contract,
+    const aaveV2 = this.enso.adapters.aaveV2.contract;
+    const addressesProvider = new Contract(await aaveV2.addressesProvider(), [], this.signers.admin);
+    const leverageAdapter = await deployLeverage2XAdapter(
+      this.signers.admin,
+      this.enso.adapters.uniswapV3.contract,
       this.enso.adapters.aaveV2.contract,
       this.enso.adapters.aaveV2Debt.contract,
       addressesProvider,
-      new Contract(this.tokens.usdc, [], this.signers.default),
-      new Contract(this.tokens.weth, [], this.signers.default),
+      new Contract(this.tokens.usdc, [], this.signers.admin),
+      new Contract(this.tokens.weth, [], this.signers.admin),
     );
-
     this.enso.adapters.leverage.contract = leverageAdapter;
 
     const { chainlinkRegistry, uniswapV3Registry } = this.enso.platform.oracles.registries;
@@ -64,6 +67,9 @@ describe("BTC_2X: Unit tests", function () {
       uniswapV3Registry,
       chainlinkRegistry,
     );
+
+    await uniswapV3Registry.addPool(FACTORY_REGISTRIES.BTC_2X, this.tokens.wbtc, "10000");
+    await uniswapV3Registry.addPool(this.tokens.wbtc, this.tokens.usdc, "3000");
 
     this.TokenSetEnv = await new TokenSetEnvironmentBuilder(this.signers.default, this.enso).connect(
       FACTORY_REGISTRIES.BTC_2X,
@@ -168,14 +174,14 @@ describe("BTC_2X: Unit tests", function () {
         percentage: BigNumber.from(-1000),
         adapters: [
           this.enso.adapters.aaveV2Debt.contract.address,
-          this.enso.adapters.uniswap.contract.address,
+          this.enso.adapters.uniswapV3.contract.address,
           this.enso.adapters.aaveV2.contract.address,
         ],
         path: [this.tokens.usdc, this.tokens.weth],
         cache: ethers.utils.defaultAbiCoder.encode(["address"], [this.tokens.aWBTC]),
       },
     ];
-    const strategyItems = prepareStrategy(positions, this.enso.adapters.uniswap.contract.address);
+    const strategyItems = prepareStrategy(positions, this.enso.adapters.uniswapV3.contract.address);
 
     const strategyManagerAddress = this.signers.default.address;
 
@@ -214,7 +220,7 @@ describe("BTC_2X: Unit tests", function () {
     await this.liquidityMigration
       .connect(this.signers.admin)
       .updateGenericRouter(this.enso.routers[0].contract.address); // this is multicall router
-
+    console.log("Multicall: ", this.enso.routers[0].contract.address);
     await this.liquidityMigration
       .connect(this.signers.admin)
       ["setStrategy(address,address)"](this.TokenSetEnv.pool.address, this.strategy.address);
@@ -248,12 +254,12 @@ describe("BTC_2X: Unit tests", function () {
   });
 
   it("Should buy and stake", async function () {
-    /*    
+    /*
     const defaultAddress = await this.signers.default.getAddress();
 
     expect(await this.TokenSetEnv.pool.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
     expect(await this.strategy.balanceOf(defaultAddress)).to.be.eq(BigNumber.from(0));
-    
+
     expect(await this.liquidityMigration.staked(defaultAddress, this.TokenSetEnv.pool.address)).to.be.eq(
       BigNumber.from(0),
     );
