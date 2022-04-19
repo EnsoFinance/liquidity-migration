@@ -9,9 +9,10 @@ import {
   impersonateWithEth,
   readTokenHolders,
   getAdapterFromType,
+  getAdapterFromAddr,
 } from "../src/mainnet";
 import { AcceptedProtocols, StakedPool, Adapters } from "../src/types";
-import { IAdapter, IERC20__factory, IStrategy__factory, IPV2SmartPool__factory } from "../typechain";
+import { IPV2SmartPool__factory } from "../typechain";
 import {
   toErc20,
   deployStakedStrategy,
@@ -115,6 +116,7 @@ describe("Stake and Migrate all tokens", function () {
       );
   });
 
+  /*
   it("Stake all tokens", async function () {
     for (let i = 0; i < this.eligibleLPs.length; i++) {
       const pool: StakedPool = this.poolsToMigrate[this.eligibleLPs[i]];
@@ -139,19 +141,30 @@ describe("Stake and Migrate all tokens", function () {
       expect(await erc20.balanceOf(holder.address)).to.be.eq(BigNumber.from(0));
     }
   });
+  */
 
   it("Migrate all pools", async function () {
     await increaseTime(1e15);
     for (let i = 0; i < this.eligibleLPs.length; i++) {
       const pool: StakedPool = this.poolsToMigrate[this.eligibleLPs[i]];
+      let poolToken;
+      try {
+        const bPoolFactory = IPV2SmartPool__factory.connect(pool.lp, this.signers.lmOwner);
+        const bPool = await bPoolFactory.getBPool();
+        console.log("\n BPOOL: ", bPool);
+        poolToken = bPool;
+      } catch {
+        poolToken = pool.lp;
+      }
       const underlyingTokens = await pool.adapter.outputTokens(pool.lp);
       try {
         console.log("\n\nPool ===========> ", pool.lp);
+        console.log("Underlying: ", underlyingTokens);
         // deploy strategy
-        const strategy = await deployStakedStrategy(this.enso, pool.lp, pool.adapter.address, this.signers.lmOwner);
-        console.log("Strategy address: ", strategy.address);
+        const strategy = await deployStakedStrategy(this.enso, poolToken, pool.adapter.address, this.signers.lmOwner);
+        //console.log("Strategy address: ", strategy.address);
 
-        // initialize strategy
+        // TODO: initialize strategy?
         //await this.migrationController.connect(this.signers.lmOwner).setupStrategy(this.signers.lmOwner.address, strategy.address, INITIAL_STATE, ethers.constants.AddressZero, "0x")
         //console.log("Set strategy in migration controller contract")
 
@@ -163,12 +176,11 @@ describe("Stake and Migrate all tokens", function () {
           .migrateAll(pool.lp, pool.adapter.address);
 
         const receipt = await tx.wait();
-        console.log(`Gas used migrateAll for ${pool.lp} : ${receipt.gasUsed.toString()}`);
-
         const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, strategy.address, underlyingTokens);
         expect(total).to.be.gt(BigNumber.from(0));
         console.log("strategy items: ", await strategy.items());
         console.log("strategy synths: ", await strategy.synths());
+        console.log(`Gas used migrateAll for ${pool.lp} : ${receipt.gasUsed.toString()}`);
 
         //expect(await strategy.balanceOf(pool.users[0])).to.be.gt(0);
       } catch (err) {

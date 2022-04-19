@@ -60,7 +60,7 @@ export async function deployStrategy(
     "0x",
   );
   const receipt = await tx.wait();
-  console.log("\n\n Strategy creation cost: ", receipt.gasUsed);
+  console.log("Strategy creation cost: ", receipt.gasUsed);
   return receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
 }
 
@@ -153,14 +153,27 @@ export async function setupStrategyItems(
   const [total, estimates] = await estimateTokens(oracle, pool, underlying);
 
   for (let i = 0; i < underlying.length; i++) {
-    let percentage = new bignumber(estimates[i].toString()).multipliedBy(1000).dividedBy(total.toString()).toFixed(0);
-    //In case there are funds below our percentage precision. Give it 0.1%
-    if (estimates[i].gt(0) && BigNumber.from(percentage).eq(0)) percentage = "1";
+    //console.log("Estimating item: ", underlying[i])
+    //console.log("total ", total)
+    //console.log("estimates ", estimates[i])
+    let percentage = estimates[i].mul(1000).mul(1e10).div(total).div(1e10);
+    //console.log("Item percentage: ", percentage);
 
-    const position: Position = {
+    if (percentage.eq(BigNumber.from(0))) {
+      //In case there are funds below our percentage precision. Give it 0.1%
+      if (estimates[i].gt(0)) {
+        console.log(`Rounding up to 1 percentage for item ${underlying[i]}`);
+        percentage = BigNumber.from(1);
+      } else {
+        console.log(`Skipping 0 percentage item ${underlying[i]}`);
+        continue;
+      }
+    }
+    let position: Position = {
       token: underlying[i],
-      percentage: BigNumber.from(percentage),
+      percentage: percentage,
     };
+    //console.log("Final percentage ", percentage);
     if (adapter == ethers.constants.AddressZero) position.adapters = [];
     positions.push(position);
   }
