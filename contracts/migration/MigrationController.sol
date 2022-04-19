@@ -188,7 +188,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         strategy.unlock();
     }
 
-    function _sensitiveToSlippage(address token) private view returns(bool) {
+    function _sensitiveToSlippage(address token) private view returns (bool) {
         return token == ETH2X || token == BTC2X;
     }
 }

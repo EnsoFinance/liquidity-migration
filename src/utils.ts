@@ -42,6 +42,12 @@ export function write2File(fileName: string, json: ScriptOutput) {
   fs.writeFileSync("out/" + fileName, data);
 }
 
+let strategyGas: BigNumber = BigNumber.from(0);
+
+export function printGas() {
+  console.log("Gas creating strategies: ", strategyGas);
+}
+
 export async function deployStrategy(
   enso: LiveEnvironment,
   name: string,
@@ -60,6 +66,10 @@ export async function deployStrategy(
     "0x",
   );
   const receipt = await tx.wait();
+  console.log("\n\n Strategy creation cost: ", receipt.gasUsed);
+  {
+    strategyGas.add(receipt.gasUsed);
+  }
   return receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
 }
 

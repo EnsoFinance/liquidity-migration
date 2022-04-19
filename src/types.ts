@@ -1,6 +1,6 @@
 import { BigNumber, Contract } from "ethers";
 
-export type ScriptOutput = Erc20Holders;
+export type ScriptOutput = Erc20Holders | PoolMapJson;
 
 export enum AcceptedProtocols {
   Indexed,
@@ -58,6 +58,14 @@ export interface StakedPoolJson {
   lp: string;
   adapter: string;
   balances: BalanceMappingJson;
+}
+
+export interface PoolMap {
+  [key: string]: StakedPool | undefined;
+}
+
+export interface PoolMapJson {
+  [key: string]: StakedPoolJson | undefined;
 }
 
 export interface BalanceMapping {
