@@ -6,10 +6,10 @@ import { write2File, getStrategyCreationParams, toJsonStrategyParams } from "../
 import { getLiveContracts, InitialState } from "@ensofinance/v1-core";
 
 export const INITIAL_STATE: InitialState = {
-  timelock: BigNumber.from(60), // 1 minute
+  timelock: BigNumber.from(604800), // 1 week
   rebalanceThreshold: BigNumber.from(50), // 5%
-  rebalanceSlippage: BigNumber.from(997), // 99.7 %
-  restructureSlippage: BigNumber.from(995), // 99.5 %
+  rebalanceSlippage: BigNumber.from(995), // 99.5 %
+  restructureSlippage: BigNumber.from(990), // 99 %
   performanceFee: BigNumber.from(0),
   social: true,
   set: false,
@@ -18,7 +18,7 @@ export const INITIAL_STATE: InitialState = {
 async function main() {
   const [signer] = await hre.ethers.getSigners();
   const enso = getLiveContracts(signer);
-  const manager = await enso.platform.strategyFactory.owner();
+  const manager = "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F"; //treasury
   const stakedPools = await getAllStakers(signer);
   const lps = Object.keys(stakedPools);
   let numErrors = 0;

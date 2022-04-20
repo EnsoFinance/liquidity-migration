@@ -202,47 +202,48 @@ export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
   return BigNumber.from(block.timestamp).add(timeInSeconds);
 }
 
-export type Serializeable = StrategyParams | InitialState | StrategyItem[];
-
-export type Deserializeable = StrategyParamsJson | InitialStateJson | StrategyItemJson[];
-
-export function isStrategyParams(data: any): data is StrategyParams {
-  return (data as StrategyParams) !== undefined;
+export function fromJsonStrategyParams(paramsJson: StrategyParamsJson): StrategyParams {
+  const items = paramsJson.items.map(i => {
+    const { item, data } = i;
+    const percentage = BigNumber.from(i.percentage);
+    return { item, data, percentage } as StrategyItem;
+  });
+  const state: InitialState = {
+    timelock: BigNumber.from(paramsJson.state.timelock),
+    rebalanceThreshold: BigNumber.from(paramsJson.state.rebalanceThreshold),
+    rebalanceSlippage: BigNumber.from(paramsJson.state.rebalanceSlippage),
+    restructureSlippage: BigNumber.from(paramsJson.state.restructureSlippage),
+    performanceFee: BigNumber.from(paramsJson.state.performanceFee),
+    social: paramsJson.state.social,
+    set: paramsJson.state.set,
+  };
+  const { name, symbol, manager } = paramsJson;
+  return { name, symbol, manager, state, items } as StrategyParams;
 }
 
-export function toJsonStrategyItem(data: StrategyItem[]): StrategyItemJson[] {
-  return data.map(d => {
-    return {
-      item: d.item,
-      percentage: d.percentage.toString(),
-      data: d.data,
-    } as StrategyItemJson;
-  }) as StrategyItemJson[];
-}
-
-export function toJsonInitialState(data: InitialState): InitialStateJson {
-  const json = {
-    timelock: data.timelock.toString(),
-    rebalanceThreshold: data.rebalanceThreshold.toString(),
-    rebalanceSlippage: data.rebalanceSlippage.toString(),
-    restructureSlippage: data.restructureSlippage.toString(),
-    performanceFee: data.performanceFee.toString(),
-    set: data.set,
+export function toJsonStrategyParams(params: StrategyParams): StrategyParamsJson {
+  const items: StrategyItemJson[] = params.items.map(d => {
+    const { item, data } = d;
+    const percentage = d.percentage.toString();
+    return { item, data, percentage } as StrategyItemJson;
+  });
+  const state = {
+    timelock: params.state.timelock.toString(),
+    rebalanceThreshold: params.state.rebalanceThreshold.toString(),
+    rebalanceSlippage: params.state.rebalanceSlippage.toString(),
+    restructureSlippage: params.state.restructureSlippage.toString(),
+    performanceFee: params.state.performanceFee.toString(),
+    social: params.state.social,
+    set: params.state.set,
   } as InitialStateJson;
-  return json;
-}
-
-export function toJsonStrategyParams(data: StrategyParams): StrategyParamsJson {
-  const items = toJsonStrategyItem(data.items);
-  const state = toJsonInitialState(data.state);
-  const json = {
-    name: data.name,
-    symbol: data.symbol,
-    manager: data.manager,
+  const { name, symbol, manager } = params;
+  return {
+    name,
+    symbol,
+    manager,
     items,
     state,
   } as StrategyParamsJson;
-  return json;
 }
 
 export async function setupStrategyItems(
@@ -255,9 +256,6 @@ export async function setupStrategyItems(
   const [total, estimates] = await estimateTokens(oracle, pool, underlying);
 
   for (let i = 0; i < underlying.length; i++) {
-    //console.log("Estimating item: ", underlying[i])
-    //console.log("total ", total)
-    //console.log("estimates ", estimates[i])
     let percentage = estimates[i].mul(1000).mul(1e10).div(total).div(1e10);
     if (percentage.eq(BigNumber.from(0))) {
       //In case there are funds below our percentage precision. Give it 0.1%
