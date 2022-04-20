@@ -57,17 +57,9 @@ describe("Stake and Migrate all tokens", function () {
     this.poolsToMigrate = await getPoolsToMigrate(this.signers.ensoOwner);
     this.holders = await readTokenHolders();
 
-    // Deploy Migration adapter
-    const MigrationAdapter = await ethers.getContractFactory("MigrationAdapter");
-    const migrationAdapter = await MigrationAdapter.connect(this.signers.lmOwner).deploy(this.signers.lmOwner.address);
-    await migrationAdapter.deployed();
-
     // Add all eligible LPs to this adapter's whitelist
     this.eligibleLPs = Object.keys(this.poolsToMigrate);
     //console.log("LPS: ", this.eligibleLPs)
-    await Promise.all(
-      this.eligibleLPs.map(async (lp: string) => migrationAdapter.connect(this.signers.lmOwner).add(lp)),
-    );
 
     // Deploy MigrationController
     const MigrationController = await ethers.getContractFactory("MigrationController");
@@ -87,33 +79,25 @@ describe("Stake and Migrate all tokens", function () {
     //this.enso.platform.controller = this.migrationController
     await this.liquidityMigration.connect(this.signers.lmOwner).updateController(this.enso.platform.controller.address);
 
+    /* Test MulticallRouter with better revert messages
+    const MulticallRouter = await ethers.getContractFactory("MulticallRouter");
+    this.enso.routers.multicall = await MulticallRouter.connect(this.signers.lmOwner).deploy(
+      this.enso.platform.controller.address
+    )
+    await this.enso.routers.multicall.deployed()
+    await this.enso.platform.administration.whitelist
+      .connect(this.signers.treasury)
+      .approve(this.enso.routers.multicall.address)
+    */
+
     // Update generic router (leverage adapter + liquidity migration)
     await this.liquidityMigration
       .connect(this.signers.lmOwner)
       .updateGenericRouter(this.enso.routers.multicall.address);
     this.indexCoopAdapter = await getAdapterFromType(Adapters.IndexCoopAdapter, this.signers.treasury);
     await this.indexCoopAdapter.connect(this.signers.lmOwner).updateGenericRouter(this.enso.routers.multicall.address);
-
-    // KNC not on Uniswap, use Chainlink
-    const { chainlinkRegistry } = this.enso.platform.oracles.registries;
-    await chainlinkRegistry
-      .connect(this.signers.ensoOwner)
-      .addOracle(SUSD, WETH, "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419", true); //sUSD
-    await chainlinkRegistry
-      .connect(this.signers.ensoOwner)
-      .addOracle(
-        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
-        SUSD,
-        "0xf8ff43e991a81e6ec886a3d281a2c6cc19ae70fc",
-        false,
-      ); //KNC
-    await this.enso.platform.strategyFactory
-      .connect(this.signers.ensoOwner)
-      .addItemToRegistry(
-        ITEM_CATEGORY.BASIC,
-        ESTIMATOR_CATEGORY.CHAINLINK_ORACLE,
-        "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
-      );
+    this.tokenSetAdapter = await getAdapterFromType(Adapters.TokenSetAdapter, this.signers.treasury);
+    await this.tokenSetAdapter.connect(this.signers.lmOwner).updateGenericRouter(this.enso.routers.multicall.address);
   });
 
   /*
@@ -145,25 +129,18 @@ describe("Stake and Migrate all tokens", function () {
 
   it("Migrate all pools", async function () {
     await increaseTime(1e15);
+    let count = 0;
     for (let i = 0; i < this.eligibleLPs.length; i++) {
       const pool: StakedPool = this.poolsToMigrate[this.eligibleLPs[i]];
-      let poolToken;
-      try {
-        const bPoolFactory = IPV2SmartPool__factory.connect(pool.lp, this.signers.lmOwner);
-        const bPool = await bPoolFactory.getBPool();
-        poolToken = bPool;
-      } catch {
-        poolToken = pool.lp;
-      }
       const underlyingTokens = await pool.adapter.outputTokens(pool.lp);
       try {
         console.log("\n\nPool ===========> ", pool.lp);
         console.log("Underlying: ", underlyingTokens);
         // deploy strategy
-        const strategy = await deployStakedStrategy(this.enso, poolToken, pool.adapter.address, this.signers.lmOwner);
+        const strategy = await deployStakedStrategy(this.enso, pool.lp, pool.adapter.address, this.signers.lmOwner);
         console.log("strategy synths: ", await strategy.synths());
         console.log("strategy items: ", await strategy.items());
-        //console.log("Strategy address: ", strategy.address);
+        console.log("Strategy address: ", strategy.address);
         // set strategy
         await this.liquidityMigration.connect(this.signers.lmOwner).setStrategy(pool.lp, strategy.address);
         // migrate all
@@ -174,14 +151,18 @@ describe("Stake and Migrate all tokens", function () {
         const receipt = await tx.wait();
         const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, strategy.address, underlyingTokens);
         expect(total).to.be.gt(BigNumber.from(0));
-        console.log(`migrateAll cost: ${receipt.gasUsed.toString()}`);
+        //console.log(`migrateAll cost: ${receipt.gasUsed.toString()}`);
 
         //expect(await strategy.balanceOf(pool.users[0])).to.be.gt(0);
       } catch (err) {
+        count++;
+        //console.log("\n\nPool ===========> ", pool.lp);
+        //console.log("Underlying: ", underlyingTokens);
         console.log(err);
         //console.log("Pool not found!")
         continue;
       }
     }
+    console.log("Failing strategies: ", count);
   });
 });

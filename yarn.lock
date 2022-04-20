@@ -35,9 +35,9 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@balancer-labs/core@git+https://github.com/balancer-labs/balancer-core.git":
+"@balancer-labs/core@https://github.com/balancer-labs/balancer-core":
   version "0.0.7"
-  resolved "git+https://github.com/balancer-labs/balancer-core.git#f4ed5d65362a8d6cec21662fb6eae233b0babc1f"
+  resolved "https://github.com/balancer-labs/balancer-core#f4ed5d65362a8d6cec21662fb6eae233b0babc1f"
   dependencies:
     decimal.js "^10.2.0"
     ganache-cli "^6.7.0"
