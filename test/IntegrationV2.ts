@@ -47,11 +47,12 @@ describe("Stake and Migrate all tokens", function () {
     this.enso = getLiveContracts(this.signers.treasury);
     const ensoOwner = await this.enso.platform.strategyFactory.owner();
     this.signers.ensoOwner = await impersonateWithEth(ensoOwner, WeiPerEther.mul(10));
-    console.log("Enso owner: ", this.signers.ensoOwner.address);
     this.liquidityMigration = liveMigrationContract(this.signers.ensoOwner);
     const lmOwner = await this.liquidityMigration.owner();
     this.signers.lmOwner = await impersonateWithEth(lmOwner, WeiPerEther.mul(10));
-    console.log("Liquidity migration owner: ", this.signers.ensoOwner.address);
+
+    console.log("Enso owner: ", this.signers.ensoOwner.address);
+    console.log("Liquidity migration owner: ", this.signers.lmOwner.address);
 
     // Get stakes to migrate
     this.poolsToMigrate = await getPoolsToMigrate(this.signers.ensoOwner);

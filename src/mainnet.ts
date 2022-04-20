@@ -56,7 +56,7 @@ export async function getTransferEvents(
   return [transfers, contract];
 }
 
-// TODO: add up Refund events instead of taking current balance to improve performance
+// TODO: add up Refund events instead of taking current balance to improve speed
 export async function getAllStakers(signer: SignerWithAddress): Promise<PoolMapJson> {
   if (!signer.provider) throw Error("No provider attached to signer");
   const lm = liveMigrationContract(signer);

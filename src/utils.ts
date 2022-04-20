@@ -9,7 +9,15 @@ import { PieDaoEnvironmentBuilder } from "../src/piedao";
 import { IndexedEnvironmentBuilder } from "../src/indexed";
 import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
 import { DHedgeEnvironmentBuilder } from "../src/dhedge";
-import { AcceptedProtocols, StakedPool, ScriptOutput } from "../src/types";
+import {
+  AcceptedProtocols,
+  StakedPool,
+  ScriptOutput,
+  StrategyParamsJson,
+  InitialStateJson,
+  StrategyItemJson,
+  StrategyParams,
+} from "../src/types";
 import { getAdapterFromAddr } from "./mainnet";
 import { INITIAL_STATE } from "./constants";
 import {
@@ -24,7 +32,7 @@ import {
   prepareStrategy,
   encodeSettleTransfer,
 } from "@ensofinance/v1-core";
-import { IERC20__factory, IAdapter, IStrategy__factory } from "../typechain";
+import { ERC20__factory, IAdapter, IStrategy__factory } from "../typechain";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
 
 export enum Networks {
@@ -34,12 +42,63 @@ export enum Networks {
 }
 
 export function toErc20(addr: string, signer: SignerWithAddress): Contract {
-  return IERC20__factory.connect(addr, signer);
+  return ERC20__factory.connect(addr, signer);
 }
 
 export function write2File(fileName: string, json: ScriptOutput) {
   const data = JSON.stringify(json, null, 4);
   fs.writeFileSync("out/" + fileName, data);
+}
+
+export async function getNameOrDefault(erc20: Contract): Promise<string> {
+  let name = "unknown";
+  try {
+    name = await erc20.name();
+  } catch {}
+  return `Enso ${name}`;
+}
+
+export async function getSymbolOrDefault(erc20: Contract): Promise<string> {
+  let symbol = "unknown";
+  try {
+    symbol = await erc20.symbol();
+  } catch {}
+  return symbol;
+}
+
+export async function getStrategyCreationParams(
+  signer: SignerWithAddress,
+  enso: LiveEnvironment,
+  stakedLP: string,
+  manager: string,
+  adapterAddr: string,
+  initialState?: InitialState,
+  stratName?: string,
+  stratSymbol?: string,
+): Promise<StrategyParams> {
+  const erc20LP = toErc20(stakedLP, signer);
+  // Check optional params
+  const name: string = stratName || (await getNameOrDefault(erc20LP));
+  const symbol: string = stratSymbol || (await getNameOrDefault(erc20LP));
+  const state: InitialState = initialState || INITIAL_STATE;
+  // Get underlying assets
+  const adapter = await getAdapterFromAddr(adapterAddr, signer);
+  const underlying = await adapter.outputTokens(stakedLP);
+  // TODO: get leverage adapter when needed
+  const items = await setupStrategyItems(
+    enso.platform.oracles.ensoOracle,
+    enso.adapters.uniswapV3.address,
+    stakedLP,
+    underlying,
+  );
+  const params: StrategyParams = {
+    name,
+    symbol,
+    manager,
+    items,
+    state,
+  };
+  return params;
 }
 
 export async function deployStrategy(
@@ -143,6 +202,49 @@ export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
   return BigNumber.from(block.timestamp).add(timeInSeconds);
 }
 
+export type Serializeable = StrategyParams | InitialState | StrategyItem[];
+
+export type Deserializeable = StrategyParamsJson | InitialStateJson | StrategyItemJson[];
+
+export function isStrategyParams(data: any): data is StrategyParams {
+  return (data as StrategyParams) !== undefined;
+}
+
+export function toJsonStrategyItem(data: StrategyItem[]): StrategyItemJson[] {
+  return data.map(d => {
+    return {
+      item: d.item,
+      percentage: d.percentage.toString(),
+      data: d.data,
+    } as StrategyItemJson;
+  }) as StrategyItemJson[];
+}
+
+export function toJsonInitialState(data: InitialState): InitialStateJson {
+  const json = {
+    timelock: data.timelock.toString(),
+    rebalanceThreshold: data.rebalanceThreshold.toString(),
+    rebalanceSlippage: data.rebalanceSlippage.toString(),
+    restructureSlippage: data.restructureSlippage.toString(),
+    performanceFee: data.performanceFee.toString(),
+    set: data.set,
+  } as InitialStateJson;
+  return json;
+}
+
+export function toJsonStrategyParams(data: StrategyParams): StrategyParamsJson {
+  const items = toJsonStrategyItem(data.items);
+  const state = toJsonInitialState(data.state);
+  const json = {
+    name: data.name,
+    symbol: data.symbol,
+    manager: data.manager,
+    items,
+    state,
+  } as StrategyParamsJson;
+  return json;
+}
+
 export async function setupStrategyItems(
   oracle: Contract,
   adapter: string,
@@ -157,8 +259,6 @@ export async function setupStrategyItems(
     //console.log("total ", total)
     //console.log("estimates ", estimates[i])
     let percentage = estimates[i].mul(1000).mul(1e10).div(total).div(1e10);
-    //console.log("Item percentage: ", percentage);
-
     if (percentage.eq(BigNumber.from(0))) {
       //In case there are funds below our percentage precision. Give it 0.1%
       if (estimates[i].gt(0)) {
@@ -300,7 +400,7 @@ export async function estimateTokens(
 ): Promise<[BigNumber, BigNumber[]]> {
   const tokensAndBalances = await Promise.all(
     tokens.map(async token => {
-      const erc20 = IERC20__factory.connect(token, ethers.provider);
+      const erc20 = ERC20__factory.connect(token, ethers.provider);
       const balance = await erc20.balanceOf(account);
       return {
         token: token,

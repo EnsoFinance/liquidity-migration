@@ -1,6 +1,9 @@
 import { BigNumber, Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { InitialState, StrategyItem, TradeData } from "@ensofinance/v1-core";
 
-export type ScriptOutput = Erc20HoldersJson | PoolMapJson;
+// Exported json files
+export type ScriptOutput = Erc20HoldersJson | PoolMapJson | StrategyParamsMapJson;
 
 export enum AcceptedProtocols {
   Indexed,
@@ -24,6 +27,46 @@ export type Adapter = {
   protocol: AcceptedProtocols;
   adapter: string;
 };
+
+export interface StrategyParamsMap {
+  [key: string]: StrategyParams;
+}
+
+export interface StrategyParamsMapJson {
+  [key: string]: StrategyParamsJson;
+}
+
+export interface StrategyParamsJson {
+  name: string;
+  symbol: string;
+  manager: string;
+  items: StrategyItemJson[];
+  state: InitialStateJson;
+}
+
+export interface StrategyParams {
+  name: string;
+  symbol: string;
+  manager: string;
+  items: StrategyItem[];
+  state: InitialState;
+}
+
+export interface InitialStateJson {
+  timelock: string;
+  rebalanceThreshold: string;
+  rebalanceSlippage: string;
+  restructureSlippage: string;
+  performanceFee: string;
+  social: boolean;
+  set: boolean;
+}
+
+export interface StrategyItemJson {
+  item: string;
+  percentage: string;
+  data: TradeData;
+}
 
 export interface Holder {
   address: string;
