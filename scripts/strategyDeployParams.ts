@@ -26,20 +26,25 @@ async function main() {
   for (let i = 0; i < lps.length; i++) {
     const pool = stakedPools[lps[i]];
     if (!pool) throw Error(`Failed to find data for pool: ${lps[i]}`);
-    try {
-      let params: StrategyParams = await getStrategyCreationParams(
-        signer,
-        enso,
-        pool.lp,
-        manager,
-        pool.adapter.address,
-        INITIAL_STATE,
-      );
-      console.log(params);
-      const paramsJson: StrategyParamsJson = toJsonStrategyParams(params) as StrategyParamsJson;
-      creationParams[lps[i]] = paramsJson;
-    } catch (err) {
-      console.log(err);
+    if (pool.lp.toLowerCase() !== "0x126c121f99e1e211df2e5f8de2d96fa36647c855") {
+      //DEGEN
+      try {
+        let params: StrategyParams = await getStrategyCreationParams(
+          signer,
+          enso,
+          pool.lp,
+          manager,
+          pool.adapter.address,
+          INITIAL_STATE,
+        );
+        //console.log(params);
+        const paramsJson: StrategyParamsJson = toJsonStrategyParams(params) as StrategyParamsJson;
+        creationParams[lps[i]] = paramsJson;
+      } catch (err) {
+        //console.log(err);
+        numErrors++;
+      }
+    } else {
       numErrors++;
     }
   }

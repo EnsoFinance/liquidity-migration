@@ -22,13 +22,13 @@ import {
 } from "./types";
 import deployments from "../deployments.json";
 import poolsToMigrate from "../out/stakes_to_migrate.json";
+import tokenHolders from "../out/erc20_holders.json";
 import LiquidityMigrationV2 from "../artifacts/contracts/migration/LiquidityMigrationV2.sol/LiquidityMigrationV2.json";
 import TokenSetAdapter from "../artifacts/contracts/adapters/TokenSetAdapter.sol/TokenSetAdapter.json";
 import PieDaoAdapter from "../artifacts/contracts/adapters/PieDaoAdapter.sol/PieDaoAdapter.json";
 import BalancerAdapter from "../artifacts/contracts/adapters/BalancerAdapter.sol/BalancerAdapter.json";
 import DHedgeAdapter from "../artifacts/contracts/adapters/DHedgeAdapter.sol/DHedgeAdapter.json";
 const { AddressZero, WeiPerEther } = constants;
-import tokenHolders from "../out/erc20_holders.json";
 
 export const MIN_ETH_SIGNER = WeiPerEther.mul(10);
 

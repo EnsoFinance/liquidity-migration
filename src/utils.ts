@@ -16,6 +16,7 @@ import {
   InitialStateJson,
   StrategyItemJson,
   StrategyParams,
+  TokenPositionMapJson,
 } from "../src/types";
 import { getAdapterFromAddr } from "./mainnet";
 import { INITIAL_STATE, FACTORY_REGISTRIES } from "./constants";
@@ -34,12 +35,25 @@ import {
 } from "@ensofinance/v1-core";
 import { ERC20__factory, IAdapter, IStrategy__factory } from "../typechain";
 import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
+import tokenPositions from "../out/token_positions.json";
 
 export enum Networks {
   Mainnet,
   LocalTestnet,
   ExternalTestnet,
 }
+
+const ADAPTER_MAPPER: { [key: string]: string } = {
+  UniswapV2Adapter: "0xf16d11753A687Dc99fE4F98D37Bc822F7388782F",
+  UniswapV3Adapter: "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
+  CompoundAdapter: "0x7cd4AFB972CA11e02d571f0733a0d58D18820050",
+  AaveV2Adapter: "0x23085950d89D3eb169c372D70362B7a40e319701",
+  CurveAdapter: "0xe3Dc8f700007de47fc72045246D05d24c141ea1A",
+  CurveLPAdapter: "0x16f5D4B327e5Fd9f87FB29550a26169d0CB160cC",
+  CurveGaugeAdapter: "0x9ceF86C92349a75d4c769f919349515946bd5F03",
+  SynthetixAdapter: "0xE3e1a55ef03cA82b79c60e426612f6aA80b6d9Bf",
+  YEarnV2Adapter: "0x7c464a18636CC2f236BC87C70aa4a6F8793DC219",
+};
 
 export function toErc20(addr: string, signer: SignerWithAddress): Contract {
   return ERC20__factory.connect(addr, signer);
@@ -315,6 +329,7 @@ export async function setupStrategyItems(
   pool: string,
   underlying: string[],
 ): Promise<StrategyItem[]> {
+  const positionsData: TokenPositionMapJson = tokenPositions;
   let positions = [] as Position[];
   const [total, estimates] = await estimateTokens(oracle, pool, underlying);
 
@@ -334,8 +349,16 @@ export async function setupStrategyItems(
       token: underlying[i],
       percentage: percentage,
     };
-    //console.log("Final percentage ", percentage);
-    if (adapter == ethers.constants.AddressZero) position.adapters = [];
+
+    const positionData = positionsData[underlying[i]];
+    if (positionData) {
+      position.adapters = positionData.adapters.map((adapterName: string) => ADAPTER_MAPPER[adapterName]);
+      position.path = positionData.path;
+    } else {
+      console.log(`Position not found for ${underlying[i]}`);
+      if (adapter == ethers.constants.AddressZero) position.adapters = [];
+    }
+
     positions.push(position);
   }
   const totalPercentage = positions.map(pos => Number(pos.percentage)).reduce((a, b) => a + b);

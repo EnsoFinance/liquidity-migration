@@ -103,12 +103,22 @@ export interface StakedPoolJson {
   balances: BalanceMappingJson;
 }
 
+export interface TokenPositionJson {
+  token: string;
+  adapters: string[];
+  path: string[];
+}
+
 export interface PoolMap {
   [key: string]: StakedPool | undefined;
 }
 
 export interface PoolMapJson {
   [key: string]: StakedPoolJson | undefined;
+}
+
+export interface TokenPositionMapJson {
+  [key: string]: TokenPositionJson;
 }
 
 export interface BalanceMapping {
