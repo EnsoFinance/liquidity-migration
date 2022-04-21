@@ -2,8 +2,6 @@ import hre from "hardhat";
 import { ethers, waffle } from "hardhat";
 import { Event, BigNumber, constants, Contract, ContractInterface } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { PieDaoAdapter__factory } from "../typechain";
-import { toErc20 } from "./utils";
 import {
   PoolMap,
   PoolMapJson,
@@ -12,23 +10,20 @@ import {
   BalanceMapping,
   StakedPoolJson,
   StakedPool,
-  Adapter,
   Adapters,
-  AcceptedProtocols,
   HolderBalance,
   Erc20Holders,
   Erc20HoldersJson,
   HolderBalanceJson,
 } from "./types";
 import deployments from "../deployments.json";
-import poolsToMigrate from "../out/stakes_to_migrate.json";
-import tokenHolders from "../out/erc20_holders.json";
+import poolsToMigrate from "../out/all_stakes.json";
 import LiquidityMigrationV2 from "../artifacts/contracts/migration/LiquidityMigrationV2.sol/LiquidityMigrationV2.json";
 import TokenSetAdapter from "../artifacts/contracts/adapters/TokenSetAdapter.sol/TokenSetAdapter.json";
 import PieDaoAdapter from "../artifacts/contracts/adapters/PieDaoAdapter.sol/PieDaoAdapter.json";
 import BalancerAdapter from "../artifacts/contracts/adapters/BalancerAdapter.sol/BalancerAdapter.json";
 import DHedgeAdapter from "../artifacts/contracts/adapters/DHedgeAdapter.sol/DHedgeAdapter.json";
-const { AddressZero, WeiPerEther } = constants;
+const { WeiPerEther } = constants;
 
 export const MIN_ETH_SIGNER = WeiPerEther.mul(10);
 
@@ -129,7 +124,7 @@ export async function getPoolsToMigrate(signer: SignerWithAddress): Promise<Pool
   const lps: string[] = Object.keys(poolsData);
   for (let i = 0; i < lps.length; i++) {
     const p = poolsData[lps[i]];
-    if (!p) throw Error("Failed to find lp in out/stakes_to_migrate.json");
+    if (!p) throw Error("Failed to find lp in out/all_stakes.json");
     const keys: string[] = Object.keys(p.balances);
     const balances: BalanceMapping = {};
     keys.map((addr, iter) => {

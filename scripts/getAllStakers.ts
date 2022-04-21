@@ -5,7 +5,7 @@ import { write2File } from "../src/utils";
 async function main() {
   const [signer] = await hre.ethers.getSigners();
   const stakers = await getAllStakers(signer);
-  write2File("stakes_to_migrate.json", stakers);
+  write2File("all_stakes.json", stakers);
 }
 
 main()

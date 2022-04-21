@@ -1,0 +1,7 @@
+[
+    "Error: VM Exception while processing transaction: reverted with reason string 'Pool not found'",
+    "Error: division-by-zero [ See: https://links.ethers.org/v5-errors-NUMERIC_FAULT-division-by-zero ] (fault=\"division-by-zero\", operation=\"div\", code=NUMERIC_FAULT, version=bignumber/5.6.0)",
+    "Error: VM Exception while processing transaction: reverted with reason string 'Pool not found'",
+    "Error: division-by-zero [ See: https://links.ethers.org/v5-errors-NUMERIC_FAULT-division-by-zero ] (fault=\"division-by-zero\", operation=\"div\", code=NUMERIC_FAULT, version=bignumber/5.6.0)",
+    "Error: VM Exception while processing transaction: reverted with reason string 'Pool not found'"
+]

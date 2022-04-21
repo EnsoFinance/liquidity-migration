@@ -1,5 +1,6 @@
 import hre from "hardhat";
-import { BigNumber, Contract } from "ethers";
+import { MetaTransactionData } from "@gnosis.pm/safe-core-sdk-types";
+import { UnsignedTransaction, BigNumber, Contract } from "ethers";
 
 const MAX_GAS_PRICE = hre.ethers.BigNumber.from("150000000000"); // 85 gWEI
 
@@ -111,3 +112,22 @@ export const getExpectedBaseFee = (block: any) => {
   }
   return expectedBaseFee;
 };
+
+export interface EthersUnsigned {
+  readonly data: string;
+  readonly to: string;
+  readonly from: string;
+}
+
+export function encodeMulticall(tx: EthersUnsigned): MetaTransactionData {
+  const transaction: MetaTransactionData = { to: tx.to, data: tx.data, value: "0" };
+  return transaction;
+}
+
+export function validateAndEncode(tx: UnsignedTransaction): MetaTransactionData {
+  if (tx as EthersUnsigned) {
+    return encodeMulticall(tx as EthersUnsigned);
+  } else {
+    throw Error(`Failed to encode tx: ${tx}`);
+  }
+}
