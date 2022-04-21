@@ -1,12 +1,12 @@
 import hre from "hardhat";
 import { BigNumber } from "ethers";
-import { getAllStakers } from "../src/mainnet";
+import { getPoolsToMigrate } from "../src/mainnet";
 import { StrategyParamsMapJson, StrategyParamsJson, StrategyParams } from "../src/types";
 import { write2File, getStrategyCreationParams, toJsonStrategyParams } from "../src/utils";
 import { getLiveContracts, InitialState } from "@ensofinance/v1-core";
 
 export const INITIAL_STATE: InitialState = {
-  timelock: BigNumber.from(604800), // 1 week
+  timelock: BigNumber.from(0),
   rebalanceThreshold: BigNumber.from(50), // 5%
   rebalanceSlippage: BigNumber.from(995), // 99.5 %
   restructureSlippage: BigNumber.from(990), // 99 %
@@ -19,7 +19,7 @@ async function main() {
   const [signer] = await hre.ethers.getSigners();
   const enso = getLiveContracts(signer);
   const manager = "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F"; //treasury
-  const stakedPools = await getAllStakers(signer);
+  const stakedPools = await getPoolsToMigrate(signer);
   const lps = Object.keys(stakedPools);
   let numErrors = 0;
   const creationParams: StrategyParamsMapJson = {};
@@ -32,9 +32,10 @@ async function main() {
         enso,
         pool.lp,
         manager,
-        pool.adapter,
+        pool.adapter.address,
         INITIAL_STATE,
       );
+      console.log(params);
       const paramsJson: StrategyParamsJson = toJsonStrategyParams(params) as StrategyParamsJson;
       creationParams[lps[i]] = paramsJson;
     } catch (err) {

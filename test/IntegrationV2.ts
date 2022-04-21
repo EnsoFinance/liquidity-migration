@@ -23,7 +23,7 @@ import {
   getBlockTime,
 } from "../src/utils";
 import { getLiveContracts, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens } from "@ensofinance/v1-core";
-import { ENSO_MULTISIG, WETH, SUSD, DEPOSIT_SLIPPAGE } from "../src/constants";
+import { ENSO_CONTRACTS_MULTISIG, WETH, SUSD, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 const { WeiPerEther } = constants;
 
@@ -43,7 +43,7 @@ describe("Stake and Migrate all tokens", function () {
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
     // Impersonate enso owners and get live v1-core contrats
-    this.signers.treasury = await impersonateWithEth("0xca702d224d61ae6980c8c7d4d98042e22b40ffdb", WeiPerEther.mul(10));
+    this.signers.treasury = await impersonateWithEth(ENSO_CONTRACTS_MULTISIG, WeiPerEther.mul(10));
     this.enso = getLiveContracts(this.signers.treasury);
     const ensoOwner = await this.enso.platform.strategyFactory.owner();
     this.signers.ensoOwner = await impersonateWithEth(ensoOwner, WeiPerEther.mul(10));

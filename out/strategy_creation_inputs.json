@@ -1,13 +1,13 @@
 {
   "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b": {
     "name": "Enso DefiPulse Index",
-    "symbol": "Enso DefiPulse Index",
+    "symbol": "eDPI",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -16,7 +16,7 @@
       {
         "item": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -25,7 +25,7 @@
       {
         "item": "0x3472A5A71965499acd81997a54BBA8D852C6E53d",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -34,7 +34,7 @@
       {
         "item": "0x408e41876cCCDC0F92210600ef50372656052a38",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -43,7 +43,7 @@
       {
         "item": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -52,7 +52,7 @@
       {
         "item": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -61,7 +61,7 @@
       {
         "item": "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -70,7 +70,7 @@
       {
         "item": "0xa0246c9032bC3A600820415aE600c6388619A14D",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -79,7 +79,7 @@
       {
         "item": "0xba100000625a3754423978a60c9317c58a424e3D",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -88,7 +88,7 @@
       {
         "item": "0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -97,7 +97,7 @@
       {
         "item": "0xc00e94Cb662C3520282E6f5717214004A7f26888",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -106,7 +106,7 @@
       {
         "item": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -115,7 +115,7 @@
       {
         "item": "0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -124,7 +124,7 @@
       {
         "item": "0xdeFA4e8a7bcBA345F687a2f1456F5Edd9CE97202",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -132,7 +132,7 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
       "rebalanceSlippage": "995",
       "restructureSlippage": "990",
@@ -143,13 +143,13 @@
   },
   "0x2aF1dF3AB0ab157e1E2Ad8F88A7D04fbea0c7dc6": {
     "name": "Enso Bankless BED Index",
-    "symbol": "Enso Bankless BED Index",
+    "symbol": "eBED",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -158,7 +158,7 @@
       {
         "item": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -167,7 +167,7 @@
       {
         "item": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -175,7 +175,7 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
       "rebalanceSlippage": "995",
       "restructureSlippage": "990",
@@ -186,13 +186,13 @@
   },
   "0x33d63Ba1E57E54779F7dDAeaA7109349344cf5F1": {
     "name": "Enso DATA Economy Index",
-    "symbol": "Enso DATA Economy Index",
+    "symbol": "eDATA",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x0D8775F648430679A709E98d2b0Cb6250d2887EF",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -201,7 +201,7 @@
       {
         "item": "0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -210,7 +210,7 @@
       {
         "item": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -219,7 +219,7 @@
       {
         "item": "0x58b6A8A3302369DAEc383334672404Ee733aB239",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -228,7 +228,7 @@
       {
         "item": "0x967da4048cD07aB37855c090aAF366e4ce1b9F48",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -237,7 +237,7 @@
       {
         "item": "0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -246,7 +246,7 @@
       {
         "item": "0xc944E90C64B2c07662A292be6244BDf05Cda44a7",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -255,7 +255,7 @@
       {
         "item": "0xD5147bc8e386d91Cc5DBE72099DAC6C9b99276F5",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -263,113 +263,7 @@
       }
     ],
     "state": {
-      "timelock": "604800",
-      "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
-      "performanceFee": "0",
-      "social": true,
-      "set": false
-    }
-  },
-  "0x126c121f99e1E211dF2e5f8De2d96Fa36647c855": {
-    "name": "Enso DEGEN Index",
-    "symbol": "Enso DEGEN Index",
-    "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
-    "items": [
-      {
-        "item": "0x09a3EcAFa817268f77BE1283176B946C4ff2E608",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "101"
-      },
-      {
-        "item": "0x111111111117dC0aa78b770fA6A738034120C302",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "108"
-      },
-      {
-        "item": "0x3472A5A71965499acd81997a54BBA8D852C6E53d",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "90"
-      },
-      {
-        "item": "0x408e41876cCCDC0F92210600ef50372656052a38",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "124"
-      },
-      {
-        "item": "0x4691937a7508860F876c9c0a2a617E7d9E945D4B",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "94"
-      },
-      {
-        "item": "0x83e6f1E41cdd28eAcEB20Cb649155049Fac3D5Aa",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "76"
-      },
-      {
-        "item": "0x8762db106B2c2A0bccB3A80d1Ed41273552616E8",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "161"
-      },
-      {
-        "item": "0x967da4048cD07aB37855c090aAF366e4ce1b9F48",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "91"
-      },
-      {
-        "item": "0xa1faa113cbE53436Df28FF0aEe54275c13B40975",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "84"
-      },
-      {
-        "item": "0xD291E7a03283640FDc51b121aC401383A46cC623",
-        "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
-          "path": [],
-          "cache": "0x"
-        },
-        "percentage": "71"
-      }
-    ],
-    "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
       "rebalanceSlippage": "995",
       "restructureSlippage": "990",
@@ -380,13 +274,13 @@
   },
   "0x26607aC599266b21d13c7aCF7942c7701a8b699c": {
     "name": "Enso Power Index Pool Token",
-    "symbol": "Enso Power Index Pool Token",
+    "symbol": "ePIPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -395,7 +289,7 @@
       {
         "item": "0x0d438F3b5175Bebc262bF23753C1E53d03432bDE",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -404,7 +298,7 @@
       {
         "item": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -413,7 +307,7 @@
       {
         "item": "0x38e4adB44ef08F22F5B5b76A8f0c2d0dCbE7DcA1",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -422,7 +316,7 @@
       {
         "item": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -431,7 +325,7 @@
       {
         "item": "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -440,7 +334,7 @@
       {
         "item": "0xc00e94Cb662C3520282E6f5717214004A7f26888",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -449,7 +343,7 @@
       {
         "item": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -457,7 +351,7 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
       "rebalanceSlippage": "995",
       "restructureSlippage": "990",
@@ -468,13 +362,13 @@
   },
   "0x9ba60bA98413A60dB4C651D4afE5C937bbD8044B": {
     "name": "Enso Yearn Lazy Ape Index",
-    "symbol": "Enso Yearn Lazy Ape Index",
+    "symbol": "eYLA",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x3B96d491f067912D18563d56858Ba7d6EC67a6fa",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -483,7 +377,7 @@
       {
         "item": "0x5fA5B62c8AF877CB37031e0a3B2f34A78e3C56A6",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -492,7 +386,7 @@
       {
         "item": "0x6Ede7F19df5df6EF23bD5B9CeDb651580Bdf56Ca",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -501,7 +395,7 @@
       {
         "item": "0xC4dAf3b5e2A9e93861c3FBDd25f1e943B8D87417",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -509,7 +403,7 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
       "rebalanceSlippage": "995",
       "restructureSlippage": "990",
@@ -520,13 +414,13 @@
   },
   "0x907FeB27f8cc5b003Db7e62dfc2f9B01ce3FADd6": {
     "name": "Enso Potato_Swap",
-    "symbol": "Enso Potato_Swap",
+    "symbol": "eDHPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0xbBC455cb4F1B9e4bFC4B73970d360c8f032EfEE6",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -535,7 +429,7 @@
       {
         "item": "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -543,7 +437,7 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
       "rebalanceSlippage": "995",
       "restructureSlippage": "990",
@@ -552,15 +446,53 @@
       "set": false
     }
   },
+  "0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD": {
+    "name": "Enso ETH 2x Flexible Leverage Index",
+    "symbol": "eETH2x-FLI",
+    "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
+    "items": [
+      {
+        "item": "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e",
+        "data": {
+          "adapters": ["0x23085950d89D3eb169c372D70362B7a40e319701"],
+          "path": [],
+          "cache": "0x00000000000000000000000000000000000000000000000000000000000001f4"
+        },
+        "percentage": "2000"
+      },
+      {
+        "item": "0xE4922afAB0BbaDd8ab2a88E0C79d884Ad337fcA6",
+        "data": {
+          "adapters": [
+            "0xE81b063126e9D5ec6C30257Ef0bE595A370ad894",
+            "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
+            "0x23085950d89D3eb169c372D70362B7a40e319701"
+          ],
+          "path": ["0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"],
+          "cache": "0x000000000000000000000000030ba81f1c18d280636f32af80b9aad02cf0854e"
+        },
+        "percentage": "-1000"
+      }
+    ],
+    "state": {
+      "timelock": "0",
+      "rebalanceThreshold": "50",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
+      "performanceFee": "0",
+      "social": true,
+      "set": false
+    }
+  },
   "0xD6cb2aDF47655B1bABdDc214d79257348CBC39A7": {
     "name": "Enso Oracle Top 5 Tokens Index",
-    "symbol": "Enso Oracle Top 5 Tokens Index",
+    "symbol": "eORCL5",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -569,7 +501,7 @@
       {
         "item": "0x0b38210ea11411557c13457D4dA7dC6ea731B88a",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -578,7 +510,7 @@
       {
         "item": "0x4c11249814f11b9346808179Cf06e71ac328c1b5",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -587,7 +519,7 @@
       {
         "item": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -596,7 +528,7 @@
       {
         "item": "0x84cA8bc7997272c7CfB4D0Cd3D55cd942B3c9419",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -605,7 +537,7 @@
       {
         "item": "0xBA11D00c5f74255f56a5E366F4F77f5A186d7f55",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -613,10 +545,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -624,13 +556,13 @@
   },
   "0x0f4c00139602AB502Bc7c1c0e71D6CB72A9FB0e7": {
     "name": "Enso dHEDGE Top Index",
-    "symbol": "Enso dHEDGE Top Index",
+    "symbol": "eDTOP",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -639,7 +571,7 @@
       {
         "item": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -648,7 +580,7 @@
       {
         "item": "0xe1aFe1Fd76Fd88f78cBf599ea1846231B8bA3B6B",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -657,7 +589,7 @@
       {
         "item": "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -665,10 +597,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -676,13 +608,13 @@
   },
   "0xfDC4a3FC36df16a78edCAf1B837d3ACAaeDB2CB4": {
     "name": "Enso ScifiToken",
-    "symbol": "Enso ScifiToken",
+    "symbol": "eSCIFI",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -691,7 +623,7 @@
       {
         "item": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -700,7 +632,7 @@
       {
         "item": "0x1fDaB294EDA5112B7d066ED8F2E4E562D5bCc664",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -709,7 +641,7 @@
       {
         "item": "0x4E15361FD6b4BB609Fa63C81A2be19d873717870",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -718,7 +650,7 @@
       {
         "item": "0x50D1c9771902476076eCFc8B2A83Ad6b9355a4c9",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -727,7 +659,7 @@
       {
         "item": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -736,7 +668,7 @@
       {
         "item": "0x84cA8bc7997272c7CfB4D0Cd3D55cd942B3c9419",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -745,7 +677,7 @@
       {
         "item": "0x92D6C1e31e14520e676a687F0a93788B716BEff5",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -754,7 +686,7 @@
       {
         "item": "0xba100000625a3754423978a60c9317c58a424e3D",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -763,7 +695,7 @@
       {
         "item": "0xbC396689893D065F41bc2C6EcbeE5e0085233447",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -772,7 +704,7 @@
       {
         "item": "0xD533a949740bb3306d119CC777fa900bA034cd52",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -780,10 +712,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -791,13 +723,13 @@
   },
   "0xb4bebD34f6DaaFd808f73De0d10235a92Fbb6c3D": {
     "name": "Enso Yearn Ecosystem Token Index",
-    "symbol": "Enso Yearn Ecosystem Token Index",
+    "symbol": "eYETI",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -806,7 +738,7 @@
       {
         "item": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -815,7 +747,7 @@
       {
         "item": "0x2ba592F78dB6436527729929AAf6c908497cB200",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -824,7 +756,7 @@
       {
         "item": "0x38e4adB44ef08F22F5B5b76A8f0c2d0dCbE7DcA1",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -833,7 +765,7 @@
       {
         "item": "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -842,7 +774,7 @@
       {
         "item": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -850,10 +782,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -861,13 +793,13 @@
   },
   "0x0ac1DBa8252240589266194F9C27a42229E84B19": {
     "name": "Enso A-DAM Public Fund ",
-    "symbol": "Enso A-DAM Public Fund ",
+    "symbol": "eDHPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x1715AC0743102BF5Cd58EfBB6Cf2dC2685d967b6",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -876,7 +808,7 @@
       {
         "item": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -885,7 +817,7 @@
       {
         "item": "0xe1aFe1Fd76Fd88f78cBf599ea1846231B8bA3B6B",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -894,7 +826,7 @@
       {
         "item": "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -902,10 +834,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -913,13 +845,13 @@
   },
   "0xd076b9865feb49A43Aa38c06b0432dF6b6cBCA9E": {
     "name": "Enso Jesse Livermore Hearts Crypto",
-    "symbol": "Enso Jesse Livermore Hearts Crypto",
+    "symbol": "eDHPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -927,10 +859,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -938,13 +870,13 @@
   },
   "0x3A4851597F36F459b58e65C55c8f3a8710313Fc7": {
     "name": "Enso SNX  Debt Pool Mirror",
-    "symbol": "Enso SNX  Debt Pool Mirror",
+    "symbol": "eDHPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -952,10 +884,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -963,13 +895,13 @@
   },
   "0xe8e8486228753E01Dbc222dA262Aa706Bd67e601": {
     "name": "Enso Arch Ethereum Web3",
-    "symbol": "Enso Arch Ethereum Web3",
+    "symbol": "eWEB3",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -978,7 +910,7 @@
       {
         "item": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -987,7 +919,7 @@
       {
         "item": "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -996,7 +928,7 @@
       {
         "item": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1005,7 +937,7 @@
       {
         "item": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1014,7 +946,7 @@
       {
         "item": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1023,7 +955,7 @@
       {
         "item": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1032,7 +964,7 @@
       {
         "item": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1041,7 +973,7 @@
       {
         "item": "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1050,7 +982,7 @@
       {
         "item": "0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1059,7 +991,7 @@
       {
         "item": "0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1068,7 +1000,7 @@
       {
         "item": "0xc00e94Cb662C3520282E6f5717214004A7f26888",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1077,7 +1009,7 @@
       {
         "item": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1086,7 +1018,7 @@
       {
         "item": "0xc944E90C64B2c07662A292be6244BDf05Cda44a7",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1095,7 +1027,7 @@
       {
         "item": "0xD533a949740bb3306d119CC777fa900bA034cd52",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1104,7 +1036,7 @@
       {
         "item": "0xF629cBd94d3791C9250152BD8dfBDF380E2a3B9c",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1113,7 +1045,7 @@
       {
         "item": "0xfF20817765cB7f73d4bde2e66e067E58D11095C2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1121,10 +1053,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -1132,13 +1064,13 @@
   },
   "0x9A48BD0EC040ea4f1D3147C025cd4076A2e71e3e": {
     "name": "Enso PieDAO USD++ Pool",
-    "symbol": "Enso PieDAO USD++ Pool",
+    "symbol": "eUSD++",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x0000000000085d4780B73119b644AE5ecd22b376",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1147,7 +1079,7 @@
       {
         "item": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1156,7 +1088,7 @@
       {
         "item": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1165,7 +1097,7 @@
       {
         "item": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1173,10 +1105,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -1184,13 +1116,13 @@
   },
   "0x68bB81B3F67f7AAb5fd1390ECB0B8e1a806F2465": {
     "name": "Enso NFT Platform Index",
-    "symbol": "Enso NFT Platform Index",
+    "symbol": "eNFTP",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1199,7 +1131,7 @@
       {
         "item": "0x15D4c048F83bd7e37d49eA4C83a07267Ec4203dA",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1208,7 +1140,7 @@
       {
         "item": "0x18aAA7115705e8be94bfFEBDE57Af9BFc265B998",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1217,7 +1149,7 @@
       {
         "item": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1226,7 +1158,7 @@
       {
         "item": "0x87d73E916D7057945c9BcD8cdd94e42A6F47f776",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1235,7 +1167,7 @@
       {
         "item": "0xBBc2AE13b23d715c30720F079fcd9B4a74093505",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1244,7 +1176,7 @@
       {
         "item": "0xe53EC727dbDEB9E2d5456c3be40cFF031AB40A55",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1253,7 +1185,7 @@
       {
         "item": "0xF5D669627376EBd411E34b98F19C868c8ABA5ADA",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1262,7 +1194,7 @@
       {
         "item": "0xF629cBd94d3791C9250152BD8dfBDF380E2a3B9c",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1271,7 +1203,7 @@
       {
         "item": "0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1279,10 +1211,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -1290,13 +1222,13 @@
   },
   "0x391603b1C3b03A0133AD82E91692790e58f73570": {
     "name": "Enso Guttastemning",
-    "symbol": "Enso Guttastemning",
+    "symbol": "eDHPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1304,10 +1236,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -1315,24 +1247,37 @@
   },
   "0x0B498ff89709d3838a063f1dFA463091F9801c2b": {
     "name": "Enso BTC 2x Flexible Leverage Index",
-    "symbol": "Enso BTC 2x Flexible Leverage Index",
+    "symbol": "eBTC2x-FLI",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
-        "item": "0xccF4429DB6322D5C611ee964527D42E5d685DD6a",
+        "item": "0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0x23085950d89D3eb169c372D70362B7a40e319701"],
           "path": [],
-          "cache": "0x"
+          "cache": "0x00000000000000000000000000000000000000000000000000000000000001f4"
         },
-        "percentage": "1000"
+        "percentage": "2000"
+      },
+      {
+        "item": "0xE4922afAB0BbaDd8ab2a88E0C79d884Ad337fcA6",
+        "data": {
+          "adapters": [
+            "0xE81b063126e9D5ec6C30257Ef0bE595A370ad894",
+            "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
+            "0x23085950d89D3eb169c372D70362B7a40e319701"
+          ],
+          "path": ["0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"],
+          "cache": "0x0000000000000000000000009ff58f4ffb29fa2266ab25e75e2a8b3503311656"
+        },
+        "percentage": "-1000"
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -1340,13 +1285,13 @@
   },
   "0x63aE7457b8Be660DAaf308a07db6bccB733B92Df": {
     "name": "Enso Convex Strategies ",
-    "symbol": "Enso Convex Strategies ",
+    "symbol": "eDHPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1355,7 +1300,7 @@
       {
         "item": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1364,7 +1309,7 @@
       {
         "item": "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1372,10 +1317,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -1383,13 +1328,13 @@
   },
   "0x23687D9d40F9Ecc86E7666DDdB820e700F954526": {
     "name": "Enso ETH USD Yield Farm",
-    "symbol": "Enso ETH USD Yield Farm",
+    "symbol": "eUSDAPY",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1398,7 +1343,7 @@
       {
         "item": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1406,10 +1351,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -1417,13 +1362,13 @@
   },
   "0xBbA8120b355bC70E771F28e151a141A126843CdF": {
     "name": "Enso Cage Meme Index",
-    "symbol": "Enso Cage Meme Index",
+    "symbol": "eCMI",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x3832d2F059E55934220881F831bE501D180671A7",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1432,7 +1377,7 @@
       {
         "item": "0x761D38e5ddf6ccf6Cf7c55759d5210750B5D60F3",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1441,7 +1386,7 @@
       {
         "item": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1450,7 +1395,7 @@
       {
         "item": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1458,10 +1403,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false
@@ -1469,13 +1414,13 @@
   },
   "0xF059aFA5239eD6463a00FC06a447c14Fe26406e1": {
     "name": "Enso ETH WBTC Yield Farm",
-    "symbol": "Enso ETH WBTC Yield Farm",
+    "symbol": "eWBTCAPY",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
       {
         "item": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1484,7 +1429,7 @@
       {
         "item": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
         "data": {
-          "adapters": ["0x6E5DaCDd34032C687B0e2C7b612eee3c850271dE"],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
@@ -1492,10 +1437,10 @@
       }
     ],
     "state": {
-      "timelock": "604800",
+      "timelock": "0",
       "rebalanceThreshold": "50",
-      "rebalanceSlippage": "995",
-      "restructureSlippage": "990",
+      "rebalanceSlippage": "990",
+      "restructureSlippage": "985",
       "performanceFee": "0",
       "social": true,
       "set": false

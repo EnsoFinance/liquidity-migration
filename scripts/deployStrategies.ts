@@ -1,8 +1,9 @@
 import hre from "hardhat";
+import { Event } from "ethers";
 import { StrategyParamsMapJson, StrategyParams } from "../src/types";
 import { getLiveContracts } from "@ensofinance/v1-core";
-import { waitForLowGas, waitForTransaction, getExpectedBaseFee, TransactionArgs } from "./common";
-import { fromJsonStrategyParams } from "../src/utils";
+import { waitForTransaction, TransactionArgs } from "./common";
+import { write2File, fromJsonStrategyParams } from "../src/utils";
 import { DeployedContracts } from "../src/types";
 import creationParameters from "../out/strategy_creation_inputs.json";
 import deployments from "../deployments.json";
@@ -25,7 +26,7 @@ async function main() {
     const currentBlock = await signer.provider.getBlockNumber();
     const params: StrategyParams = fromJsonStrategyParams(paramsJson[lps[i]]);
     try {
-      const strategy = await waitForTransaction(async (txArgs: TransactionArgs) => {
+      const receipt = await waitForTransaction(async (txArgs: TransactionArgs) => {
         return enso.platform.strategyFactory.createStrategy(
           params.manager,
           params.name,
@@ -37,11 +38,13 @@ async function main() {
           txArgs,
         );
       }, signer);
-      log(lps[i], strategy.address);
+      const strategyAddress = receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
+      log(lps[i], strategyAddress);
     } catch (err) {
       console.log(err);
     }
   }
+  write2File("deployed_strategies.json", contracts);
 }
 
 main()

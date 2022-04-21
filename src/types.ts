@@ -3,7 +3,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { InitialState, StrategyItem, TradeData } from "@ensofinance/v1-core";
 
 // Exported json files
-export type ScriptOutput = Erc20HoldersJson | PoolMapJson | StrategyParamsMapJson;
+export type ScriptOutput = Erc20HoldersJson | PoolMapJson | StrategyParamsMapJson | DeployedContracts;
 
 export enum AcceptedProtocols {
   Indexed,

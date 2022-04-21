@@ -1,5 +1,4 @@
 import fs from "fs";
-import bignumber from "bignumber.js";
 import { BigNumber, Contract, Event } from "ethers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -19,7 +18,7 @@ import {
   StrategyParams,
 } from "../src/types";
 import { getAdapterFromAddr } from "./mainnet";
-import { INITIAL_STATE } from "./constants";
+import { INITIAL_STATE, FACTORY_REGISTRIES } from "./constants";
 import {
   EnsoEnvironment,
   LiveEnvironment,
@@ -29,6 +28,7 @@ import {
   Multicall,
   StrategyItem,
   InitialState,
+  Tokens,
   prepareStrategy,
   encodeSettleTransfer,
 } from "@ensofinance/v1-core";
@@ -51,19 +51,21 @@ export function write2File(fileName: string, json: ScriptOutput) {
 }
 
 export async function getNameOrDefault(erc20: Contract): Promise<string> {
-  let name = "unknown";
   try {
-    name = await erc20.name();
-  } catch {}
-  return `Enso ${name}`;
+    const name = await erc20.name();
+    return `Enso ${name}`;
+  } catch {
+    return "Enso Strategy";
+  }
 }
 
 export async function getSymbolOrDefault(erc20: Contract): Promise<string> {
-  let symbol = "unknown";
   try {
-    symbol = await erc20.symbol();
-  } catch {}
-  return symbol;
+    const symbol = await erc20.symbol();
+    return `e${symbol}`;
+  } catch {
+    return "STRAT";
+  }
 }
 
 export async function getStrategyCreationParams(
@@ -76,21 +78,82 @@ export async function getStrategyCreationParams(
   stratName?: string,
   stratSymbol?: string,
 ): Promise<StrategyParams> {
+  const tokens = new Tokens();
   const erc20LP = toErc20(stakedLP, signer);
   // Check optional params
   const name: string = stratName || (await getNameOrDefault(erc20LP));
-  const symbol: string = stratSymbol || (await getNameOrDefault(erc20LP));
+  const symbol: string = stratSymbol || (await getSymbolOrDefault(erc20LP));
   const state: InitialState = initialState || INITIAL_STATE;
   // Get underlying assets
   const adapter = await getAdapterFromAddr(adapterAddr, signer);
   const underlying = await adapter.outputTokens(stakedLP);
-  // TODO: get leverage adapter when needed
-  const items = await setupStrategyItems(
-    enso.platform.oracles.ensoOracle,
-    enso.adapters.uniswapV3.address,
-    stakedLP,
-    underlying,
-  );
+
+  let items: StrategyItem[];
+  switch (stakedLP.toLowerCase()) {
+    case FACTORY_REGISTRIES.ETH_2X.toLowerCase():
+      // Setup slippages
+      state.rebalanceSlippage = BigNumber.from(990);
+      state.restructureSlippage = BigNumber.from(985);
+      // Setup custom strategy
+      items = prepareStrategy(
+        [
+          {
+            token: tokens.aWETH,
+            percentage: BigNumber.from(2000),
+            adapters: [enso.adapters.aaveV2.address],
+            path: [],
+            cache: ethers.utils.defaultAbiCoder.encode(
+              ["uint16"],
+              [500], // Multiplier 50% (divisor = 1000). For calculating the amount to purchase based off of the percentage
+            ),
+          },
+          {
+            token: tokens.debtUSDC,
+            percentage: BigNumber.from(-1000),
+            adapters: [enso.adapters.aaveV2Debt.address, enso.adapters.uniswapV3.address, enso.adapters.aaveV2.address],
+            path: [tokens.usdc, tokens.weth],
+            cache: ethers.utils.defaultAbiCoder.encode(["address"], [tokens.aWETH]),
+          },
+        ],
+        enso.adapters.uniswapV3.address,
+      );
+      break;
+    case FACTORY_REGISTRIES.BTC_2X.toLowerCase():
+      // Setup slippages
+      state.rebalanceSlippage = BigNumber.from(990);
+      state.restructureSlippage = BigNumber.from(985);
+      // Setup custom strategy
+      items = prepareStrategy(
+        [
+          {
+            token: tokens.aWBTC,
+            percentage: ethers.BigNumber.from(2000),
+            adapters: [enso.adapters.aaveV2.address],
+            path: [],
+            cache: ethers.utils.defaultAbiCoder.encode(
+              ["uint16"],
+              [500], // Multiplier 50% (divisor = 1000). For calculating the amount to purchase based off of the percentage
+            ),
+          },
+          {
+            token: tokens.debtUSDC,
+            percentage: BigNumber.from(-1000),
+            adapters: [enso.adapters.aaveV2Debt.address, enso.adapters.uniswapV3.address, enso.adapters.aaveV2.address],
+            path: [tokens.usdc, tokens.weth],
+            cache: ethers.utils.defaultAbiCoder.encode(["address"], [tokens.aWBTC]),
+          },
+        ],
+        enso.adapters.uniswapV3.address,
+      );
+      break;
+    default:
+      items = await setupStrategyItems(
+        enso.platform.oracles.ensoOracle,
+        enso.adapters.uniswapV3.address,
+        stakedLP,
+        underlying,
+      );
+  }
   const params: StrategyParams = {
     name,
     symbol,

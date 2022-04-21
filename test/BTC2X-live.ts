@@ -6,7 +6,15 @@ import { LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
 import { IERC20__factory, IStrategy__factory, IUniswapV3Router__factory } from "../typechain";
 import { AcceptedProtocols, Adapters } from "../src/types";
 import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { FACTORY_REGISTRIES, TOKENSET_ISSUANCE_MODULES, UNISWAP_V3_ROUTER, DEPOSIT_SLIPPAGE } from "../src/constants";
+import {
+  ENSO_DEPLOYER,
+  ENSO_CONTRACTS_MULTISIG,
+  ENSO_TREASURY_MULTISIG,
+  FACTORY_REGISTRIES,
+  TOKENSET_ISSUANCE_MODULES,
+  UNISWAP_V3_ROUTER,
+  DEPOSIT_SLIPPAGE,
+} from "../src/constants";
 import { estimateTokens, increaseTime } from "../src/utils";
 import { liveMigrationContract, impersonateWithEth, getAdapterFromType } from "../src/mainnet";
 import {
@@ -21,9 +29,6 @@ import {
 } from "@ensofinance/v1-core";
 
 const { WeiPerEther } = ethers.constants;
-const ENSO_DEPLOYER = "0x77b59E6CcDB8962192e48a848fdeaf6c0796Afa4";
-const ENSO_CONTRACTS_MULTISIG = "0xca702d224d61ae6980c8c7d4d98042e22b40ffdb";
-const ENSO_TREASURY_MULTISIG = "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F";
 
 const INITIAL_STATE: InitialState = {
   timelock: BigNumber.from(60), // 1 minute
