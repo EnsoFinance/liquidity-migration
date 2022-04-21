@@ -22,7 +22,8 @@
     "Claimable": "0xE39d9712F3749b9663627331d9BCa15Ac69b6170",
     "LiquidityMigrationV2": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
     "MigrationAdapter": "0xAf8d0523660A94494c56d5445e7BfE8C61802B59",
-    "MigrationCoordinator": "0x6CD0df59370B38261E251Bd786B2f320595005d1"
+    "MigrationCoordinator": "0x6CD0df59370B38261E251Bd786B2f320595005d1",
+    "MigrationControllerImplementation": "0x81c8bE47b09CAF806ac5B757990B0725ff6cefc8"
   },
   "hardhat": {
     "IndexCoopAdapter": "0x9c9326C521895c78414BD3C2945e47AFC4Ef16cc",
@@ -36,7 +37,8 @@
     "Claimable": "0xE39d9712F3749b9663627331d9BCa15Ac69b6170",
     "LiquidityMigrationV2": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
     "MigrationAdapter": "0xAf8d0523660A94494c56d5445e7BfE8C61802B59",
-    "MigrationCoordinator": "0x6CD0df59370B38261E251Bd786B2f320595005d1"
+    "MigrationCoordinator": "0x6CD0df59370B38261E251Bd786B2f320595005d1",
+    "MigrationControllerImplementation": "0x81c8bE47b09CAF806ac5B757990B0725ff6cefc8"
   },
   "mainnet": {
     "IndexCoopAdapter": "0x9c9326C521895c78414BD3C2945e47AFC4Ef16cc",
@@ -51,6 +53,6 @@
     "LiquidityMigrationV2": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
     "MigrationAdapter": "0xAf8d0523660A94494c56d5445e7BfE8C61802B59",
     "MigrationCoordinator": "0x6CD0df59370B38261E251Bd786B2f320595005d1",
-    "MigrationControllerImplementation": "0x65734B96c4295B70391c86753fb9740e881792BA"
+    "MigrationControllerImplementation": "0x81c8bE47b09CAF806ac5B757990B0725ff6cefc8"
   }
 }

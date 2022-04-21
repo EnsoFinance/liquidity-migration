@@ -1,7 +1,7 @@
 import hre from "hardhat";
 import { BigNumber, Contract } from "ethers";
 
-const MAX_GAS_PRICE = hre.ethers.BigNumber.from("85000000000"); // 85 gWEI
+const MAX_GAS_PRICE = hre.ethers.BigNumber.from("150000000000"); // 85 gWEI
 
 export type TransactionArgs = {
   maxPriorityFeePerGas: BigNumber;

@@ -4,12 +4,22 @@ import { Adapters } from "../src/types";
 import { ENSO_CONTRACTS_MULTISIG, ENSO_TREASURY_MULTISIG } from "../src/constants";
 import { impersonateAccount, liveMigrationContract, getAdapterFromType } from "../src/mainnet";
 import { getLiveContracts } from "@ensofinance/v1-core";
-import deployments from "../deployments.json";
+import deploymentsJSON from "../deployments.json";
+const deployments: { [key: string]: { [key: string]: string } } = deploymentsJSON;
+
+let contracts: { [key: string]: string } = {};
+let network: string;
+if (process.env.HARDHAT_NETWORK) {
+  network = process.env.HARDHAT_NETWORK;
+  //ts-ignore
+  if (deployments[network]) contracts = deployments[network];
+}
 
 async function main() {
   const [signer] = await hre.ethers.getSigners();
   const enso = getLiveContracts(signer);
 
+  /*
   //Impersonate Treasury Multisig
   const treasury = await impersonateAccount(ENSO_TREASURY_MULTISIG);
   const liquidityMigration = await liveMigrationContract(treasury);
@@ -28,13 +38,15 @@ async function main() {
   //Add Leverage2XAdapter to IndexCoopAdapter
   console.log("Updating leverage adapter on IndexedAdapter...");
   await indexCoopAdapter.updateLeverageAdapter(enso.adapters.leverage.address);
+  */
+
   //Impersonate Upgrade Multisig
   const upgrades = await impersonateAccount(ENSO_CONTRACTS_MULTISIG);
   //Update StrategyController implementation
   console.log("Switching implementation...");
   await enso.platform.administration.platformProxyAdmin
     .connect(upgrades)
-    .upgrade(enso.platform.controller.address, deployments.mainnet.MigrationControllerImplementation);
+    .upgrade(enso.platform.controller.address, contracts["MigrationControllerImplementation"]);
 }
 
 main()

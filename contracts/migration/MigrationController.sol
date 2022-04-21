@@ -27,10 +27,10 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
 
     event Withdraw(address indexed strategy, address indexed account, uint256 value, uint256 amount);
     event Deposit(address indexed strategy, address indexed account, uint256 value, uint256 amount);
-    event Balanced(address indexed strategy, uint256 total);
+    event Balanced(address indexed strategy, uint256 totalBefore, uint256 totalAfter);
     event NewStructure(address indexed strategy, StrategyItem[] items, bool indexed finalized);
     event NewValue(address indexed strategy, TimelockCategory category, uint256 newValue, bool indexed finalized);
-    event StrategyOpen(address indexed strategy, uint256 performanceFee);
+    event StrategyOpen(address indexed strategy);
     event StrategySet(address indexed strategy);
 
     constructor(
@@ -144,6 +144,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
     }
 
     function _setInitialState(address strategy, InitialState memory state) private {
+        _checkAndEmit(strategy, TimelockCategory.PERFORMANCE, uint256(state.performanceFee), true);
         _checkAndEmit(strategy, TimelockCategory.THRESHOLD, uint256(state.rebalanceThreshold), true);
         _checkAndEmit(strategy, TimelockCategory.REBALANCE_SLIPPAGE, uint256(state.rebalanceSlippage), true);
         _checkAndEmit(strategy, TimelockCategory.RESTRUCTURE_SLIPPAGE, uint256(state.restructureSlippage), true);
@@ -155,12 +156,9 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
             state.social,
             state.set
         );
+        IStrategy(strategy).updatePerformanceFee(state.performanceFee);
         IStrategy(strategy).updateRebalanceThreshold(state.rebalanceThreshold);
-        if (state.social) {
-            _checkDivisor(uint256(state.performanceFee));
-            IStrategy(strategy).updatePerformanceFee(state.performanceFee);
-            emit StrategyOpen(strategy, state.performanceFee);
-        }
+        if (state.social) emit StrategyOpen(strategy);
         if (state.set) emit StrategySet(strategy);
         emit NewValue(strategy, TimelockCategory.TIMELOCK, uint256(state.timelock), true);
     }
@@ -174,7 +172,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         require(!strategy.supportsSynths(), "Synths not supported");
         address[] memory strategyItems = strategy.items();
         for (uint256 i = 0; i < strategyItems.length; i++) {
-            if (EstimatorCategory(registry.estimatorCategories(strategyItems[i])) == EstimatorCategory.STRATEGY)
+            if (registry.estimatorCategories(strategyItems[i]) == uint256(EstimatorCategory.STRATEGY))
                 _checkCyclicDependency(test, IStrategy(strategyItems[i]), registry);
         }
     }
