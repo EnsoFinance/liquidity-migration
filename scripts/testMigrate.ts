@@ -49,7 +49,7 @@ async function main() {
   //Update StrategyController implementation
   await enso.platform.administration.platformProxyAdmin
     .connect(upgrades)
-    .upgrade(enso.platform.controller.address, "0xEfbF7555cD248571b88562070d06E0Da25Fc2034");
+    .upgrade(enso.platform.controller.address, "0x43DaCf2d9E6fb37449Bb962986219aE787d80cc3");
 
   //Test Strategies
 }

@@ -120,7 +120,7 @@ export const ENSO_DEPLOYER: string = "0x77b59E6CcDB8962192e48a848fdeaf6c0796Afa4
 
 export const WETH: string = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
-export const SUSD: string = "0x57ab1ec28d129707052df4df418d58a2d46d5f51";
+export const SUSD: string = "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51";
 
 export const UNISWAP_V2_ROUTER: string = "0xf164fC0Ec4E93095b804a4795bBe1e041497b92a";
 

@@ -19,7 +19,7 @@ import {
   TokenPositionMapJson,
 } from "../src/types";
 import { getAdapterFromAddr } from "./mainnet";
-import { INITIAL_STATE, FACTORY_REGISTRIES } from "./constants";
+import { INITIAL_STATE, FACTORY_REGISTRIES, SUSD } from "./constants";
 import {
   EnsoEnvironment,
   LiveEnvironment,
@@ -124,9 +124,9 @@ export async function getStrategyCreationParams(
           {
             token: tokens.debtUSDC,
             percentage: BigNumber.from(-1000),
-            adapters: [enso.adapters.aaveV2Debt.address, enso.adapters.uniswapV3.address, enso.adapters.aaveV2.address],
+            adapters: [enso.adapters.aaveV2Debt.address, enso.adapters.uniswapV3.address],
             path: [tokens.usdc, tokens.weth],
-            cache: ethers.utils.defaultAbiCoder.encode(["address"], [tokens.aWETH]),
+            cache: ethers.utils.defaultAbiCoder.encode(["address[]"], [[tokens.aWETH]]),
           },
         ],
         enso.adapters.uniswapV3.address,
@@ -142,8 +142,8 @@ export async function getStrategyCreationParams(
           {
             token: tokens.aWBTC,
             percentage: ethers.BigNumber.from(2000),
-            adapters: [enso.adapters.aaveV2.address],
-            path: [],
+            adapters: [enso.adapters.uniswapV3.address, enso.adapters.aaveV2.address],
+            path: [tokens.wbtc],
             cache: ethers.utils.defaultAbiCoder.encode(
               ["uint16"],
               [500], // Multiplier 50% (divisor = 1000). For calculating the amount to purchase based off of the percentage
@@ -152,9 +152,9 @@ export async function getStrategyCreationParams(
           {
             token: tokens.debtUSDC,
             percentage: BigNumber.from(-1000),
-            adapters: [enso.adapters.aaveV2Debt.address, enso.adapters.uniswapV3.address, enso.adapters.aaveV2.address],
+            adapters: [enso.adapters.aaveV2Debt.address, enso.adapters.uniswapV3.address],
             path: [tokens.usdc, tokens.weth],
-            cache: ethers.utils.defaultAbiCoder.encode(["address"], [tokens.aWBTC]),
+            cache: ethers.utils.defaultAbiCoder.encode(["address[]"], [[tokens.aWBTC]]),
           },
         ],
         enso.adapters.uniswapV3.address,
@@ -333,6 +333,7 @@ export async function setupStrategyItems(
   let positions = [] as Position[];
   const [total, estimates] = await estimateTokens(oracle, pool, underlying);
 
+  let synthDetected = false;
   for (let i = 0; i < underlying.length; i++) {
     let percentage = estimates[i].mul(1000).mul(1e10).div(total).div(1e10);
     if (percentage.eq(BigNumber.from(0))) {
@@ -352,7 +353,10 @@ export async function setupStrategyItems(
 
     const positionData = positionsData[underlying[i]];
     if (positionData) {
-      position.adapters = positionData.adapters.map((adapterName: string) => ADAPTER_MAPPER[adapterName]);
+      position.adapters = positionData.adapters.map((adapterName: string) => {
+        if (adapterName == "SynthetixAdapter") synthDetected = true;
+        return ADAPTER_MAPPER[adapterName];
+      });
       position.path = positionData.path;
     } else {
       console.log(`Position not found for ${underlying[i]}`);
@@ -373,6 +377,26 @@ export async function setupStrategyItems(
       const position = positions[0];
       position.percentage = position.percentage?.sub(totalPercentage - 1000);
       positions[0] = position;
+    }
+  }
+
+  if (synthDetected) {
+    // Add sUSD if there isn't already
+    const susdIndex = positions.findIndex(position => position.token.toLowerCase() === SUSD.toLowerCase());
+    if (susdIndex === -1) {
+      const positionData = positionsData[SUSD];
+      if (positionData) {
+        const adapters = positionData.adapters.map((adapterName: string) => ADAPTER_MAPPER[adapterName]);
+        const path = positionData.path;
+        positions.push({
+          token: SUSD,
+          percentage: BigNumber.from(0),
+          adapters,
+          path,
+        });
+      } else {
+        console.log("sUSD Position Not Found!");
+      }
     }
   }
   return prepareStrategy(positions, adapter);

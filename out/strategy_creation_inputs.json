@@ -11,7 +11,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "50"
+        "percentage": "51"
       },
       {
         "item": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
@@ -20,7 +20,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "224"
+        "percentage": "222"
       },
       {
         "item": "0x408e41876cCCDC0F92210600ef50372656052a38",
@@ -29,7 +29,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "27"
+        "percentage": "29"
       },
       {
         "item": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
@@ -38,7 +38,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "50"
+        "percentage": "53"
       },
       {
         "item": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
@@ -47,7 +47,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "190"
+        "percentage": "188"
       },
       {
         "item": "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2",
@@ -56,7 +56,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "121"
+        "percentage": "122"
       },
       {
         "item": "0xa0246c9032bC3A600820415aE600c6388619A14D",
@@ -65,7 +65,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "11"
+        "percentage": "12"
       },
       {
         "item": "0xba100000625a3754423978a60c9317c58a424e3D",
@@ -83,7 +83,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "89"
+        "percentage": "91"
       },
       {
         "item": "0xc00e94Cb662C3520282E6f5717214004A7f26888",
@@ -92,7 +92,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "72"
+        "percentage": "70"
       },
       {
         "item": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
@@ -101,7 +101,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "107"
+        "percentage": "99"
       },
       {
         "item": "0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B",
@@ -110,16 +110,16 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "15"
+        "percentage": "16"
       },
       {
         "item": "0xdeFA4e8a7bcBA345F687a2f1456F5Edd9CE97202",
         "data": {
-          "adapters": [],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": [],
           "cache": "0x"
         },
-        "percentage": "32"
+        "percentage": "35"
       }
     ],
     "state": {
@@ -144,7 +144,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "324"
+        "percentage": "321"
       },
       {
         "item": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
@@ -153,7 +153,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "341"
+        "percentage": "342"
       },
       {
         "item": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -162,7 +162,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "335"
+        "percentage": "337"
       }
     ],
     "state": {
@@ -187,7 +187,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "130"
+        "percentage": "135"
       },
       {
         "item": "0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671",
@@ -196,7 +196,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "22"
+        "percentage": "21"
       },
       {
         "item": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
@@ -205,7 +205,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "250"
+        "percentage": "249"
       },
       {
         "item": "0x58b6A8A3302369DAEc383334672404Ee733aB239",
@@ -214,7 +214,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "72"
+        "percentage": "75"
       },
       {
         "item": "0x967da4048cD07aB37855c090aAF366e4ce1b9F48",
@@ -250,7 +250,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "241"
+        "percentage": "235"
       }
     ],
     "state": {
@@ -275,7 +275,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "125"
+        "percentage": "124"
       },
       {
         "item": "0x0d438F3b5175Bebc262bF23753C1E53d03432bDE",
@@ -284,7 +284,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "124"
+        "percentage": "125"
       },
       {
         "item": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
@@ -293,7 +293,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "125"
+        "percentage": "127"
       },
       {
         "item": "0x38e4adB44ef08F22F5B5b76A8f0c2d0dCbE7DcA1",
@@ -302,7 +302,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "126"
+        "percentage": "128"
       },
       {
         "item": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
@@ -311,7 +311,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "128"
+        "percentage": "124"
       },
       {
         "item": "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2",
@@ -329,7 +329,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "124"
+        "percentage": "125"
       },
       {
         "item": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
@@ -338,7 +338,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "124"
+        "percentage": "123"
       }
     ],
     "state": {
@@ -360,11 +360,16 @@
         "item": "0x3B96d491f067912D18563d56858Ba7d6EC67a6fa",
         "data": {
           "adapters": [
-            "0xf16d11753A687Dc99fE4F98D37Bc822F7388782F",
+            "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
+            "0xe3Dc8f700007de47fc72045246D05d24c141ea1A",
             "0x16f5D4B327e5Fd9f87FB29550a26169d0CB160cC",
             "0x7c464a18636CC2f236BC87C70aa4a6F8793DC219"
           ],
-          "path": ["0x674C6Ad92Fd080e4004b2312b45f796a192D27a0", "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522"],
+          "path": [
+            "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "0x674C6Ad92Fd080e4004b2312b45f796a192D27a0",
+            "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522"
+          ],
           "cache": "0x"
         },
         "percentage": "905"
@@ -374,10 +379,15 @@
         "data": {
           "adapters": [
             "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
+            "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
             "0x16f5D4B327e5Fd9f87FB29550a26169d0CB160cC",
             "0x7c464a18636CC2f236BC87C70aa4a6F8793DC219"
           ],
-          "path": ["0x5f98805A4E8be255a32880FDeC7F6728C6568bA0", "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA"],
+          "path": [
+            "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+            "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0",
+            "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA"
+          ],
           "cache": "0x"
         },
         "percentage": "60"
@@ -387,10 +397,15 @@
         "data": {
           "adapters": [
             "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
+            "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
             "0x16f5D4B327e5Fd9f87FB29550a26169d0CB160cC",
             "0x7c464a18636CC2f236BC87C70aa4a6F8793DC219"
           ],
-          "path": ["0x4Fabb145d64652a948d72533023f6E7A623C7C53", "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a"],
+          "path": [
+            "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "0x4Fabb145d64652a948d72533023f6E7A623C7C53",
+            "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a"
+          ],
           "cache": "0x"
         },
         "percentage": "6"
@@ -400,10 +415,15 @@
         "data": {
           "adapters": [
             "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
+            "0xe3Dc8f700007de47fc72045246D05d24c141ea1A",
             "0x16f5D4B327e5Fd9f87FB29550a26169d0CB160cC",
             "0x7c464a18636CC2f236BC87C70aa4a6F8793DC219"
           ],
-          "path": ["0x8E870D67F660D95d5be530380D0eC0bd388289E1", "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6"],
+          "path": [
+            "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "0x1456688345527bE1f37E9e627DA0837D6f08C925",
+            "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6"
+          ],
           "cache": "0x"
         },
         "percentage": "29"
@@ -424,6 +444,15 @@
     "symbol": "eDHPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
+      {
+        "item": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
+        "data": {
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9", "0xe3Dc8f700007de47fc72045246D05d24c141ea1A"],
+          "path": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],
+          "cache": "0x"
+        },
+        "percentage": "0"
+      },
       {
         "item": "0xbBC455cb4F1B9e4bFC4B73970d360c8f032EfEE6",
         "data": {
@@ -470,13 +499,9 @@
       {
         "item": "0xE4922afAB0BbaDd8ab2a88E0C79d884Ad337fcA6",
         "data": {
-          "adapters": [
-            "0xE81b063126e9D5ec6C30257Ef0bE595A370ad894",
-            "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
-            "0x23085950d89D3eb169c372D70362B7a40e319701"
-          ],
+          "adapters": ["0xE81b063126e9D5ec6C30257Ef0bE595A370ad894", "0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": ["0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"],
-          "cache": "0x000000000000000000000000030ba81f1c18d280636f32af80b9aad02cf0854e"
+          "cache": "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000030ba81f1c18d280636f32af80b9aad02cf0854e"
         },
         "percentage": "-1000"
       }
@@ -512,7 +537,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "20"
+        "percentage": "17"
       },
       {
         "item": "0x4c11249814f11b9346808179Cf06e71ac328c1b5",
@@ -521,7 +546,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "136"
+        "percentage": "137"
       },
       {
         "item": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
@@ -530,7 +555,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "566"
+        "percentage": "568"
       },
       {
         "item": "0x84cA8bc7997272c7CfB4D0Cd3D55cd942B3c9419",
@@ -573,7 +598,7 @@
           "path": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],
           "cache": "0x"
         },
-        "percentage": "332"
+        "percentage": "338"
       },
       {
         "item": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",
@@ -582,7 +607,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "206"
+        "percentage": "203"
       },
       {
         "item": "0xe1aFe1Fd76Fd88f78cBf599ea1846231B8bA3B6B",
@@ -591,7 +616,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "100"
+        "percentage": "101"
       },
       {
         "item": "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",
@@ -600,7 +625,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "362"
+        "percentage": "358"
       }
     ],
     "state": {
@@ -634,7 +659,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "3"
+        "percentage": "4"
       },
       {
         "item": "0x1fDaB294EDA5112B7d066ED8F2E4E562D5bCc664",
@@ -643,7 +668,7 @@
           "path": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],
           "cache": "0x"
         },
-        "percentage": "37"
+        "percentage": "38"
       },
       {
         "item": "0x4E15361FD6b4BB609Fa63C81A2be19d873717870",
@@ -652,7 +677,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "275"
+        "percentage": "269"
       },
       {
         "item": "0x50D1c9771902476076eCFc8B2A83Ad6b9355a4c9",
@@ -661,7 +686,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "289"
+        "percentage": "293"
       },
       {
         "item": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
@@ -670,7 +695,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "82"
+        "percentage": "85"
       },
       {
         "item": "0x84cA8bc7997272c7CfB4D0Cd3D55cd942B3c9419",
@@ -688,7 +713,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "60"
+        "percentage": "58"
       },
       {
         "item": "0xba100000625a3754423978a60c9317c58a424e3D",
@@ -706,7 +731,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "50"
+        "percentage": "51"
       },
       {
         "item": "0xD533a949740bb3306d119CC777fa900bA034cd52",
@@ -715,7 +740,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "100"
+        "percentage": "98"
       }
     ],
     "state": {
@@ -740,7 +765,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "339"
+        "percentage": "333"
       },
       {
         "item": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44",
@@ -758,7 +783,7 @@
           "path": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],
           "cache": "0x"
         },
-        "percentage": "264"
+        "percentage": "265"
       },
       {
         "item": "0x38e4adB44ef08F22F5B5b76A8f0c2d0dCbE7DcA1",
@@ -767,7 +792,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "77"
+        "percentage": "79"
       },
       {
         "item": "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
@@ -776,7 +801,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "74"
+        "percentage": "80"
       },
       {
         "item": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
@@ -785,7 +810,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "169"
+        "percentage": "166"
       }
     ],
     "state": {
@@ -810,7 +835,16 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "113"
+        "percentage": "110"
+      },
+      {
+        "item": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
+        "data": {
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9", "0xe3Dc8f700007de47fc72045246D05d24c141ea1A"],
+          "path": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],
+          "cache": "0x"
+        },
+        "percentage": "0"
       },
       {
         "item": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",
@@ -819,7 +853,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "444"
+        "percentage": "443"
       },
       {
         "item": "0xe1aFe1Fd76Fd88f78cBf599ea1846231B8bA3B6B",
@@ -828,7 +862,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "270"
+        "percentage": "274"
       },
       {
         "item": "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",
@@ -855,6 +889,15 @@
     "symbol": "eDHPT",
     "manager": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
     "items": [
+      {
+        "item": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
+        "data": {
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9", "0xe3Dc8f700007de47fc72045246D05d24c141ea1A"],
+          "path": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],
+          "cache": "0x"
+        },
+        "percentage": "0"
+      },
       {
         "item": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",
         "data": {
@@ -921,7 +964,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "113"
+        "percentage": "111"
       },
       {
         "item": "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0",
@@ -930,7 +973,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "50"
+        "percentage": "48"
       },
       {
         "item": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
@@ -939,7 +982,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "84"
+        "percentage": "85"
       },
       {
         "item": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
@@ -948,7 +991,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "42"
+        "percentage": "41"
       },
       {
         "item": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
@@ -957,7 +1000,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "172"
+        "percentage": "174"
       },
       {
         "item": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
@@ -966,7 +1009,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "25"
+        "percentage": "26"
       },
       {
         "item": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
@@ -975,7 +1018,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "66"
+        "percentage": "65"
       },
       {
         "item": "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2",
@@ -993,7 +1036,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "86"
+        "percentage": "88"
       },
       {
         "item": "0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD",
@@ -1011,7 +1054,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "26"
+        "percentage": "25"
       },
       {
         "item": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
@@ -1020,7 +1063,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "36"
+        "percentage": "33"
       },
       {
         "item": "0xc944E90C64B2c07662A292be6244BDf05Cda44a7",
@@ -1029,7 +1072,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "59"
+        "percentage": "60"
       },
       {
         "item": "0xD533a949740bb3306d119CC777fa900bA034cd52",
@@ -1056,7 +1099,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "27"
+        "percentage": "30"
       }
     ],
     "state": {
@@ -1151,7 +1194,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "75"
+        "percentage": "72"
       },
       {
         "item": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
@@ -1160,7 +1203,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "169"
+        "percentage": "170"
       },
       {
         "item": "0x87d73E916D7057945c9BcD8cdd94e42A6F47f776",
@@ -1192,11 +1235,11 @@
       {
         "item": "0xF5D669627376EBd411E34b98F19C868c8ABA5ADA",
         "data": {
-          "adapters": [],
-          "path": [],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9", "0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
+          "path": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],
           "cache": "0x"
         },
-        "percentage": "181"
+        "percentage": "183"
       },
       {
         "item": "0xF629cBd94d3791C9250152BD8dfBDF380E2a3B9c",
@@ -1260,8 +1303,8 @@
       {
         "item": "0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656",
         "data": {
-          "adapters": ["0x23085950d89D3eb169c372D70362B7a40e319701"],
-          "path": [],
+          "adapters": ["0xEc36e1e39551ea72a8453C42512b3647fD930db9", "0x23085950d89D3eb169c372D70362B7a40e319701"],
+          "path": ["0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"],
           "cache": "0x00000000000000000000000000000000000000000000000000000000000001f4"
         },
         "percentage": "2000"
@@ -1269,13 +1312,9 @@
       {
         "item": "0xE4922afAB0BbaDd8ab2a88E0C79d884Ad337fcA6",
         "data": {
-          "adapters": [
-            "0xE81b063126e9D5ec6C30257Ef0bE595A370ad894",
-            "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
-            "0x23085950d89D3eb169c372D70362B7a40e319701"
-          ],
+          "adapters": ["0xE81b063126e9D5ec6C30257Ef0bE595A370ad894", "0xEc36e1e39551ea72a8453C42512b3647fD930db9"],
           "path": ["0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"],
-          "cache": "0x0000000000000000000000009ff58f4ffb29fa2266ab25e75e2a8b3503311656"
+          "cache": "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009ff58f4ffb29fa2266ab25e75e2a8b3503311656"
         },
         "percentage": "-1000"
       }
@@ -1302,7 +1341,7 @@
           "path": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],
           "cache": "0x"
         },
-        "percentage": "2"
+        "percentage": "3"
       },
       {
         "item": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",
@@ -1311,7 +1350,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "372"
+        "percentage": "371"
       },
       {
         "item": "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",
@@ -1345,7 +1384,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "137"
+        "percentage": "140"
       },
       {
         "item": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -1354,7 +1393,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "863"
+        "percentage": "860"
       }
     ],
     "state": {
@@ -1388,7 +1427,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "188"
+        "percentage": "177"
       },
       {
         "item": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
@@ -1397,7 +1436,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "144"
+        "percentage": "145"
       },
       {
         "item": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
@@ -1406,7 +1445,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "387"
+        "percentage": "397"
       }
     ],
     "state": {
@@ -1431,7 +1470,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "473"
+        "percentage": "472"
       },
       {
         "item": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -1440,7 +1479,7 @@
           "path": [],
           "cache": "0x"
         },
-        "percentage": "527"
+        "percentage": "528"
       }
     ],
     "state": {
