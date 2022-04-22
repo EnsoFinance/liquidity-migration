@@ -1,0 +1,75 @@
+{
+  "method": "multiSend",
+  "parameters": [
+    {
+      "name": "transactions",
+      "type": "bytes",
+      "value": "0x000c6d898ac945e493d25751ea43be2c8beb881d8c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044f64db050000000000000000000000000d076b9865feb49a43aa38c06b0432df6b6cbca9e000000000000000000000000ae6859311c341bac4e0bceca0242247c16718ff1000c6d898ac945e493d25751ea43be2c8beb881d8c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044f64db0500000000000000000000000003a4851597f36f459b58e65c55c8f3a8710313fc7000000000000000000000000ae6859311c341bac4e0bceca0242247c16718ff1000c6d898ac945e493d25751ea43be2c8beb881d8c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044f64db050000000000000000000000000e8e8486228753e01dbc222da262aa706bd67e6010000000000000000000000005f2c716d912ce400a8a49fb87db722e8257257a7",
+      "valueDecoded": [
+        {
+          "operation": 0,
+          "to": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
+          "value": "0",
+          "data": "0xf64db050000000000000000000000000d076b9865feb49a43aa38c06b0432df6b6cbca9e000000000000000000000000ae6859311c341bac4e0bceca0242247c16718ff1",
+          "dataDecoded": {
+            "method": "migrateAll",
+            "parameters": [
+              {
+                "name": "lp",
+                "type": "address",
+                "value": "0xd076b9865feb49A43Aa38c06b0432dF6b6cBCA9E"
+              },
+              {
+                "name": "adapter",
+                "type": "address",
+                "value": "0xaE6859311c341bAc4E0BcEcA0242247c16718FF1"
+              }
+            ]
+          }
+        },
+        {
+          "operation": 0,
+          "to": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
+          "value": "0",
+          "data": "0xf64db0500000000000000000000000003a4851597f36f459b58e65c55c8f3a8710313fc7000000000000000000000000ae6859311c341bac4e0bceca0242247c16718ff1",
+          "dataDecoded": {
+            "method": "migrateAll",
+            "parameters": [
+              {
+                "name": "lp",
+                "type": "address",
+                "value": "0x3A4851597F36F459b58e65C55c8f3a8710313Fc7"
+              },
+              {
+                "name": "adapter",
+                "type": "address",
+                "value": "0xaE6859311c341bAc4E0BcEcA0242247c16718FF1"
+              }
+            ]
+          }
+        },
+        {
+          "operation": 0,
+          "to": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
+          "value": "0",
+          "data": "0xf64db050000000000000000000000000e8e8486228753e01dbc222da262aa706bd67e6010000000000000000000000005f2c716d912ce400a8a49fb87db722e8257257a7",
+          "dataDecoded": {
+            "method": "migrateAll",
+            "parameters": [
+              {
+                "name": "lp",
+                "type": "address",
+                "value": "0xe8e8486228753E01Dbc222dA262Aa706Bd67e601"
+              },
+              {
+                "name": "adapter",
+                "type": "address",
+                "value": "0x5F2C716D912Ce400a8A49fB87DB722e8257257A7"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

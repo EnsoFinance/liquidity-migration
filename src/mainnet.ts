@@ -18,6 +18,7 @@ import {
 } from "./types";
 import deployments from "../deployments.json";
 import poolsToMigrate from "../out/all_stakes.json";
+import tokenHolders from "../out/erc20_holders.json";
 import LiquidityMigrationV2 from "../artifacts/contracts/migration/LiquidityMigrationV2.sol/LiquidityMigrationV2.json";
 import TokenSetAdapter from "../artifacts/contracts/adapters/TokenSetAdapter.sol/TokenSetAdapter.json";
 import PieDaoAdapter from "../artifacts/contracts/adapters/PieDaoAdapter.sol/PieDaoAdapter.json";
@@ -241,7 +242,7 @@ export function liveMigrationContract(signer: SignerWithAddress): Contract {
 }
 
 export async function impersonateWithEth(addr: string, value: BigNumber): Promise<SignerWithAddress> {
-  await hre.network.provider.send("hardhat_setBalance", [addr, "0xFFFFFFFFFFFFFFFFFFFFF"]);
+  await hre.network.provider.send("hardhat_setBalance", [addr, value._hex]);
 
   const signer = await impersonateAccount(addr);
   return signer;

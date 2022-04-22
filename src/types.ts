@@ -1,6 +1,7 @@
 import { BigNumber, Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { InitialState, StrategyItem, TradeData } from "@ensofinance/v1-core";
+import { MetaTransactionData } from "@gnosis.pm/safe-core-sdk-types";
 
 // Exported json files
 export type ScriptOutput =
@@ -133,6 +134,11 @@ export interface BalanceMapping {
 
 export interface BalanceMappingJson {
   [key: string]: string | undefined;
+}
+
+export interface TransactionBatch {
+  batchTx: MetaTransactionData[];
+  filename: string;
 }
 
 export interface Deployments {

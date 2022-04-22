@@ -48,7 +48,7 @@ async function main() {
       }
     } else {
       numErrors++;
-      errs.push("Cant support DEGEN")
+      errs.push("Cant support DEGEN");
     }
   }
   if (numErrors) {
