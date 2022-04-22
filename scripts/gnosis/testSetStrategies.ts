@@ -1,29 +1,23 @@
 import hre from "hardhat";
-import { BigNumber } from "ethers";
-import { EthersUnsigned, encodeMulticall, validateAndEncode } from "../../scripts/common";
+import { validateAndEncode } from "../../scripts/common";
 import { DeployedContracts } from "../../src/types";
 import { write2File } from "../../src/utils";
-import { ENSO_CONTRACTS_MULTISIG, ENSO_TREASURY_MULTISIG } from "../../src/constants";
+import { ENSO_TREASURY_MULTISIG } from "../../src/constants";
 import { impersonateAccount, liveMigrationContract, getPoolsToMigrate } from "../../src/mainnet";
 import { getLiveContracts } from "@ensofinance/v1-core";
 import deployedStrategies from "../../out/deployed_strategies.json";
-import lpsMigrated from "../../out/migrated_lps.json";
 import strategiesSet from "../../out/strategies_set.json";
 import EthersAdapter from "@gnosis.pm/safe-ethers-lib";
 import Safe from "@gnosis.pm/safe-core-sdk";
 import SafeServiceClient from "@gnosis.pm/safe-service-client";
 import { MetaTransactionData } from "@gnosis.pm/safe-core-sdk-types";
 
-const MAX_MIGRATION_BATCH = 3;
-
 async function main() {
   const senderAddress = "0x05d0cf613e9a140fAbdb33Fd7e8d8009F6Df8B3d";
   if (!senderAddress) throw Error("Must set multisig signer address");
-  const sender = await impersonateAccount(senderAddress);
   const treasury = await impersonateAccount(ENSO_TREASURY_MULTISIG);
-  const enso = getLiveContracts(treasury);
 
-  const liquidityMigration = await liveMigrationContract(treasury);
+  const liquidityMigration = liveMigrationContract(treasury);
 
   //Gnosis safe
   const safeAddress = ENSO_TREASURY_MULTISIG;
@@ -69,10 +63,7 @@ async function main() {
     const pendingTxs = await safeService.getPendingTransactions(safeAddress);
     const tx = await safeService.getTransaction(safeTxHash);
     if (!tx.dataDecoded) throw Error("Failed to decode transaction");
-    const valuesDecoded = JSON.stringify(tx.dataDecoded);
-    console.log(valuesDecoded);
     write2File("setStrategyDecoded.json", tx.dataDecoded);
-    //console.log("Value: ", tx.dataDecoded?.parameters[0].valueDecoded)
   }
 }
 

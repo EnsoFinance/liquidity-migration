@@ -102,14 +102,13 @@ async function main() {
     // decode transaction
     const tx = await safeService.getTransaction(safeTxHash);
     if (!tx.dataDecoded) throw Error("Failed to decode transaction");
-    const valuesDecoded = JSON.stringify(tx.dataDecoded);
 
     // save values to json files
     console.log("Saving multisig decoded values to out/migrations/", txs.filename);
     write2File("migrations/" + txs.filename + ".json", tx.dataDecoded);
     console.log("Saving migrated lps to out/migrated_lps.json");
-    write2File("migrated_lps.json", lpsToMigrate);
   }
+  write2File("migrated_lps.json", lpsToMigrate);
 
   //Update StrategyController implementation
   /*
