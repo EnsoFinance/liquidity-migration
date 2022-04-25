@@ -39,7 +39,7 @@ export class TokenSetEnvironmentBuilder {
 
     const signerAddress = await this.signer.getAddress();
 
-    const generiRouter: string = this.enso?.routers[0]?.contract?.address || ethers.constants.AddressZero;
+    const genericRouter: string = this.enso?.routers[0]?.contract?.address || ethers.constants.AddressZero;
 
     const leverageAdapter: string = this.enso?.adapters?.leverage?.contract?.address || ethers.constants.AddressZero;
 
@@ -48,7 +48,7 @@ export class TokenSetEnvironmentBuilder {
       (await tokenSetAdapterFactory.deploy(
         setBasicIssuanceModule.address,
         leverageAdapter,
-        generiRouter,
+        genericRouter,
         signerAddress,
       ));
 

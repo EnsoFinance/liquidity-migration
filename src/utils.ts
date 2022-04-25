@@ -1,22 +1,229 @@
-import bignumber from "bignumber.js";
-import { BigNumber, Contract } from "ethers";
+import fs from "fs";
+import { BigNumber, Contract, Event } from "ethers";
 import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { LiquidityMigrationBuilderV2 } from "../src/liquiditymigrationv2";
+import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
+import { PieDaoEnvironmentBuilder } from "../src/piedao";
+import { IndexedEnvironmentBuilder } from "../src/indexed";
+import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
+import { DHedgeEnvironmentBuilder } from "../src/dhedge";
 import {
+  AcceptedProtocols,
+  StakedPool,
+  ScriptOutput,
+  StrategyParamsJson,
+  InitialStateJson,
+  StrategyItemJson,
+  StrategyParams,
+  TokenPositionMapJson,
+} from "../src/types";
+import { getAdapterFromAddr } from "./mainnet";
+import { INITIAL_STATE, FACTORY_REGISTRIES, SUSD } from "./constants";
+import {
+  EnsoEnvironment,
+  LiveEnvironment,
   ITEM_CATEGORY,
   ESTIMATOR_CATEGORY,
   Position,
   Multicall,
   StrategyItem,
   InitialState,
+  Tokens,
   prepareStrategy,
   encodeSettleTransfer,
 } from "@ensofinance/v1-core";
-import { IERC20__factory } from "../typechain";
+import { ERC20__factory, IAdapter, IStrategy__factory } from "../typechain";
+import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
+import tokenPositions from "../out/token_positions.json";
 
 export enum Networks {
   Mainnet,
   LocalTestnet,
   ExternalTestnet,
+}
+
+const ADAPTER_MAPPER: { [key: string]: string } = {
+  UniswapV2Adapter: "0xf16d11753A687Dc99fE4F98D37Bc822F7388782F",
+  UniswapV3Adapter: "0xEc36e1e39551ea72a8453C42512b3647fD930db9",
+  CompoundAdapter: "0x7cd4AFB972CA11e02d571f0733a0d58D18820050",
+  AaveV2Adapter: "0x23085950d89D3eb169c372D70362B7a40e319701",
+  CurveAdapter: "0xe3Dc8f700007de47fc72045246D05d24c141ea1A",
+  CurveLPAdapter: "0x16f5D4B327e5Fd9f87FB29550a26169d0CB160cC",
+  CurveGaugeAdapter: "0x9ceF86C92349a75d4c769f919349515946bd5F03",
+  SynthetixAdapter: "0xE3e1a55ef03cA82b79c60e426612f6aA80b6d9Bf",
+  YEarnV2Adapter: "0x7c464a18636CC2f236BC87C70aa4a6F8793DC219",
+};
+
+export function toErc20(addr: string, signer: SignerWithAddress): Contract {
+  return ERC20__factory.connect(addr, signer);
+}
+
+export function write2File(fileName: string, json: ScriptOutput) {
+  const data = JSON.stringify(json, null, 4);
+  fs.writeFileSync("out/" + fileName, data);
+}
+
+export async function getNameOrDefault(erc20: Contract): Promise<string> {
+  try {
+    const name = await erc20.name();
+    return `Enso ${name}`;
+  } catch {
+    return "Enso Strategy";
+  }
+}
+
+export async function getSymbolOrDefault(erc20: Contract): Promise<string> {
+  try {
+    const symbol = await erc20.symbol();
+    return `e${symbol}`;
+  } catch {
+    return "STRAT";
+  }
+}
+
+export async function getStrategyCreationParams(
+  signer: SignerWithAddress,
+  enso: LiveEnvironment,
+  stakedLP: string,
+  manager: string,
+  adapterAddr: string,
+  initialState?: InitialState,
+  stratName?: string,
+  stratSymbol?: string,
+): Promise<StrategyParams> {
+  const tokens = new Tokens();
+  const erc20LP = toErc20(stakedLP, signer);
+  // Check optional params
+  const name: string = stratName || (await getNameOrDefault(erc20LP));
+  const symbol: string = stratSymbol || (await getSymbolOrDefault(erc20LP));
+  const state: InitialState = initialState || INITIAL_STATE;
+  // Get underlying assets
+  const adapter = await getAdapterFromAddr(adapterAddr, signer);
+  const underlying = await adapter.outputTokens(stakedLP);
+
+  let items: StrategyItem[];
+  switch (stakedLP.toLowerCase()) {
+    case FACTORY_REGISTRIES.ETH_2X.toLowerCase():
+      // Setup slippages
+      state.rebalanceSlippage = BigNumber.from(990);
+      state.restructureSlippage = BigNumber.from(985);
+      // Setup custom strategy
+      items = prepareStrategy(
+        [
+          {
+            token: tokens.aWETH,
+            percentage: BigNumber.from(2000),
+            adapters: [enso.adapters.aaveV2.address],
+            path: [],
+            cache: ethers.utils.defaultAbiCoder.encode(
+              ["uint16"],
+              [500], // Multiplier 50% (divisor = 1000). For calculating the amount to purchase based off of the percentage
+            ),
+          },
+          {
+            token: tokens.debtUSDC,
+            percentage: BigNumber.from(-1000),
+            adapters: [enso.adapters.aaveV2Debt.address, enso.adapters.uniswapV3.address],
+            path: [tokens.usdc, tokens.weth],
+            cache: ethers.utils.defaultAbiCoder.encode(["address[]"], [[tokens.aWETH]]),
+          },
+        ],
+        enso.adapters.uniswapV3.address,
+      );
+      break;
+    case FACTORY_REGISTRIES.BTC_2X.toLowerCase():
+      // Setup slippages
+      state.rebalanceSlippage = BigNumber.from(990);
+      state.restructureSlippage = BigNumber.from(985);
+      // Setup custom strategy
+      items = prepareStrategy(
+        [
+          {
+            token: tokens.aWBTC,
+            percentage: ethers.BigNumber.from(2000),
+            adapters: [enso.adapters.uniswapV3.address, enso.adapters.aaveV2.address],
+            path: [tokens.wbtc],
+            cache: ethers.utils.defaultAbiCoder.encode(
+              ["uint16"],
+              [500], // Multiplier 50% (divisor = 1000). For calculating the amount to purchase based off of the percentage
+            ),
+          },
+          {
+            token: tokens.debtUSDC,
+            percentage: BigNumber.from(-1000),
+            adapters: [enso.adapters.aaveV2Debt.address, enso.adapters.uniswapV3.address],
+            path: [tokens.usdc, tokens.weth],
+            cache: ethers.utils.defaultAbiCoder.encode(["address[]"], [[tokens.aWBTC]]),
+          },
+        ],
+        enso.adapters.uniswapV3.address,
+      );
+      break;
+    default:
+      items = await setupStrategyItems(
+        enso.platform.oracles.ensoOracle,
+        enso.adapters.uniswapV3.address,
+        stakedLP,
+        underlying,
+      );
+  }
+  const params: StrategyParams = {
+    name,
+    symbol,
+    manager,
+    items,
+    state,
+  };
+  return params;
+}
+
+export async function deployStrategy(
+  enso: LiveEnvironment,
+  name: string,
+  symbol: string,
+  items: StrategyItem[],
+  state: InitialState,
+  signer: SignerWithAddress,
+): Promise<string> {
+  const tx = await enso.platform.strategyFactory.createStrategy(
+    signer.address,
+    name,
+    symbol,
+    items,
+    state,
+    ethers.constants.AddressZero,
+    "0x",
+  );
+  const receipt = await tx.wait();
+  console.log("Strategy creation cost: ", receipt.gasUsed);
+  return receipt.events.find((ev: Event) => ev.event === "NewStrategy").args.strategy;
+}
+
+// TODO: pass state as param
+export async function deployStakedStrategy(
+  enso: LiveEnvironment,
+  stakedLP: string,
+  migrationAdapter: string,
+  signer: SignerWithAddress,
+  stratName?: string,
+  symbol?: string,
+): Promise<Contract> {
+  if (!stratName) stratName = stakedLP.slice(8);
+  if (!symbol) symbol = stakedLP.slice(4);
+  const adapter = await getAdapterFromAddr(migrationAdapter, signer);
+  const underlying = await adapter.outputTokens(stakedLP);
+  const strategyItems = await setupStrategyItems(
+    enso.platform.oracles.ensoOracle,
+    enso.adapters.uniswapV3.address,
+    stakedLP,
+    underlying,
+  );
+  const strategy = IStrategy__factory.connect(
+    await deployStrategy(enso, stratName, symbol, strategyItems, INITIAL_STATE, signer),
+    signer,
+  );
+  return strategy;
 }
 
 const strategyItemTuple =
@@ -72,25 +279,90 @@ export async function getBlockTime(timeInSeconds: number): Promise<BigNumber> {
   return BigNumber.from(block.timestamp).add(timeInSeconds);
 }
 
+export function fromJsonStrategyParams(paramsJson: StrategyParamsJson): StrategyParams {
+  const items = paramsJson.items.map(i => {
+    const { item, data } = i;
+    const percentage = BigNumber.from(i.percentage);
+    return { item, data, percentage } as StrategyItem;
+  });
+  const state: InitialState = {
+    timelock: BigNumber.from(paramsJson.state.timelock),
+    rebalanceThreshold: BigNumber.from(paramsJson.state.rebalanceThreshold),
+    rebalanceSlippage: BigNumber.from(paramsJson.state.rebalanceSlippage),
+    restructureSlippage: BigNumber.from(paramsJson.state.restructureSlippage),
+    performanceFee: BigNumber.from(paramsJson.state.performanceFee),
+    social: paramsJson.state.social,
+    set: paramsJson.state.set,
+  };
+  const { name, symbol, manager } = paramsJson;
+  return { name, symbol, manager, state, items } as StrategyParams;
+}
+
+export function toJsonStrategyParams(params: StrategyParams): StrategyParamsJson {
+  const items: StrategyItemJson[] = params.items.map(d => {
+    const { item, data } = d;
+    const percentage = d.percentage.toString();
+    return { item, data, percentage } as StrategyItemJson;
+  });
+  const state = {
+    timelock: params.state.timelock.toString(),
+    rebalanceThreshold: params.state.rebalanceThreshold.toString(),
+    rebalanceSlippage: params.state.rebalanceSlippage.toString(),
+    restructureSlippage: params.state.restructureSlippage.toString(),
+    performanceFee: params.state.performanceFee.toString(),
+    social: params.state.social,
+    set: params.state.set,
+  } as InitialStateJson;
+  const { name, symbol, manager } = params;
+  return {
+    name,
+    symbol,
+    manager,
+    items,
+    state,
+  } as StrategyParamsJson;
+}
+
 export async function setupStrategyItems(
   oracle: Contract,
   adapter: string,
   pool: string,
   underlying: string[],
 ): Promise<StrategyItem[]> {
+  const positionsData: TokenPositionMapJson = tokenPositions;
   let positions = [] as Position[];
   const [total, estimates] = await estimateTokens(oracle, pool, underlying);
 
+  let synthDetected = false;
   for (let i = 0; i < underlying.length; i++) {
-    let percentage = new bignumber(estimates[i].toString()).multipliedBy(1000).dividedBy(total.toString()).toFixed(0);
-    //In case there are funds below our percentage precision. Give it 0.1%
-    if (estimates[i].gt(0) && BigNumber.from(percentage).eq(0)) percentage = "1";
-
-    const position: Position = {
+    let percentage = estimates[i].mul(1000).mul(1e10).div(total).div(1e10);
+    if (percentage.eq(BigNumber.from(0))) {
+      //In case there are funds below our percentage precision. Give it 0.1%
+      if (estimates[i].gt(0)) {
+        console.log(`Rounding up to 1 percentage for item ${underlying[i]}`);
+        percentage = BigNumber.from(1);
+      } else {
+        console.log(`Skipping 0 percentage item ${underlying[i]}`);
+        continue;
+      }
+    }
+    let position: Position = {
       token: underlying[i],
-      percentage: BigNumber.from(percentage),
+      percentage: percentage,
     };
-    if (adapter == ethers.constants.AddressZero) position.adapters = [];
+
+    const positionData = positionsData[underlying[i]];
+    if (positionData) {
+      position.adapters = positionData.adapters.map((adapterName: string) => {
+        if (adapterName == "SynthetixAdapter") synthDetected = true;
+        return ADAPTER_MAPPER[adapterName];
+      });
+      position.path = positionData.path;
+    } else {
+      console.log(`Position not found for ${underlying[i]}`);
+      if (adapter == ethers.constants.AddressZero) position.adapters = [];
+    }
+
     positions.push(position);
   }
   const totalPercentage = positions.map(pos => Number(pos.percentage)).reduce((a, b) => a + b);
@@ -107,7 +379,126 @@ export async function setupStrategyItems(
       positions[0] = position;
     }
   }
+
+  if (synthDetected) {
+    // Add sUSD if there isn't already
+    const susdIndex = positions.findIndex(position => position.token.toLowerCase() === SUSD.toLowerCase());
+    if (susdIndex === -1) {
+      const positionData = positionsData[SUSD];
+      if (positionData) {
+        const adapters = positionData.adapters.map((adapterName: string) => ADAPTER_MAPPER[adapterName]);
+        const path = positionData.path;
+        positions.push({
+          token: SUSD,
+          percentage: BigNumber.from(0),
+          adapters,
+          path,
+        });
+      } else {
+        console.log("sUSD Position Not Found!");
+      }
+    }
+  }
   return prepareStrategy(positions, adapter);
+}
+
+export type Pools = {
+  liquidityMigration: Contract;
+  poolsToMigrate: any;
+  adapters: Contract[];
+};
+
+let dhedgeAdapter: Contract;
+let indexedAdapter: Contract;
+let pieDaoAdapter: Contract;
+let powerpoolAdapter: Contract;
+let tokensetsAdapter: Contract;
+let indexCoopAdapter: Contract;
+
+export async function setupPools(signer: SignerWithAddress, enso: EnsoEnvironment) {
+  const liquidityMigrationBuilder = new LiquidityMigrationBuilderV2(signer, enso);
+  let pool;
+  const poolsToMigrate: any[] = [];
+
+  for (const { victim, lpTokenAddress, lpTokenName, walletAddress } of LP_TOKEN_WHALES) {
+    switch (victim.toLowerCase()) {
+      case "dhedge":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new DHedgeEnvironmentBuilder(signer, dhedgeAdapter).connect(lpTokenAddress, [walletAddress]);
+        if (!dhedgeAdapter) {
+          dhedgeAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DHedge, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
+
+      case "indexed":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new IndexedEnvironmentBuilder(signer, indexedAdapter).connect(lpTokenAddress, [walletAddress]);
+        if (!indexedAdapter) {
+          indexedAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
+
+      case "piedao":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new PieDaoEnvironmentBuilder(signer, pieDaoAdapter).connect(lpTokenAddress, [walletAddress]);
+        if (!pieDaoAdapter) {
+          pieDaoAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.PieDao, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
+
+      case "powerpool":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new PowerpoolEnvironmentBuilder(signer, powerpoolAdapter).connect(lpTokenAddress, [walletAddress]);
+        if (!powerpoolAdapter) {
+          powerpoolAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
+
+      case "tokensets":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new TokenSetEnvironmentBuilder(signer, enso, tokensetsAdapter).connect(lpTokenAddress, [
+          walletAddress,
+        ]);
+        if (!tokensetsAdapter) {
+          tokensetsAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
+
+      case "indexcoop":
+        console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
+        pool = await new TokenSetEnvironmentBuilder(signer, enso, indexCoopAdapter).connect(lpTokenAddress, [
+          walletAddress,
+        ]);
+        if (!indexCoopAdapter) {
+          indexCoopAdapter = pool.adapter;
+          liquidityMigrationBuilder.addAdapter(AcceptedProtocols.IndexCoop, pool.adapter as IAdapter);
+        }
+        poolsToMigrate.push(pool);
+        break;
+
+      default:
+        throw Error("Failed to parse victim");
+    }
+  }
+  // deploy liqudity migration
+  const lm = await liquidityMigrationBuilder.deploy();
+
+  // add pools to adapters
+  const txs = await Promise.all(poolsToMigrate.map(async p => await p.adapter.add(p.pool.address)));
+
+  await Promise.all(txs.map(async p => await p.wait()));
+
+  return [lm.liquidityMigration, poolsToMigrate];
 }
 
 export async function estimateTokens(
@@ -117,7 +508,7 @@ export async function estimateTokens(
 ): Promise<[BigNumber, BigNumber[]]> {
   const tokensAndBalances = await Promise.all(
     tokens.map(async token => {
-      const erc20 = IERC20__factory.connect(token, ethers.provider);
+      const erc20 = ERC20__factory.connect(token, ethers.provider);
       const balance = await erc20.balanceOf(account);
       return {
         token: token,
@@ -141,9 +532,10 @@ export async function estimateTokens(
 
     }
     */
-  const estimates = await Promise.all(tokensAndBalances.map(async obj => oracle.estimateItem(obj.balance, obj.token)));
+  const estimates = await Promise.all(
+    tokensAndBalances.map(async obj => oracle["estimateItem(uint256,address)"](obj.balance, obj.token)),
+  );
   const total = estimates.reduce((a, b) => a.add(b));
-
   return [total, estimates];
 }
 
@@ -163,22 +555,22 @@ export async function addItemsToRegistry(factory: Contract) {
   // Curve
   await factory.addItemToRegistry(
     ITEM_CATEGORY.BASIC,
-    ESTIMATOR_CATEGORY.CRV,
+    ESTIMATOR_CATEGORY.CURVE_LP,
     "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522",
   ); //usdn3CRV
   await factory.addItemToRegistry(
     ITEM_CATEGORY.BASIC,
-    ESTIMATOR_CATEGORY.CRV,
+    ESTIMATOR_CATEGORY.CURVE_LP,
     "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
   ); //BUSD3CRV-f
   await factory.addItemToRegistry(
     ITEM_CATEGORY.BASIC,
-    ESTIMATOR_CATEGORY.CRV,
+    ESTIMATOR_CATEGORY.CURVE_LP,
     "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
   ); //LUSD3CRV-f
   await factory.addItemToRegistry(
     ITEM_CATEGORY.BASIC,
-    ESTIMATOR_CATEGORY.CRV,
+    ESTIMATOR_CATEGORY.CURVE_LP,
     "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6",
   ); //USDP/3Crv
   // YEarn

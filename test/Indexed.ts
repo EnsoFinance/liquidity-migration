@@ -159,6 +159,7 @@ describe("Indexed: Unit tests", function () {
     const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
     console.log("Strategy address: ", strategyAddress);
     this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+    if (!this.strategy) throw Error("Indexed: Failed to deploy strategy");
   });
 
   it("Should migrate tokens to strategy", async function () {

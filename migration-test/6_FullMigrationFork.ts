@@ -1,6 +1,6 @@
 import { ethers, network } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Event } from "ethers";
+import { BigNumber, Event, constants } from "ethers";
 import { Signers } from "../types";
 import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
 import { IERC20__factory } from "../typechain";
@@ -11,6 +11,8 @@ import { EnsoBuilder, InitialState, StrategyItem, ITEM_CATEGORY, ESTIMATOR_CATEG
 import { WETH, SUSD } from "../src/constants";
 import { setupStrategyItems, getBlockTime } from "../src/utils";
 import deployments from "../deployments.json";
+import { impersonateWithEth } from "../src/mainnet";
+const { WeiPerEther } = constants;
 
 const migrator = "0x007A8CFf81A9FCca63E8a05Acb41A8292F4b353e";
 
@@ -22,12 +24,7 @@ describe("MigrationCoordinator tests: ", function () {
     const allSigners = await ethers.getSigners();
     signers.default = allSigners[0];
     signers.secondary = allSigners[1];
-
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [migrator],
-    });
-    signers.admin = await ethers.getSigner(migrator);
+    signers.admin = await impersonateWithEth(migrator, WeiPerEther.mul(10));
 
     const LiquidityMigration = await ethers.getContractFactory("LiquidityMigration");
     liquidityMigration = LiquidityMigration.attach(deployments.mainnet.LiquidityMigration);

@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "@ensofinance/v1-core/contracts/StrategyControllerStorage.sol";
 import "@ensofinance/v1-core/contracts/interfaces/IOracle.sol";
+import "@ensofinance/v1-core/contracts/interfaces/IStrategyController.sol";
 import "@ensofinance/v1-core/contracts/interfaces/registries/ITokenRegistry.sol";
 import "@ensofinance/v1-core/contracts/helpers/StrategyTypes.sol";
 import "./libraries/SignedSafeMath.sol";
@@ -21,12 +22,15 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
     address internal immutable _liquidityMigration;
     address internal immutable _ensoManager;
 
+    address private constant ETH2X = 0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD;
+    address private constant BTC2X = 0x0B498ff89709d3838a063f1dFA463091F9801c2b;
+
     event Withdraw(address indexed strategy, address indexed account, uint256 value, uint256 amount);
     event Deposit(address indexed strategy, address indexed account, uint256 value, uint256 amount);
-    event Balanced(address indexed strategy, uint256 total);
+    event Balanced(address indexed strategy, uint256 totalBefore, uint256 totalAfter);
     event NewStructure(address indexed strategy, StrategyItem[] items, bool indexed finalized);
     event NewValue(address indexed strategy, TimelockCategory category, uint256 newValue, bool indexed finalized);
-    event StrategyOpen(address indexed strategy, uint256 performanceFee);
+    event StrategyOpen(address indexed strategy);
     event StrategySet(address indexed strategy);
 
     constructor(
@@ -50,12 +54,31 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         require(strategy.totalSupply() == 0, "Strategy cannot be migrated to");
         require(amount > 0, "No amount");
         require(lpToken.balanceOf(address(genericRouter)) >= amount, "Wrong balance"); // Funds should have been sent to GenericRouter
+        bool sensitiveToSlippage = _sensitiveToSlippage(address(lpToken));
+        int256 estimateBefore = (sensitiveToSlippage) ? oracle().estimateItem(amount, address(lpToken)) : 0;
+        if (strategy.supportsDebt()) {
+            // approve and set ONLY for the deposit
+            IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), uint256(-1));
+            IStrategy(strategy).setRouter(address(genericRouter));
+        }
         bytes memory migrationData = abi.encode(
             adapter.encodeMigration(address(genericRouter), address(strategy), address(lpToken), amount)
         );
         genericRouter.deposit(address(strategy), migrationData);
         // At this point the underlying tokens should be in the Strategy. Estimate strategy value
+        if (strategy.supportsDebt()) {
+            // remove approval and router after deposit
+            IStrategy(strategy).approveDebt(IStrategy(strategy).debt(), address(genericRouter), 0);
+            IStrategy(strategy).setRouter(address(0));
+        }
         (uint256 total, ) = oracle().estimateStrategy(strategy);
+        if (sensitiveToSlippage) {
+            int256 slippage = int256(_strategyStates[address(strategy)].restructureSlippage);
+            require(
+                int256(total) >= estimateBefore.mul(slippage).div(int256(DIVISOR)),
+                "migrate: value lost to slippage."
+            );
+        }
         // Migration is a one-time function and cannot be called unless Strategy's total
         // supply is zero. So we can trust that `amount` will be the new total supply
         strategy.updateTokenValue(total, amount);
@@ -98,9 +121,10 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
                 require(percentage >= 0, "Token cannot be negative");
                 require(percentage <= PERCENTAGE_BOUND, "Out of bounds");
             }
-            EstimatorCategory category = EstimatorCategory(registry.estimatorCategories(item));
-            require(category != EstimatorCategory.BLOCKED, "Token blocked");
-            if (category == EstimatorCategory.STRATEGY) _checkCyclicDependency(strategy, IStrategy(item), registry);
+            uint256 category = registry.estimatorCategories(item);
+            require(category != uint256(EstimatorCategory.BLOCKED), "Token blocked");
+            if (category == uint256(EstimatorCategory.STRATEGY))
+                _checkCyclicDependency(strategy, IStrategy(item), registry);
             total = total.add(percentage);
         }
         require(total == int256(DIVISOR), "Total percentage wrong");
@@ -111,11 +135,16 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         return _initialized[strategy] > 0;
     }
 
-    function oracle() public view returns (IOracle) {
+    function oracle() public view override returns (IOracle) {
         return IOracle(_oracle);
     }
 
+    function whitelist() external view override returns (IWhitelist) {
+        return IWhitelist(_whitelist);
+    }
+
     function _setInitialState(address strategy, InitialState memory state) private {
+        _checkAndEmit(strategy, TimelockCategory.PERFORMANCE, uint256(state.performanceFee), true);
         _checkAndEmit(strategy, TimelockCategory.THRESHOLD, uint256(state.rebalanceThreshold), true);
         _checkAndEmit(strategy, TimelockCategory.REBALANCE_SLIPPAGE, uint256(state.rebalanceSlippage), true);
         _checkAndEmit(strategy, TimelockCategory.RESTRUCTURE_SLIPPAGE, uint256(state.restructureSlippage), true);
@@ -127,12 +156,9 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
             state.social,
             state.set
         );
+        IStrategy(strategy).updatePerformanceFee(state.performanceFee);
         IStrategy(strategy).updateRebalanceThreshold(state.rebalanceThreshold);
-        if (state.social) {
-            _checkDivisor(uint256(state.performanceFee));
-            IStrategy(strategy).updatePerformanceFee(state.performanceFee);
-            emit StrategyOpen(strategy, state.performanceFee);
-        }
+        if (state.social) emit StrategyOpen(strategy);
         if (state.set) emit StrategySet(strategy);
         emit NewValue(strategy, TimelockCategory.TIMELOCK, uint256(state.timelock), true);
     }
@@ -146,7 +172,7 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
         require(!strategy.supportsSynths(), "Synths not supported");
         address[] memory strategyItems = strategy.items();
         for (uint256 i = 0; i < strategyItems.length; i++) {
-            if (EstimatorCategory(registry.estimatorCategories(strategyItems[i])) == EstimatorCategory.STRATEGY)
+            if (registry.estimatorCategories(strategyItems[i]) == uint256(EstimatorCategory.STRATEGY))
                 _checkCyclicDependency(test, IStrategy(strategyItems[i]), registry);
         }
     }
@@ -171,5 +197,9 @@ contract MigrationController is IMigrationController, StrategyTypes, StrategyCon
 
     function _removeStrategyLock(IStrategy strategy) private {
         strategy.unlock();
+    }
+
+    function _sensitiveToSlippage(address token) private pure returns (bool) {
+        return token == ETH2X || token == BTC2X;
     }
 }

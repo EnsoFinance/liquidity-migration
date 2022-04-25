@@ -1,281 +1,169 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Signer, Contract, Event } from "ethers";
+import { BigNumber, Signer, Contract, Event, constants } from "ethers";
 import { Signers } from "../types";
-import { AcceptedProtocols, LiquidityMigrationBuilder } from "../src/liquiditymigration";
-import { IAdapter, IERC20__factory, IStrategy__factory } from "../typechain";
-import { TokenSetEnvironmentBuilder } from "../src/tokenSets";
-import { PieDaoEnvironmentBuilder } from "../src/piedao";
-import { IndexedEnvironmentBuilder } from "../src/indexed";
-import { PowerpoolEnvironmentBuilder } from "../src/powerpool";
-import { DHedgeEnvironmentBuilder } from "../src/dhedge";
-import { setupStrategyItems, encodeStrategyData, estimateTokens, increaseTime } from "../src/utils";
-import { EnsoBuilder, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens, EnsoEnvironment } from "@ensofinance/v1-core";
-import { WETH, SUSD, INITIAL_STATE, DEPOSIT_SLIPPAGE } from "../src/constants";
-import { LP_TOKEN_WHALES } from "../tasks/initMasterUser";
+import {
+  impersonateAccount,
+  getPoolsToMigrate,
+  liveMigrationContract,
+  impersonateWithEth,
+  readTokenHolders,
+  getAdapterFromType,
+  getAdapterFromAddr,
+} from "../src/mainnet";
+import { AcceptedProtocols, StakedPool, Adapters } from "../src/types";
+import { IPV2SmartPool__factory } from "../typechain";
+import {
+  toErc20,
+  deployStakedStrategy,
+  setupStrategyItems,
+  encodeStrategyData,
+  estimateTokens,
+  increaseTime,
+  getBlockTime,
+} from "../src/utils";
+import { getLiveContracts, ITEM_CATEGORY, ESTIMATOR_CATEGORY, Tokens } from "@ensofinance/v1-core";
+import { ENSO_CONTRACTS_MULTISIG, WETH, SUSD, DEPOSIT_SLIPPAGE } from "../src/constants";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+const { WeiPerEther } = constants;
 
-describe("Integration: Unit tests", function () {
-  const poolsToMigrate: any[] = [];
-  let dhedgeAdapter: Contract;
-  let indexedAdapter: Contract;
-  let pieDaoAdapter: Contract;
-  let powerpoolAdapter: Contract;
-  let tokensetsAdapter: Contract;
-  let indexCoopAdapter: Contract;
+const INITIAL_STATE = {
+  timelock: BigNumber.from(60), // 1 minute
+  rebalanceThreshold: BigNumber.from(50), // 5%
+  rebalanceSlippage: BigNumber.from(990), // 99.0 %
+  restructureSlippage: BigNumber.from(985), // 98.5 %
+  performanceFee: BigNumber.from(0),
+  social: true,
+  set: false,
+};
 
-  const toErc20 = (addr: string, signer: Signer) => {
-    return IERC20__factory.connect(addr, signer);
-  };
-
-  const setupPools = async (signer: SignerWithAddress, enso: EnsoEnvironment) => {
-    const liquidityMigrationBuilder = new LiquidityMigrationBuilder(signer, enso);
-    let pool;
-    for (const { victim, lpTokenAddress, lpTokenName, walletAddress } of LP_TOKEN_WHALES) {
-      switch (victim.toLowerCase()) {
-        case "dhedge":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new DHedgeEnvironmentBuilder(signer, dhedgeAdapter).connect(lpTokenAddress, [walletAddress]);
-          if (!dhedgeAdapter) {
-            dhedgeAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.DHedge, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
-
-        case "indexed":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new IndexedEnvironmentBuilder(signer, indexedAdapter).connect(lpTokenAddress, [walletAddress]);
-          if (!indexedAdapter) {
-            indexedAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Indexed, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
-
-        case "piedao":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new PieDaoEnvironmentBuilder(signer, pieDaoAdapter).connect(lpTokenAddress, [walletAddress]);
-          if (!pieDaoAdapter) {
-            pieDaoAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.PieDao, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
-
-        case "powerpool":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new PowerpoolEnvironmentBuilder(signer, powerpoolAdapter).connect(lpTokenAddress, [
-            walletAddress,
-          ]);
-          if (!powerpoolAdapter) {
-            powerpoolAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.Powerpool, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
-
-        case "tokensets":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new TokenSetEnvironmentBuilder(signer, enso, tokensetsAdapter).connect(lpTokenAddress, [
-            walletAddress,
-          ]);
-          if (!tokensetsAdapter) {
-            tokensetsAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.TokenSets, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
-
-        case "indexcoop":
-          console.log(victim, " ", lpTokenName, " at: ", lpTokenAddress);
-          pool = await new TokenSetEnvironmentBuilder(signer, enso, indexCoopAdapter).connect(lpTokenAddress, [
-            walletAddress,
-          ]);
-          if (!indexCoopAdapter) {
-            indexCoopAdapter = pool.adapter;
-            liquidityMigrationBuilder.addAdapter(AcceptedProtocols.IndexCoop, pool.adapter as IAdapter);
-          }
-          poolsToMigrate.push(pool);
-          break;
-
-        default:
-          throw Error("Failed to parse victim");
-      }
-    }
-    // deploy liqudity migration
-    const lm = await liquidityMigrationBuilder.deploy();
-
-    // add pools to adapters
-    const txs = await Promise.all(poolsToMigrate.map(async p => await p.adapter.add(p.pool.address)));
-
-    await Promise.all(txs.map(async p => await p.wait()));
-
-    return lm.liquidityMigration;
-  };
-
+describe("Stake and Migrate all tokens", function () {
   before(async function () {
     this.signers = {} as Signers;
     const signers = await ethers.getSigners();
     this.signers.default = signers[0];
-    this.signers.admin = signers[10];
-    this.enso = await new EnsoBuilder(this.signers.admin).mainnet().build();
-    const factory = this.enso.platform.strategyFactory;
-    const { chainlinkRegistry, curveDepositZapRegistry } = this.enso.platform.oracles.registries;
-    this.tokens = new Tokens();
-    this.tokens.registerTokens(
-      this.signers.admin,
-      this.enso.platform.strategyFactory,
-      curveDepositZapRegistry,
-      chainlinkRegistry,
+    // Impersonate enso owners and get live v1-core contrats
+    this.signers.treasury = await impersonateWithEth(ENSO_CONTRACTS_MULTISIG, WeiPerEther.mul(10));
+    this.enso = getLiveContracts(this.signers.treasury);
+    const ensoOwner = await this.enso.platform.strategyFactory.owner();
+    this.signers.ensoOwner = await impersonateWithEth(ensoOwner, WeiPerEther.mul(10));
+    this.liquidityMigration = liveMigrationContract(this.signers.ensoOwner);
+    const lmOwner = await this.liquidityMigration.owner();
+    this.signers.lmOwner = await impersonateWithEth(lmOwner, WeiPerEther.mul(10));
+
+    console.log("Enso owner: ", this.signers.ensoOwner.address);
+    console.log("Liquidity migration owner: ", this.signers.lmOwner.address);
+
+    // Get stakes to migrate
+    this.poolsToMigrate = await getPoolsToMigrate(this.signers.ensoOwner);
+    this.holders = await readTokenHolders();
+
+    // Add all eligible LPs to this adapter's whitelist
+    this.eligibleLPs = Object.keys(this.poolsToMigrate);
+    //console.log("LPS: ", this.eligibleLPs)
+
+    // Deploy MigrationController
+    const MigrationController = await ethers.getContractFactory("MigrationController");
+    this.migrationController = await MigrationController.connect(this.signers.lmOwner).deploy(
+      this.enso.platform.strategyFactory.address,
+      this.liquidityMigration.address,
+      this.signers.lmOwner.address,
     );
-    this.liquidityMigration = await setupPools(this.signers.default, this.enso);
+    await this.migrationController.deployed();
 
-    // Register tokens
-    // Compound
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.COMPOUND,
-      "0x70e36f6BF80a52b3B46b3aF8e106CC0ed743E8e4",
-    ); //cCOMP
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.COMPOUND,
-      "0x35A18000230DA775CAc24873d00Ff85BccdeD550",
-    ); //cUNI
-    // Curve
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CRV,
-      "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522",
-    ); //usdn3CRV
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CRV,
-      "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
-    ); //BUSD3CRV-f
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CRV,
-      "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
-    ); //LUSD3CRV-f
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.CRV,
-      "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6",
-    ); //USDP/3Crv
-    // YEarn
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.YEARN_V2,
-      "0x3B96d491f067912D18563d56858Ba7d6EC67a6fa",
-    ); //yvCurve-USDN
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.YEARN_V2,
-      "0x6ede7f19df5df6ef23bd5b9cedb651580bdf56ca",
-    ); //yvCurve-BUSD
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.YEARN_V2,
-      "0x5fA5B62c8AF877CB37031e0a3B2f34A78e3C56A6",
-    ); //yvCurve-LUSD
-    await factory.addItemToRegistry(
-      ITEM_CATEGORY.BASIC,
-      ESTIMATOR_CATEGORY.YEARN_V2,
-      "0xC4dAf3b5e2A9e93861c3FBDd25f1e943B8D87417",
-    ); //yvCurve-USDP
+    await this.enso.platform.controller.connect(this.signers.treasury)["updateAddresses()"]();
+
+    // Upgrade controller to new implementation
+    await this.enso.platform.administration.platformProxyAdmin
+      .connect(this.signers.treasury)
+      .upgrade(this.enso.platform.controller.address, this.migrationController.address);
+    //this.enso.platform.controller = this.migrationController
+    await this.liquidityMigration.connect(this.signers.lmOwner).updateController(this.enso.platform.controller.address);
+
+    /* Test MulticallRouter with better revert messages
+    const MulticallRouter = await ethers.getContractFactory("MulticallRouter");
+    this.enso.routers.multicall = await MulticallRouter.connect(this.signers.lmOwner).deploy(
+      this.enso.platform.controller.address
+    )
+    await this.enso.routers.multicall.deployed()
+    await this.enso.platform.administration.whitelist
+      .connect(this.signers.treasury)
+      .approve(this.enso.routers.multicall.address)
+    */
+
+    // Update generic router (leverage adapter + liquidity migration)
+    await this.liquidityMigration
+      .connect(this.signers.lmOwner)
+      .updateGenericRouter(this.enso.routers.multicall.address);
+    this.indexCoopAdapter = await getAdapterFromType(Adapters.IndexCoopAdapter, this.signers.treasury);
+    await this.indexCoopAdapter.connect(this.signers.lmOwner).updateGenericRouter(this.enso.routers.multicall.address);
+    this.tokenSetAdapter = await getAdapterFromType(Adapters.TokenSetAdapter, this.signers.treasury);
+    await this.tokenSetAdapter.connect(this.signers.lmOwner).updateGenericRouter(this.enso.routers.multicall.address);
   });
 
+  /*
   it("Stake all tokens", async function () {
-    for (let i = 0; i < poolsToMigrate.length; i++) {
-      const pool = poolsToMigrate[i];
-      const erc20 = toErc20(pool.pool.address, this.signers.default);
-      const holder = await pool.holders[0];
-      const holderAddress = await holder.getAddress();
-      const holderBalance = await erc20.balanceOf(holderAddress);
-
+    for (let i = 0; i < this.eligibleLPs.length; i++) {
+      const pool: StakedPool = this.poolsToMigrate[this.eligibleLPs[i]];
+      const holderAcc = this.holders[pool.lp];
+      if (!holderAcc) throw Error(`Couldnt find holder for lp: ${pool.lp}`);
+      // Impersonate and give ETH to holder of this coin
+      console.log("Staking into pool: ", pool.lp, "for user: ", holderAcc.address);
+      this.holders[pool.lp].signer = await impersonateWithEth(holderAcc.address, WeiPerEther.mul(1));
+      const holder = this.holders[pool.lp].signer;
+      const erc20 = toErc20(pool.lp, holder);
+      const stakedBefore = await this.liquidityMigration.staked(holder.address, pool.lp);
+      const holderBalance = await erc20.balanceOf(holder.address);
       if (holderBalance.eq(BigNumber.from(0))) {
-        console.log("Balance: ", holderBalance, "  \nHolder: ", holderAddress);
-        throw Error("Need to update holder for pool in tasks/initMasterUser: " + pool.address);
+        throw Error("Need to update holder token balances at scripts/getHoldersWithBalance.ts " + pool.lp);
       }
-      expect(await pool.adapter.isWhitelisted(pool.pool.address)).to.be.eq(true, "Pool not whitelisted");
-      // expect(holderBalance).to.be.gt(BigNumber.from(0));
-
-      await erc20.connect(holder).approve(this.liquidityMigration.address, holderBalance.div(2));
-      await this.liquidityMigration
-        .connect(holder)
-        .stake(pool.pool.address, holderBalance.div(2), pool.adapter.address);
-      expect(await this.liquidityMigration.staked(holderAddress, pool.pool.address)).to.equal(holderBalance.div(2));
+      // Make sure whitelisted
+      expect(await pool.adapter.isWhitelisted(pool.lp)).to.be.eq(true, "Pool not whitelisted");
+      // Stake
+      await erc20.connect(holder).approve(this.liquidityMigration.address, holderBalance);
+      const tx = await this.liquidityMigration.connect(holder).stake(pool.lp, holderBalance, pool.adapter.address);
+      expect(await this.liquidityMigration.staked(holder.address, pool.lp)).to.be.eq(holderBalance.add(stakedBefore));
+      expect(await erc20.balanceOf(holder.address)).to.be.eq(BigNumber.from(0));
     }
   });
+  */
 
-  it("Migrate tokens", async function () {
-    await increaseTime(10);
-    for (let i = 0; i < poolsToMigrate.length; i++) {
-      const pool = poolsToMigrate[i];
-      if (
-        // Skip 2X FLI, SciFi (GEL), WEB3 (OHM)
-        pool.pool.address !== "0xaa6e8127831c9de45ae56bb1b0d4d4da6e5665bd" &&
-        pool.pool.address !== "0x0b498ff89709d3838a063f1dfa463091f9801c2b" &&
-        pool.pool.address !== "0xfdc4a3fc36df16a78edcaf1b837d3acaaedb2cb4" &&
-        pool.pool.address !== "0xe8e8486228753E01Dbc222dA262Aa706Bd67e601"
-      ) {
-        const underlyingTokens = await pool.adapter.outputTokens(pool.pool.address);
-        // encode strategy items
-        console.log("Pool: ", pool.pool.address);
-        //console.log("Underlying tokens: \n", underlyingTokens);
-        let poolAddress;
-        try {
-          // Some PieDao pool hold their tokens in Balancer pools
-          poolAddress = await pool.pool.getBPool();
-        } catch (e) {
-          poolAddress = pool.pool.address;
-        }
-        const strategyItems = await setupStrategyItems(
-          this.enso.platform.oracles.ensoOracle,
-          ethers.constants.AddressZero, // For real strategies an adapter is needed, but for migration it is not
-          poolAddress,
-          underlyingTokens,
-        );
+  it("Migrate all pools", async function () {
+    await increaseTime(1e15);
+    let count = 0;
+    for (let i = 0; i < this.eligibleLPs.length; i++) {
+      const pool: StakedPool = this.poolsToMigrate[this.eligibleLPs[i]];
+      const underlyingTokens = await pool.adapter.outputTokens(pool.lp);
+      try {
+        console.log("\n\nPool ===========> ", pool.lp);
+        console.log("Underlying: ", underlyingTokens);
         // deploy strategy
-        const strategyData = encodeStrategyData(
-          this.signers.default.address,
-          `Token - ${i}`,
-          `Address: ${pool.pool.address}`,
-          strategyItems,
-          INITIAL_STATE,
-          ethers.constants.AddressZero,
-          "0x",
-        );
-        //console.log("Creating strategy: \n", strategyItems);
-        const tx = await this.liquidityMigration.createStrategy(pool.pool.address, pool.adapter.address, strategyData);
-        const receipt = await tx.wait();
-        const strategyAddress = receipt.events.find((ev: Event) => ev.event === "Created").args.strategy;
-        this.strategy = IStrategy__factory.connect(strategyAddress, this.signers.default);
+        const strategy = await deployStakedStrategy(this.enso, pool.lp, pool.adapter.address, this.signers.lmOwner);
+        console.log("strategy synths: ", await strategy.synths());
+        console.log("strategy items: ", await strategy.items());
+        console.log("Strategy address: ", strategy.address);
+        // set strategy
+        await this.liquidityMigration.connect(this.signers.lmOwner).setStrategy(pool.lp, strategy.address);
+        // migrate all
+        const tx = await this.liquidityMigration
+          .connect(this.signers.lmOwner)
+          .migrateAll(pool.lp, pool.adapter.address);
 
-        // Migrate
-        const holder = await pool.holders[0];
-        const holderAddress = await holder.getAddress();
-        console.log("Holder address: ", holderAddress);
-        await this.liquidityMigration
-          .connect(holder)
-          ["migrate(address,address,address,uint256)"](
-            pool.pool.address,
-            pool.adapter.address,
-            this.strategy.address,
-            DEPOSIT_SLIPPAGE,
-          );
-        const [total] = await estimateTokens(
-          this.enso.platform.oracles.ensoOracle,
-          this.strategy.address,
-          underlyingTokens,
-        );
-        expect(total).to.gt(0);
-        expect(await this.strategy.balanceOf(holderAddress)).to.gt(0);
-        console.log("strategy items: ", await this.strategy.items());
-        console.log("strategy synths: ", await this.strategy.synths());
+        const receipt = await tx.wait();
+        const [total] = await estimateTokens(this.enso.platform.oracles.ensoOracle, strategy.address, underlyingTokens);
+        expect(total).to.be.gt(BigNumber.from(0));
+        //console.log(`migrateAll cost: ${receipt.gasUsed.toString()}`);
+
+        //expect(await strategy.balanceOf(pool.users[0])).to.be.gt(0);
+      } catch (err) {
+        count++;
+        //console.log("\n\nPool ===========> ", pool.lp);
+        //console.log("Underlying: ", underlyingTokens);
+        console.log(err);
+        //console.log("Pool not found!")
+        continue;
       }
     }
+    console.log("Failing strategies: ", count);
   });
 });

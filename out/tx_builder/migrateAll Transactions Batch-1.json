@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1650645879991,
+  "meta": {
+    "name": "Transactions Batch",
+    "description": "",
+    "txBuilderVersion": "1.6.0",
+    "createdFromSafeAddress": "0xEE0e85c384F7370FF3eb551E92A71A4AFc1B259F",
+    "createdFromOwnerAddress": "",
+    "checksum": "0x502fec4aa6d45cacf001ebdb4881feac869b4269b546e06b81d2ef0469934b6f"
+  },
+  "transactions": [
+    {
+      "to": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "lp",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "adapter",
+            "type": "address"
+          }
+        ],
+        "name": "migrateAll",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "lp": "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b",
+        "adapter": "0x9c9326C521895c78414BD3C2945e47AFC4Ef16cc"
+      }
+    },
+    {
+      "to": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "lp",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "adapter",
+            "type": "address"
+          }
+        ],
+        "name": "migrateAll",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "lp": "0x2aF1dF3AB0ab157e1E2Ad8F88A7D04fbea0c7dc6",
+        "adapter": "0x9c9326C521895c78414BD3C2945e47AFC4Ef16cc"
+      }
+    },
+    {
+      "to": "0x0c6D898ac945E493D25751Ea43BE2c8Beb881D8C",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "lp",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "adapter",
+            "type": "address"
+          }
+        ],
+        "name": "migrateAll",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "lp": "0x33d63Ba1E57E54779F7dDAeaA7109349344cf5F1",
+        "adapter": "0x9c9326C521895c78414BD3C2945e47AFC4Ef16cc"
+      }
+    }
+  ]
+}

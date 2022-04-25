@@ -1,25 +1,12 @@
 import { ethers } from "hardhat";
 import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { IAdapter, LiquidityMigration__factory, LiquidityMigrationV2__factory } from "../typechain";
+import { IAdapter, LiquidityMigrationV2__factory } from "../typechain";
 import { EnsoEnvironment } from "@ensofinance/v1-core";
 import { getBlockTime } from "./utils";
+import { Adapter, AcceptedProtocols } from "./types";
 
-export enum AcceptedProtocols {
-  Indexed,
-  PieDao,
-  DHedge,
-  Powerpool,
-  TokenSets,
-  IndexCoop,
-}
-
-export type Adapter = {
-  protocol: AcceptedProtocols;
-  adapter: string;
-};
-
-export class LiquidityMigrationBuilder {
+export class LiquidityMigrationBuilderV2 {
   signer: SignerWithAddress;
   adapters: Adapter[];
   liquidityMigration?: Contract;
@@ -57,7 +44,7 @@ export class LiquidityMigrationBuilder {
       "LiquidityMigrationV2",
     )) as LiquidityMigrationV2__factory;
 
-    const unlock = await getBlockTime(100);
+    const unlock = await getBlockTime(1000);
 
     this.liquidityMigration = await LiquidityMigrationFactory.connect(this.signer).deploy(
       this.adapters.map(a => a.adapter),
